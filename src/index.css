@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #2e7d32;
+  --color-primary-dark: #256628;
+  --color-secondary: #66bb6a;
+  --color-soft: #e8f5e9;
+  --color-surface: #ffffff;
+  --color-app-bg: #f5f7f5;
+  --color-ink: #263238;
+  --color-muted: #607d8b;
+  --color-line: #e2e8e5;
+
+  --color-status-pending: #f9a825;
+  --color-status-pending-bg: #fff3dc;
+  --color-status-progress: #1976d2;
+  --color-status-progress-bg: #e3f0fb;
+  --color-status-done: #2e7d32;
+  --color-status-done-bg: #e8f5e9;
+  --color-status-error: #d32f2f;
+  --color-status-error-bg: #fbe4e4;
+  --color-status-inactive: #78909c;
+  --color-status-inactive-bg: #eceff1;
+
+  --radius-card: 14px;
+  --radius-btn: 11px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-app-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+@keyframes dialog-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialog-pop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.dialog-overlay[data-state="open"] {
+  animation: dialog-fade 180ms ease-out;
+}
+
+.dialog-content[data-state="open"] {
+  animation: dialog-pop 200ms ease-out;
+}

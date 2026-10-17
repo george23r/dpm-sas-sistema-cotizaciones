@@ -1,0 +1,108 @@
+import type { Cotizacion } from "@/types";
+import { calcularPrecio } from "@/lib/precio";
+
+function conPrecio(c: Omit<Cotizacion, "precio" | "desglose">): Cotizacion {
+  if (c.estado === "pendiente") {
+    return { ...c, precio: null, desglose: null };
+  }
+  const desglose = calcularPrecio({
+    areaM2: c.areaM2,
+    tipoVegetacion: c.tipoVegetacion,
+    frecuencia: c.frecuencia,
+    numeroOperarios: c.numeroOperarios,
+    equipos: c.equipos,
+  });
+  return { ...c, precio: desglose.total, desglose };
+}
+
+export const cotizacionesSeed: Cotizacion[] = [
+  conPrecio({
+    id: "cot-01",
+    clienteId: "cli-01",
+    zonaId: "zon-01",
+    zonaNombre: "Zona común - Torre A",
+    areaM2: 850,
+    tipoVegetacion: "cesped_simple",
+    frecuencia: "mensual",
+    numeroOperarios: 3,
+    equipos: ["guadañadora"],
+    observaciones: "Incluye poda de borde sobre andenes.",
+    estado: "aceptada",
+    fechaSolicitud: "2026-09-02",
+    origen: "cliente",
+  }),
+  conPrecio({
+    id: "cot-02",
+    clienteId: "cli-01",
+    zonaId: "zon-02",
+    zonaNombre: "Jardines de ingreso",
+    areaM2: 220,
+    tipoVegetacion: "jardin_ornamental",
+    frecuencia: "quincenal",
+    numeroOperarios: 2,
+    equipos: ["guadañadora", "fumigadora"],
+    observaciones: "Cliente solicita fumigación preventiva.",
+    estado: "enviada",
+    fechaSolicitud: "2026-10-05",
+    origen: "cliente",
+  }),
+  conPrecio({
+    id: "cot-03",
+    clienteId: "cli-02",
+    zonaId: "zon-03",
+    zonaNombre: "Parque interno",
+    areaM2: 1600,
+    tipoVegetacion: "zona_arborizada",
+    frecuencia: "mensual",
+    numeroOperarios: 5,
+    equipos: ["guadañadora", "motosierra"],
+    observaciones: "Requiere poda de 6 árboles grandes.",
+    estado: "aceptada",
+    fechaSolicitud: "2026-08-18",
+    origen: "administrador",
+  }),
+  conPrecio({
+    id: "cot-04",
+    clienteId: "cli-03",
+    zonaId: "zon-04",
+    zonaNombre: "Zonas verdes perimetrales",
+    areaM2: 3200,
+    tipoVegetacion: "mixta",
+    frecuencia: "semanal",
+    numeroOperarios: 6,
+    equipos: ["guadañadora", "motosierra", "fumigadora"],
+    estado: "pendiente",
+    fechaSolicitud: "2026-10-14",
+    origen: "cliente",
+  }),
+  conPrecio({
+    id: "cot-05",
+    clienteId: "cli-04",
+    zonaId: "zon-05",
+    zonaNombre: "Canchas y zonas verdes",
+    areaM2: 1900,
+    tipoVegetacion: "cesped_simple",
+    frecuencia: "unica",
+    numeroOperarios: 4,
+    equipos: ["guadañadora"],
+    observaciones: "Corte previo a evento institucional.",
+    estado: "rechazada",
+    fechaSolicitud: "2026-09-28",
+    origen: "cliente",
+  }),
+  conPrecio({
+    id: "cot-06",
+    clienteId: "cli-02",
+    zonaId: "zon-03",
+    zonaNombre: "Parque interno",
+    areaM2: 1600,
+    tipoVegetacion: "zona_arborizada",
+    frecuencia: "mensual",
+    numeroOperarios: 4,
+    equipos: ["fumigadora"],
+    observaciones: "Control fitosanitario trimestral.",
+    estado: "pendiente",
+    fechaSolicitud: "2026-10-15",
+    origen: "cliente",
+  }),
+];
