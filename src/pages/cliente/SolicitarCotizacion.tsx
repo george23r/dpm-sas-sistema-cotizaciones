@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { SERVICIOS_DPM } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";import { Input } from "@/components/ui/input";import { Textarea } from "@/components/ui/textarea";import { Button } from "@/components/ui/button";import { HuTag } from "@/components/shared/HuTag";
+import { Select } from "@/components/ui/select";import { Textarea } from "@/components/ui/textarea";import { Button } from "@/components/ui/button";import { HuTag } from "@/components/shared/HuTag";
 export function SolicitarCotizacion(){
  const {zonas,clienteActualId,crearCotizacion}=useApp();const nav=useNavigate();const location=useLocation();
  const pre=(location.state as {zonaId?:string}|null)?.zonaId;
