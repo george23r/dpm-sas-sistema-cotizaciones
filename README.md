@@ -50,3 +50,11 @@ Se usa una rama por historia de usuario, con el formato `feature/HU-XX-nombre-co
 - [Base de datos PostgreSQL](database/README.md): scripts de reconstrucción, diccionario, diagramas entidad-relación y comprobaciones.
 
 **Nota de alcance:** el frontend en `src/` es actualmente un prototipo con datos simulados; la API Express y la integración con PostgreSQL están diseñadas, pero no deben describirse como implementadas hasta comprobarlo. Los datos SQL de prueba son ficticios y no incluyen información real de DPM SAS ni de sus clientes.
+
+## Seguimiento del corte 2
+
+- [Sprint Backlog de diseño](docs/scrum/sprint-backlog-corte-2.md)
+- [Validaciones pendientes](docs/validaciones_pendientes.md)
+- [HU-09](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/3) y [HU-10](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/4) (issues de implementación; no equivalen a tarjetas de GitHub Projects)
+- **Documento académico:** versión 2.3 revisada localmente; aún pendiente de subida como binario al repositorio.
+- **Figuras PNG:** extraídas del Word; pendientes de subir a `docs/arquitectura/img/`.
