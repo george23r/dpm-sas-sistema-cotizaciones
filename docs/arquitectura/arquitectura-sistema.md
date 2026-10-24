@@ -1,91 +1,56 @@
-# Arquitectura del sistema — DPM S.A.S.
+# Arquitectura del sistema — DPM SAS
 
-**Proyecto:** Sistema web para la gestión de cotizaciones y mantenimiento de zonas verdes.  
-**Etapa:** Trabajo de Grado I, corte 2, objetivo específico 2.  
-**Metodología aprobada:** Scrum.  
-**Autores:** Jorge Luis Ramos Perdomo y Richard Esteban Sevillano Cuaran.
+Documento de diseño del Trabajo de Grado I (corte 2, objetivo específico 2). Describe la arquitectura prevista del sistema de información web para la gestión de cotizaciones, programación de servicios y control de jornadas de DPM SAS, y el estado real de cada componente.
 
-## 1. Propósito y alcance
+## 1. Estado actual y previsto
 
-Documentar la estructura lógica, las responsabilidades, la persistencia, los flujos e interfaces del sistema, asegurando trazabilidad con las historias de usuario HU-01 a HU-08 y los requisitos no funcionales RNF-01 a RNF-04. La entrega del corte 2 se centra en **diseñar** la solución y construir/comprobar su base de datos, no en terminar todos los módulos de la aplicación.
+| Componente | Estado |
+|---|---|
+| Aplicación web (React + TypeScript) | **Prototipo** con datos simulados en `src/`; cubre 12 de 19 pantallas identificadas |
+| Base de datos PostgreSQL (esquema `dpm`) | **Construida y probada** (carpeta `database/`, 18 pruebas, 27 comprobaciones) |
+| API REST (Node.js + Express) | **Diseñada**; no implementada |
+| Autenticación (JWT) y permisos por rol | **Diseñada**; no implementada |
+| Integración API–base de datos | **Diseñada**; no implementada |
+| Despliegue (Vercel, Render y PostgreSQL gestionado) | **Previsto**; falta elegir la base de datos gestionada |
 
-## 2. Estado verificable de los componentes
+> La API Express y la integración con PostgreSQL no deben describirse como implementadas hasta comprobarlo.
 
-| Componente | Tecnología | Estado de la evidencia |
-| --- | --- | --- |
-| Interfaz y navegación por perfiles | React, TypeScript, Vite, React Router, Tailwind CSS | Presente en `src/` como prototipo navegable |
-| Datos de interfaz, cotizaciones y órdenes | `src/data/` y estado React en `src/context/AppContext.tsx` | Simulados en el navegador; sin persistencia en PostgreSQL |
-| Inicio de sesión y permisos del frontend | Componentes de rutas y estado del contexto | Solo demostración; **no es autenticación/autorización real** |
-| API de negocio | Node.js + Express, JSON sobre HTTPS | Arquitectura **propuesta**, no verificada como implementada en este repositorio |
-| Base de datos | PostgreSQL 14+, esquema `dpm` | Scripts, ER, diccionario y resultados de comprobación aportados en `database/` |
-| Hosting del frontend y API | Vercel y Render | Opciones **previstas**, no evidenciadas como desplegadas |
+## 2. Arquitectura en capas
 
-## 3. Vista de arquitectura lógica
+![Arquitectura en capas](img/arquitectura.png)
 
-```mermaid
-flowchart TD
-    A[Cliente / Administrador / Operario] --> N[Navegador web]
-    N --> F[Frontend React + TypeScript + Vite]
-    F -->|Situación actual: datos ficticios| C[AppContext + src/data]
-    F -.->|Arquitectura futura: HTTPS + JSON| API[API REST Node.js + Express]
-    API -.-> AUTH[Autenticación y autorización por perfil]
-    API -.-> BIZ[Servicios de cotizaciones, programación, cuadrillas, historial y reportes]
-    AUTH -.-> DB[(PostgreSQL - esquema dpm)]
-    BIZ -.-> DB
-```
+- **Presentación.** Aplicación de una sola página (React + TypeScript) desplegada en Vercel. Se usa desde el navegador de escritorio o del celular (RNF-01).
+- **Servicios.** API REST (Node.js + Express) desplegada en Render. Un middleware autentica con JWT y verifica el permiso del rol antes de cada operación. Las rutas delegan en servicios de negocio (cotizaciones, órdenes, jornadas y reportes), que acceden a los datos con consultas parametrizadas.
+- **Datos.** PostgreSQL. La API se conecta con el rol `dpm_app`; los reportes pueden usar `dpm_reportes` (solo lectura de vistas). Las reglas críticas (precio fijo, hitos de pago, cruce de horarios y conciliación de planillas) también se verifican en la base de datos.
 
-**Convención:** las líneas continuas representan el prototipo actual; las líneas discontinuas, componentes o conexiones previstos para implementación posterior.
+## 3. Ejemplo de flujo de una petición
 
-## 4. Responsabilidades de los módulos propuestos
+1. El administrador envía una cotización desde la aplicación web.
+2. La aplicación llama `POST /cotizaciones/{id}/enviar` con el token del usuario.
+3. El middleware valida el token y comprueba que el rol sea administrador.
+4. El servicio ejecuta `CALL sp_enviar_cotizacion(id)`.
+5. La base de datos valida que exista visita técnica y líneas, y que los hitos sumen 100 %; luego marca la cotización como enviada, con precio fijo.
+6. Si una regla falla, la API responde `422` con el motivo y la aplicación lo muestra al usuario.
 
-| Módulo | HU/RNF | Responsabilidad | Persistencia diseñada |
-| --- | --- | --- | --- |
-| Cuentas y acceso | RNF-02, RNF-04 | Identidad, acceso por rol, validación y controles de seguridad | `usuarios`, `clientes`, `operarios` |
-| Clientes y zonas | HU-02, HU-07 | Catálogo de clientes y predios/zonas verdes | `clientes`, `zonas` |
-| Cotizaciones | HU-01, HU-02 | Solicitud, factores, costo de personal/equipos, cálculo y estados | `cotizaciones`, `cotizacion_equipos`, `equipos`, `tipos_vegetacion`, `frecuencias`, `parametros_tarifa` |
-| Programación | HU-03 | Órdenes, fechas, horarios y prevención de cruces | `ordenes_trabajo`, `cuadrillas` |
-| Asignación de cuadrillas | HU-04, HU-05 | Asociar cuadrilla y visualizar órdenes pertinentes | `cuadrillas`, `operarios`, `ordenes_trabajo` |
-| Ejecución e historial | HU-06, HU-07 | Cambios de estado, responsable, fecha, hora y consulta del historial | `ordenes_trabajo`, vistas de historial |
-| Reportes | HU-08 | Indicadores y filtros por fechas/cliente | función `fn_reporte_periodo` y vistas de consulta |
+## 4. Requisitos no funcionales
 
-La distribución definitiva y las reglas de precios deben contrastarse con la entrevista y documentos reales de DPM S.A.S. Los datos de `02_seed.sql` son ficticios y las tarifas, ilustrativas.
+| RNF | Cómo se atiende |
+|---|---|
+| RNF-01 Acceso multiplataforma | Aplicación web responsiva; verificación en navegadores de escritorio y móvil durante la implementación |
+| RNF-02 Cifrado de datos personales | Contraseñas como hash; HTTPS en el despliegue; solo se almacenan los datos necesarios (Ley 1581 de 2012) |
+| RNF-03 Tiempo de respuesta | Índices en las consultas frecuentes; plan de pruebas de desempeño (apartado 3.8.9 del documento) |
+| RNF-04 Control de acceso por perfil | Permisos por rol en la API y roles de privilegios mínimos en la base de datos |
 
-## 5. Flujo principal propuesto
+## 5. Seguridad y protección de la información
 
-1. El cliente o administrador identifica una zona y crea una solicitud de cotización (HU-02).
-2. El administrador calcula el precio con área, vegetación, frecuencia, personal y equipos; el registro conserva los valores aplicados (HU-01).
-3. Tras la aceptación, se programa una orden y se evita superposición de horarios de la cuadrilla (HU-03).
-4. Se asigna cuadrilla; el operario ve las órdenes pertinentes (HU-04 y HU-05).
-5. El operario informa finalización con fecha, hora y responsable (HU-06).
-6. El cliente consulta el historial y el administrador obtiene reportes (HU-07 y HU-08).
+- Las contraseñas se almacenan como hash (por ejemplo, bcrypt); nunca en texto plano.
+- Los usuarios se desactivan (`activo = false`) en lugar de borrarse; las cotizaciones enviadas no se modifican.
+- El perfil `dpm_reportes` no puede leer `usuarios` ni el análisis interno de costos (verificado en la prueba C16).
+- Los datos de prueba son ficticios y las evidencias de la empresa se usan anonimizadas, con el consentimiento de DPM SAS (carta del Apéndice A del documento).
+- Pendiente: HTTPS en el despliegue y política de copias de seguridad.
 
-Los pasos anteriores son el **diseño esperado**; no implican que ya exista una API o que el frontend consuma PostgreSQL.
+## 6. Limitaciones y pendientes
 
-## 6. Persistencia y reconstrucción
-
-La documentación de `database/` incluye el diagrama ER en Mermaid, diccionario de datos, `01_schema.sql` (tablas, funciones, restricciones, índices, vistas y permisos), `02_seed.sql` (datos de prueba) y `03_consultas_comprobacion.sql` (pruebas). `prueba_salida.txt` contiene la ejecución registrada.
-
-```bash
-createdb dpm_sas
-psql -d dpm_sas -v ON_ERROR_STOP=1 -f database/01_schema.sql
-psql -d dpm_sas -v ON_ERROR_STOP=1 -f database/02_seed.sql
-psql -d dpm_sas -v ON_ERROR_STOP=1 -f database/03_consultas_comprobacion.sql
-```
-
-**Advertencia:** `01_schema.sql` elimina y recrea el esquema `dpm`. Usar **solo en desarrollo o una base dedicada a pruebas**.
-
-## 7. Diseño de seguridad
-
-- El backend deberá verificar identidad y permisos del lado del servidor: las rutas protegidas de React solo sirven como comportamiento de interfaz.
-- Las contraseñas reales deben almacenarse como hashes seguros con sal (por ejemplo, bcrypt o Argon2), nunca en texto plano. Los marcadores del seed no son contraseñas reales.
-- El servidor deberá comprobar propiedad del cliente sobre cada zona/cotización y pertenencia del operario a su cuadrilla antes de atender solicitudes.
-- Usar HTTPS en despliegue; credenciales de base de datos solo mediante variables de entorno del servidor, jamás en código cliente.
-- Aplicar privilegios mínimos al usuario de PostgreSQL y controles para la consulta de datos personales, según RNF-02/RNF-04.
-- Obtener aval y autorización para cualquier dato privado de DPM; las pruebas usan datos ficticios hasta validar con información real autorizada.
-
-## 8. Evidencias y pendientes
-
-**Disponibles:** navegación por perfiles, pantallas del prototipo, esquema relacional, diccionario, consultas y resultados de pruebas SQL.  
-**Pendientes de validación:** reglas de negocio/tarifas con DPM, entrevista/documentación empresarial, contratos detallados de endpoints, autenticación segura, integración API–BD–frontend, despliegue y pruebas end-to-end. No presentar estas actividades pendientes como implementadas.
-
-**Complementos:** [Diagrama de componentes](./diagrama-componentes.md), [Decisiones técnicas](./decisiones-tecnicas.md), [Base de datos](../../database/README.md).
+- Las tarifas, los valores en pesos y las unidades de cobro son ilustrativos hasta validarlos con DPM SAS.
+- El perfil del responsable de campo dentro del sistema está por validar.
+- Falta elegir el servicio de PostgreSQL gestionado para el despliegue.
