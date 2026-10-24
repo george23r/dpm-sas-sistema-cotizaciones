@@ -36,3 +36,13 @@ El desarrollo se gestiona con Scrum. El Product Backlog y el detalle de las hist
 ## Control de versiones
 
 Se usa una rama por historia de usuario, con el formato `feature/HU-XX-nombre-corto`, trazable directamente con el Product Backlog.
+
+
+## Evidencias de diseño — Segundo corte
+
+- [Arquitectura del sistema](docs/arquitectura/arquitectura-sistema.md): estado actual y arquitectura prevista.
+- [Diagramas de componentes](docs/arquitectura/diagrama-componentes.md): componentes, secuencia y trazabilidad.
+- [Decisiones técnicas](docs/arquitectura/decisiones-tecnicas.md): justificaciones, seguridad y pendientes.
+- [Base de datos PostgreSQL](database/README.md): scripts de reconstrucción, diccionario, diagrama ER y comprobaciones.
+
+**Nota de alcance:** el frontend en `src/` es actualmente un prototipo con datos simulados; la API Express y la integración con PostgreSQL están diseñadas, pero no deben describirse como implementadas hasta comprobarlo. Los datos SQL de prueba son ficticios.

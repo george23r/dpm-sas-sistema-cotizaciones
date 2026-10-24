@@ -1,0 +1,64 @@
+SET
+SET
+psql:03_consultas_comprobacion.sql:30: NOTICE:  PASS C1  Cálculo de precio (HU-01): total = 422750.00
+DO
+psql:03_consultas_comprobacion.sql:44: NOTICE:  PASS C2  Cotizaciones calculadas con total consistente: 4
+DO
+psql:03_consultas_comprobacion.sql:58: NOTICE:  PASS C3  Se rechaza una cotización "enviada" sin precio calculado
+DO
+psql:03_consultas_comprobacion.sql:75: NOTICE:  PASS C4  Cruce de horario rechazado (HU-03): La cuadrilla ya tiene un servicio asignado en este horario.
+DO
+psql:03_consultas_comprobacion.sql:90: NOTICE:  PASS C5  Servicios consecutivos permitidos (HU-03)
+DO
+psql:03_consultas_comprobacion.sql:104: NOTICE:  PASS C6  No se puede iniciar una orden sin cuadrilla asignada (HU-04)
+DO
+psql:03_consultas_comprobacion.sql:129: NOTICE:  PASS C7a Finalizar sin responsable es rechazado (HU-06)
+psql:03_consultas_comprobacion.sql:129: NOTICE:  PASS C7b Un operario de otra cuadrilla no puede finalizar la orden (HU-06)
+DO
+psql:03_consultas_comprobacion.sql:146: NOTICE:  PASS C8  El operario ve únicamente las órdenes de su cuadrilla (HU-05): 4
+DO
+psql:03_consultas_comprobacion.sql:158: NOTICE:  PASS C9  Historial del cliente consultable (HU-07): 1 servicio(s) finalizado(s)
+DO
+psql:03_consultas_comprobacion.sql:174: NOTICE:  PASS C10 Reporte por periodo y cliente (HU-08): solicitadas=2, aceptadas=1, valor=422750.00
+DO
+psql:03_consultas_comprobacion.sql:192: NOTICE:  PASS C11 El perfil de reportes no puede leer la tabla de usuarios (RNF-04)
+DO
+psql:03_consultas_comprobacion.sql:208: NOTICE:  PASS C12 La zona debe pertenecer al cliente de la cotización
+DO
+psql:03_consultas_comprobacion.sql:222: NOTICE:  PASS C13 El usuario enlazado a un cliente debe tener rol cliente
+DO
+psql:03_consultas_comprobacion.sql:235: NOTICE:  PASS C14 Una cuadrilla tiene un único líder
+DO
+--- Cotizaciones (HU-01 / HU-02) ---
+ cotizacion_id |               cliente                |           zona            |    vegetacion     | frecuencia | area_m2 | num_operarios |  estado   | precio_total 
+---------------+--------------------------------------+---------------------------+-------------------+------------+---------+---------------+-----------+--------------
+             4 | Unidad Residencial Portal del Bosque | Parque interno            | Zona arborizada   | Mensual    | 1600.00 |             4 | pendiente |             
+             5 | Centro Comercial Plaza Mirador       | Zonas verdes perimetrales | Mixta             | Semanal    | 3200.00 |             6 | pendiente |             
+             2 | Conjunto Residencial Los Almendros   | Jardines de ingreso       | Jardín ornamental | Quincenal  |  220.00 |             3 | enviada   |    260085.00
+             6 | Colegio Nuevo Horizonte              | Canchas y zonas verdes    | Césped simple     | Única vez  | 1900.00 |             5 | rechazada |    950000.00
+             1 | Conjunto Residencial Los Almendros   | Zona común - Torre A      | Césped simple     | Mensual    |  850.00 |             3 | aceptada  |    422750.00
+             3 | Unidad Residencial Portal del Bosque | Parque interno            | Zona arborizada   | Mensual    | 1600.00 |             4 | aceptada  |   1106400.00
+(6 rows)
+
+--- Órdenes y cuadrillas (HU-03 / HU-04) ---
+ orden_id |               cliente                |           zona            |            tipo_servicio            |         inicio         |    estado    |      cuadrilla      
+----------+--------------------------------------+---------------------------+-------------------------------------+------------------------+--------------+---------------------
+        8 | Colegio Nuevo Horizonte              | Canchas y zonas verdes    | Corte previo a evento institucional | 2026-09-30 07:00:00-05 | finalizada   | Cuadrilla Esmeralda
+        4 | Unidad Residencial Portal del Bosque | Parque interno            | Poda de árboles y recolección       | 2026-10-08 08:00:00-05 | finalizada   | Cuadrilla Raíces
+        2 | Conjunto Residencial Los Almendros   | Zona común - Torre A      | Corte de césped y perfilado         | 2026-10-10 08:00:00-05 | finalizada   | Cuadrilla Esmeralda
+        7 | Unidad Residencial Portal del Bosque | Parque interno            | Control fitosanitario               | 2026-10-14 08:00:00-05 | finalizada   | Cuadrilla Follaje
+        9 | Centro Comercial Plaza Mirador       | Zonas verdes perimetrales | Mantenimiento integral semanal      | 2026-10-17 08:00:00-05 | en_ejecucion | Cuadrilla Esmeralda
+        1 | Conjunto Residencial Los Almendros   | Jardines de ingreso       | Poda ornamental y fumigación        | 2026-10-20 09:00:00-05 | pendiente    | Cuadrilla Follaje
+        6 | Centro Comercial Plaza Mirador       | Zonas verdes perimetrales | Mantenimiento integral semanal      | 2026-10-21 08:00:00-05 | pendiente    | Cuadrilla Raíces
+        3 | Conjunto Residencial Los Almendros   | Zona común - Torre A      | Corte de césped y perfilado         | 2026-10-24 08:00:00-05 | pendiente    | Cuadrilla Esmeralda
+        5 | Colegio Nuevo Horizonte              | Canchas y zonas verdes    | Corte de césped y perfilado         | 2026-10-27 08:00:00-05 | pendiente    | (por asignar)
+(9 rows)
+
+--- Reporte por periodo (HU-08) ---
+               cliente                | cotizaciones_solicitadas | cotizaciones_aceptadas | valor_aceptado | servicios_finalizados 
+--------------------------------------+--------------------------+------------------------+----------------+-----------------------
+ Centro Comercial Plaza Mirador       |                        1 |                      0 |              0 |                     0
+ Colegio Nuevo Horizonte              |                        1 |                      0 |              0 |                     1
+ Conjunto Residencial Los Almendros   |                        2 |                      1 |      422750.00 |                     1
+ Unidad Residencial Portal del Bosque |                        2 |                      1 |     1106400.00 |                     2
+(4 rows)
