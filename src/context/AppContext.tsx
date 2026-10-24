@@ -52,17 +52,36 @@ export function AppProvider({children}:{children:React.ReactNode}){
   setCotizaciones(prev=>prev.map(x=>x.id===id?{...x,estado:aceptar?"aceptada":"rechazada"}:x));return {ok:true};
  };
  const crearOrden:AppContextValue["crearOrden"]=(input)=>{
-  if(input.cuadrillaId && ordenes.some(o=>o.cuadrillaId===input.cuadrillaId&&o.fecha===input.fecha&&o.estado!=="finalizado"&&haySolape(o.horaInicio,o.horaFin,input.horaInicio,input.horaFin)))return {ok:false,error:"La cuadrilla ya tiene un servicio asignado en este horario."};
-  const orden:OrdenTrabajo={...input,id:nuevoId("ord"),estado:"pendiente"};setOrdenes(prev=>[...prev,orden]);return {ok:true,orden};
+  const cotizacion=cotizaciones.find(c=>c.id===input.cotizacionId);
+  if(!cotizacion||cotizacion.estado!=="aceptada")return {ok:false,error:"Solo se pueden programar servicios de cotizaciones aceptadas."};
+  if(cotizacion.clienteId!==input.clienteId||cotizacion.zonaId!==input.zonaId)return {ok:false,error:"Los datos del servicio no coinciden con la cotización aceptada."};
+  if(!zonas.some(z=>z.id===input.zonaId&&z.clienteId===input.clienteId))return {ok:false,error:"La zona no pertenece al cliente."};
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(input.fecha)||Number.isNaN(new Date(input.fecha+"T12:00:00Z").valueOf()))return {ok:false,error:"Selecciona una fecha válida."};
+  if(!/^\d{2}:\d{2}$/.test(input.horaInicio)||!/^\d{2}:\d{2}$/.test(input.horaFin)||input.horaFin<=input.horaInicio)return {ok:false,error:"La hora de fin debe ser posterior al inicio."};
+  if(!input.tipoServicio.trim())return {ok:false,error:"Selecciona el servicio."};
+  if(input.cuadrillaId&&!cuadrillas.some(c=>c.id===input.cuadrillaId))return {ok:false,error:"La cuadrilla no existe."};
+  if(input.cuadrillaId&&ordenes.some(o=>o.cuadrillaId===input.cuadrillaId&&o.fecha===input.fecha&&o.estado!=="finalizado"&&haySolape(o.horaInicio,o.horaFin,input.horaInicio,input.horaFin)))return {ok:false,error:"La cuadrilla ya tiene un servicio asignado en este horario."};
+  const orden:OrdenTrabajo={...input,id:nuevoId("ord"),estado:"pendiente"};
+  setOrdenes(prev=>[...prev,orden]);
+  return {ok:true,orden};
  };
  const asignarCuadrillaAOrden:AppContextValue["asignarCuadrillaAOrden"]=(ordenId,cuadrillaId)=>{
-  const orden=ordenes.find(x=>x.id===ordenId);if(!orden)return {ok:false,error:"Orden no encontrada."};
+  const orden=ordenes.find(x=>x.id===ordenId);
+  if(!orden)return {ok:false,error:"Orden no encontrada."};
+  if(orden.estado!=="pendiente")return {ok:false,error:"Solo pueden reasignarse órdenes pendientes."};
+  if(!cuadrillas.some(c=>c.id===cuadrillaId))return {ok:false,error:"La cuadrilla no existe."};
   if(ordenes.some(o=>o.id!==ordenId&&o.cuadrillaId===cuadrillaId&&o.fecha===orden.fecha&&o.estado!=="finalizado"&&haySolape(o.horaInicio,o.horaFin,orden.horaInicio,orden.horaFin)))return {ok:false,error:"La cuadrilla ya tiene un servicio asignado en este horario."};
   setOrdenes(prev=>prev.map(o=>o.id===ordenId?{...o,cuadrillaId}:o));return {ok:true};
  };
- const cambiarEstadoOrden:AppContextValue["cambiarEstadoOrden"]=(id,estado)=>setOrdenes(prev=>prev.map(o=>o.id===id?{...o,estado}:o));
+ const cambiarEstadoOrden:AppContextValue["cambiarEstadoOrden"]=(id,estado)=>{
+   if(estado!=="en_ejecucion")return;
+   setOrdenes(prev=>prev.map(o=>o.id===id&&o.estado==="pendiente"&&o.cuadrillaId===OPERARIO_DEMO_CUADRILLA_ID?{...o,estado}:o));
+ };
  const finalizarOrden:AppContextValue["finalizarOrden"]=(id,input)=>{
-  const d=new Date();setOrdenes(prev=>prev.map(o=>o.id===id?{...o,estado:"finalizado",finalizacion:{fecha:d.toISOString().slice(0,10),hora:d.toTimeString().slice(0,5),responsable:OPERARIO_DEMO_NOMBRE,nota:input.nota}}:o));
+   const d=new Date();
+   setOrdenes(prev=>prev.map(o=>o.id===id&&o.estado==="en_ejecucion"&&o.cuadrillaId===OPERARIO_DEMO_CUADRILLA_ID?{
+     ...o,estado:"finalizado",finalizacion:{fecha:d.toLocaleDateString("en-CA",{timeZone:"America/Bogota"}),hora:d.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Bogota"}),responsable:OPERARIO_DEMO_NOMBRE,nota:input.nota}
+   }:o));
  };
  const value=useMemo<AppContextValue>(()=>({rol,setRol,autenticado,iniciarSesion:()=>setAutenticado(true),cerrarSesion:()=>setAutenticado(false),mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden}),[rol,autenticado,mostrarHU,cotizaciones,ordenes]);
  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
