@@ -8,6 +8,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   BarChart3,
+  UserRoundCheck,
   type LucideIcon,
 } from "lucide-react";
 import type { Rol } from "@/types";
@@ -27,6 +28,8 @@ export const NAV_POR_ROL: Record<Rol, NavItem[]> = {
   administrador: [
     { to: "/app/admin/panel", label: "Panel de control", icon: LayoutDashboard },
     { to: "/app/admin/cotizaciones", label: "Cotizaciones", icon: FileText },
+    { to: "/app/admin/clientes", label: "Clientes", icon: UserRoundCheck },
+    { to: "/app/admin/trabajadores", label: "Trabajadores", icon: Users },
     { to: "/app/admin/programacion", label: "Programación", icon: CalendarDays },
     { to: "/app/admin/cuadrillas", label: "Cuadrillas", icon: Users },
     { to: "/app/admin/reportes", label: "Reportes", icon: BarChart3 },
