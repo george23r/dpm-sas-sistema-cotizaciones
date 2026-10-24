@@ -63,7 +63,7 @@ Los pasos anteriores son el **diseño esperado**; no implican que ya exista una 
 
 ## 6. Persistencia y reconstrucción
 
-La documentación de `database/` incluye el diagrama ER, diccionario de datos, `01_schema.sql` (tablas, funciones, restricciones, índices, vistas y permisos), `02_seed.sql` (datos de prueba) y `03_consultas_comprobacion.sql` (pruebas). `prueba_salida.txt` contiene la ejecución registrada.
+La documentación de `database/` incluye el diagrama ER en Mermaid, diccionario de datos, `01_schema.sql` (tablas, funciones, restricciones, índices, vistas y permisos), `02_seed.sql` (datos de prueba) y `03_consultas_comprobacion.sql` (pruebas). `prueba_salida.txt` contiene la ejecución registrada.
 
 ```bash
 createdb dpm_sas

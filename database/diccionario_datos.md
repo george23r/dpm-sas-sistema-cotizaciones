@@ -14,7 +14,7 @@ Cuentas de acceso al sistema. Cada persona que ingresa (administrador, cliente u
 | `nombre` | varchar(120) | No |  | Nombre completo de la persona. |
 | `correo` | varchar(160) | No |  | Correo electrónico usado para iniciar sesión; es único sin distinguir mayúsculas. |
 | `password_hash` | varchar(255) | No |  | Contraseña almacenada como hash (nunca en texto plano), según RNF-02. |
-| `rol` | rol_usuario | No | UQ | Perfil de acceso: administrador, cliente u operario (RNF-04). |
+| `rol` | rol_usuario | No | UQ compuesta con `id` | Perfil de acceso: administrador, cliente u operario (RNF-04). |
 | `activo` | boolean | No |  | Indica si la cuenta puede iniciar sesión. Se desactiva en lugar de borrar. (por defecto: `true`) |
 | `creado_en` | timestamptz | No |  | Fecha y hora de creación de la cuenta. (por defecto: `now()`) |
 
@@ -109,7 +109,7 @@ Predios o zonas verdes de cada cliente que reciben mantenimiento.
 | Columna | Tipo | Nulo | Clave | Descripción |
 |---|---|---|---|---|
 | `id` | integer | No | PK | Identificador único de la zona. |
-| `cliente_id` | integer | No | FK → clientes.id, UQ | Cliente propietario de la zona. |
+| `cliente_id` | integer | No | FK → clientes.id; UQ compuesta con `id` | Cliente propietario de la zona; participa en la clave única `(id, cliente_id)` para preservar integridad de las cotizaciones. |
 | `nombre` | varchar(120) | No | UQ | Nombre de la zona; es único dentro de cada cliente. |
 | `direccion` | varchar(200) | No |  | Dirección donde se ubica la zona. |
 | `area_m2` | numeric(10,2) | No |  | Área en metros cuadrados; debe ser mayor que cero. |
@@ -140,7 +140,7 @@ Personal de campo. Cada operario pertenece a una cuadrilla; solo algunos tienen 
 | `usuario_id` | integer | Sí | FK → usuarios.id, UQ | Cuenta de usuario del operario (opcional). Debe ser un usuario con rol operario. |
 | `rol_usuario` | rol_usuario | No | FK → usuarios.rol | Columna técnica fija en "operario"; permite validar el rol del usuario con una llave foránea compuesta. (por defecto: `'operario'::rol_usuario`) |
 | `nombre` | varchar(120) | No |  | Nombre completo del operario. |
-| `cuadrilla_id` | smallint | No | FK → cuadrillas.id, UQ | Cuadrilla a la que pertenece. |
+| `cuadrilla_id` | smallint | No | FK → cuadrillas.id | Cuadrilla a la que pertenece (varios operarios por cuadrilla). |
 | `es_lider` | boolean | No |  | Indica si es el líder de la cuadrilla; solo puede haber uno por cuadrilla. (por defecto: `false`) |
 | `activo` | boolean | No |  | Indica si el operario está en servicio. (por defecto: `true`) |
 
@@ -155,8 +155,8 @@ Solicitudes y cotizaciones de servicio. Nace como "pendiente" (sin precio) y, al
 | Columna | Tipo | Nulo | Clave | Descripción |
 |---|---|---|---|---|
 | `id` | integer | No | PK | Identificador único de la cotización. |
-| `cliente_id` | integer | No | FK → zonas.id | Cliente que solicita la cotización. |
-| `zona_id` | integer | No | FK → zonas.cliente_id | Zona a cotizar; debe pertenecer al mismo cliente. |
+| `cliente_id` | integer | No | FK compuesta con `zona_id` → zonas(cliente_id) | Cliente que solicita la cotización; junto con `zona_id` valida que la zona le pertenece. |
+| `zona_id` | integer | No | FK compuesta con `cliente_id` → zonas(id) | Zona a cotizar; la restricción real es `FOREIGN KEY (zona_id, cliente_id) REFERENCES zonas(id, cliente_id)`. |
 | `area_m2` | numeric(10,2) | No |  | Área en metros cuadrados usada para calcular el precio. |
 | `tipo_vegetacion_id` | smallint | No | FK → tipos_vegetacion.id | Tipo de vegetación considerado en el cálculo. |
 | `frecuencia_id` | smallint | No | FK → frecuencias.id | Frecuencia del servicio considerada en el cálculo. |
@@ -238,3 +238,5 @@ Servicios programados y ejecutados: fecha, cuadrilla, estado y registro de final
 | Reporte de cotizaciones y servicios por periodo y cliente | `fn_reporte_periodo` | HU-08 |
 | La zona de una cotización pertenece al cliente | llave foránea compuesta `fk_cotizaciones_zona_cliente` | HU-01 / HU-02 |
 | Perfiles de acceso: aplicación y reportes (sin acceso a usuarios) | roles `dpm_app` y `dpm_reportes` | RNF-04 |
+
+> **Nota de claves compuestas.** En PostgreSQL, `cotizaciones(zona_id, cliente_id)` referencia conjuntamente `zonas(id, cliente_id)`. Los campos `usuarios.id`/`rol` también se referencian conjuntamente en los perfiles de clientes y operarios. Las marcas `UQ` de columnas individuales no deben interpretarse como restricciones de unicidad individuales cuando su origen es una clave compuesta.

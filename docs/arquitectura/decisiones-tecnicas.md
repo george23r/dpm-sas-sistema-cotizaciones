@@ -29,7 +29,7 @@ Este registro documenta decisiones de arquitectura **previstas** y otras verific
 - **R1 – Supuestos del negocio:** precio base, factores de vegetación/frecuencia, costo por operario y equipos son ilustrativos. Confirmarlos con entrevista y ejemplos de cotización reales autorizados.
 - **R2 – Autenticación demo:** el frontend actual permite una navegación simulada; no tratarla como mecanismo seguro.
 - **R3 – Integración:** conectar frontend, API y PostgreSQL y ejecutar pruebas de extremo a extremo en la siguiente fase.
-- **R4 – Coherencia documental:** corregir las etiquetas intercambiadas de referencias en el diccionario de las columnas `cotizaciones.cliente_id` / `zona_id`; la verdad estructural está en `01_schema.sql`.
+- **R4 – Coherencia documental:** referencias compuestas de `cotizaciones.cliente_id` y `zona_id` revisadas y corregidas en el diccionario; para cualquier discrepancia, `01_schema.sql` es la fuente autoritativa.
 - **R5 – Verificación:** las 14 pruebas aparecen como satisfactorias en `database/prueba_salida.txt`, registro proporcionado por el equipo; conservar instrucciones para repetirlas y verificar el entorno de ejecución.
 
 ## Siguientes evidencias Scrum

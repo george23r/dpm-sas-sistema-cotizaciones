@@ -1,6 +1,6 @@
 # Diagramas de componentes y relaciones — DPM S.A.S.
 
-**Alcance:** arquitectura diseñada para el corte 2 de Trabajo de Grado I. Diferenciar implementación actual y componentes planificados. El diagrama ER de la persistencia está en `database/diagrama_er.png`.
+**Alcance:** arquitectura diseñada para el corte 2 de Trabajo de Grado I. Diferenciar implementación actual y componentes planificados. El diagrama ER de la persistencia está en [database/diagrama_er.md](../../database/diagrama_er.md). La imagen PNG aportada se conserva fuera del repositorio y no forma parte de esta entrega.
 
 ## 1. Componentes y dependencias
 
@@ -60,11 +60,11 @@ El comportamiento SQL relevante existe en los scripts aportados. Esta secuencia 
 
 ## 3. Modelo de datos
 
-- Ver diagrama ER entregado en `database/diagrama_er.png`.
+- Ver [diagrama ER en Mermaid](../../database/diagrama_er.md), basado en las 12 tablas del esquema SQL.
 - Ver `database/diccionario_datos.md` para 12 tablas y sus atributos.
 - Ver `database/01_schema.sql` como definición autoritativa de claves foráneas, `CHECK`, índices, vistas, procedimientos y políticas del esquema.
 
-**Nota de revisión:** en el diccionario de datos original conviene corregir la descripción de las claves de `cotizaciones.cliente_id` y `cotizaciones.zona_id`: el esquema SQL define conjuntamente `FOREIGN KEY (zona_id, cliente_id) REFERENCES zonas(id, cliente_id)`.
+**Nota de revisión:** se corrigieron las referencias de `cotizaciones.cliente_id` y `cotizaciones.zona_id` en el diccionario. El esquema SQL define conjuntamente `FOREIGN KEY (zona_id, cliente_id) REFERENCES zonas(id, cliente_id)`.
 
 ## 4. Matriz rápida de trazabilidad
 
