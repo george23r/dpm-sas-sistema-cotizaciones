@@ -6,6 +6,7 @@ import { zonas } from "@/data/zonas";
 import { cuadrillas, OPERARIO_DEMO_CUADRILLA_ID, OPERARIO_DEMO_NOMBRE } from "@/data/cuadrillas";
 import { cotizacionesSeed } from "@/data/cotizaciones";
 import { ordenesSeed } from "@/data/ordenes";
+import { compararPlanillas, demoPlanillas, demoJornadas, horasJornada, type Planilla, type Jornada } from "@/lib/jornadas";
 import { cotizacionVigente, totalLineas, validarEnvio } from "@/lib/cotizaciones";
 
 type NuevaCotizacionInput = Omit<Cotizacion, "id"|"fechaSolicitud"|"fechaEnvio"|"precio"|"vigenciaDias">;
@@ -19,6 +20,10 @@ interface AppContextValue {
  editarCotizacion:(id:string,input:Pick<Cotizacion,"objeto"|"servicio"|"fechaVisita"|"lineas"|"costos"|"hitos"|"observaciones">)=>void;
  enviarCotizacion:(id:string)=>{ok:true}|{ok:false;error:string};
  responderCotizacion:(id:string,aceptar:boolean)=>{ok:true}|{ok:false;error:string};
+ planillas:Planilla[]; jornadas:Jornada[];
+ crearParejaPlanillas:(clienteId:string,desde:string,hasta:string)=>{ok:true;campoId:string;adminId:string}|{ok:false;error:string};
+ agregarJornada:(input:Omit<Jornada,"id">)=>{ok:true}|{ok:false;error:string};
+ conciliarPlanillas:(campoId:string,adminId:string)=>{ok:true}|{ok:false;error:string};
  ordenes:OrdenTrabajo[];
  crearOrden:(input:ProgramarOrdenInput)=>{ok:true;orden:OrdenTrabajo}|{ok:false;error:string};
  asignarCuadrillaAOrden:(ordenId:string,cuadrillaId:string)=>{ok:true}|{ok:false;error:string};
@@ -33,6 +38,8 @@ export function AppProvider({children}:{children:React.ReactNode}){
  const [rol,setRol]=useState<Rol>("cliente");const [autenticado,setAutenticado]=useState(false);const [mostrarHU,setMostrarHU]=useState(true);
  const [cotizaciones,setCotizaciones]=useState<Cotizacion[]>(cotizacionesSeed);
  const [ordenes,setOrdenes]=useState<OrdenTrabajo[]>(ordenesSeed);
+ const [planillas,setPlanillas]=useState<Planilla[]>(demoPlanillas);
+ const [jornadas,setJornadas]=useState<Jornada[]>(demoJornadas);
  const crearCotizacion=(input:NuevaCotizacionInput):Cotizacion=>{
   const nueva:Cotizacion={...input,id:nuevoId("cot"),fechaSolicitud:new Date().toLocaleDateString("en-CA",{timeZone:"America/Bogota"}),fechaEnvio:null,vigenciaDias:15,precio:input.estado==="solicitada"?null:totalLineas(input.lineas)};
   setCotizaciones(prev=>[nueva,...prev]);return nueva;
@@ -83,7 +90,31 @@ export function AppProvider({children}:{children:React.ReactNode}){
      ...o,estado:"finalizado",finalizacion:{fecha:d.toLocaleDateString("en-CA",{timeZone:"America/Bogota"}),hora:d.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"America/Bogota"}),responsable:OPERARIO_DEMO_NOMBRE,nota:input.nota}
    }:o));
  };
- const value=useMemo<AppContextValue>(()=>({rol,setRol,autenticado,iniciarSesion:()=>setAutenticado(true),cerrarSesion:()=>setAutenticado(false),mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden}),[rol,autenticado,mostrarHU,cotizaciones,ordenes]);
+ const crearParejaPlanillas:AppContextValue["crearParejaPlanillas"]=(clienteId,desde,hasta)=>{
+ if(!clientes.some(c=>c.id===clienteId)||!/^\d{4}-\d{2}-\d{2}$/.test(desde)||!/^\d{4}-\d{2}-\d{2}$/.test(hasta)||desde>hasta)return {ok:false,error:"Cliente o periodo inválido."};
+ if(planillas.some(p=>p.clienteId===clienteId&&p.desde===desde&&p.hasta===hasta))return {ok:false,error:"Ya existen planillas para este cliente y periodo."};
+ const campoId=nuevoId("campo"),adminId=nuevoId("admin");
+ setPlanillas(p=>[...p,{id:campoId,clienteId,desde,hasta,origen:"campo",estado:"borrador"},{id:adminId,clienteId,desde,hasta,origen:"administrativa",estado:"borrador"}]);
+ return {ok:true,campoId,adminId};
+ };
+ const agregarJornada:AppContextValue["agregarJornada"]=(input)=>{
+ const planilla=planillas.find(p=>p.id===input.planillaId);
+ if(!planilla||planilla.estado==="conciliada")return {ok:false,error:"La planilla no existe o ya fue conciliada."};
+ if(input.fecha<planilla.desde||input.fecha>planilla.hasta)return {ok:false,error:"Fecha fuera del periodo."};
+ if(!zonas.some(z=>z.id===input.zonaId&&z.clienteId===planilla.clienteId))return {ok:false,error:"La zona no corresponde al cliente."};
+ if(!input.trabajador.trim()||!input.labor.trim()||!Number.isFinite(horasJornada(input)))return {ok:false,error:"Datos de jornada inválidos."};
+ if(jornadas.some(j=>j.planillaId===input.planillaId&&j.trabajador.toLowerCase()===input.trabajador.trim().toLowerCase()&&j.fecha===input.fecha&&j.inicio===input.inicio))return {ok:false,error:"Jornada duplicada."};
+ setJornadas(p=>[...p,{...input,id:nuevoId("j")}]);return {ok:true};
+ };
+ const conciliarPlanillas:AppContextValue["conciliarPlanillas"]=(campoId,adminId)=>{
+ const campo=planillas.find(p=>p.id===campoId),admin=planillas.find(p=>p.id===adminId);
+ if(!campo||!admin||campo.origen!=="campo"||admin.origen!=="administrativa"||campo.clienteId!==admin.clienteId||campo.desde!==admin.desde||campo.hasta!==admin.hasta)return {ok:false,error:"La pareja de planillas no corresponde al mismo cliente y periodo."};
+ if(campo.estado==="conciliada"||admin.estado==="conciliada")return {ok:false,error:"Planillas ya conciliadas."};
+ const comparacion=compararPlanillas(jornadas,campoId,adminId);
+ if(!comparacion.length||comparacion.some(r=>r.resultado!=="coincide")){setPlanillas(p=>p.map(x=>x.id===campoId||x.id===adminId?{...x,estado:"en_comparacion"}:x));return {ok:false,error:"Existen diferencias o faltan registros; revisa antes de conciliar."};}
+ setPlanillas(p=>p.map(x=>x.id===campoId||x.id===adminId?{...x,estado:"conciliada"}:x));return {ok:true};
+ };
+ const value=useMemo<AppContextValue>(()=>({rol,setRol,autenticado,iniciarSesion:()=>setAutenticado(true),cerrarSesion:()=>setAutenticado(false),mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden}),[rol,autenticado,mostrarHU,cotizaciones,ordenes,planillas,jornadas]);
  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 export function useApp(){const c=useContext(AppContext);if(!c)throw new Error("useApp debe usarse dentro de AppProvider");return c;}

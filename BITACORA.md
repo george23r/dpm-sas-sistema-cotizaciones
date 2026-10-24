@@ -24,3 +24,10 @@
 - Se limitaron nuevas órdenes a cotizaciones aceptadas, se validan zona/cliente y horarios, se evitan cruces por cuadrilla.
 - Se creó una pantalla de reporte de cotizaciones aceptadas y servicios finalizados con filtros de cliente y periodo.
 - No se conecta aún a PostgreSQL ni se simulan cifras verificadas de DPM; los registros continúan ficticios.
+
+## 2026-10-24 — Integración de HU-09/HU-10 con HU-08
+- Se trasladaron las planillas de campo y administrativas al AppContext compartido.
+- Se agregó registro de jornadas por cliente/periodo, validaciones de zona, horas nocturnas, descanso y registros repetidos.
+- Se incorporó la comparación por trabajador y fecha y la conciliación solo cuando ambas planillas coinciden; las conciliadas se bloquean.
+- El reporte HU-08 muestra horas de campo, pares conciliados y diferencias para el periodo y cliente filtrados.
+- Build de GitHub Actions superado en la rama; son pantallas de prototipo con datos ficticios, no API ni conexión PostgreSQL.
