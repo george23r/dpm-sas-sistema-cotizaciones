@@ -56,5 +56,15 @@ Se usa una rama por historia de usuario, con el formato `feature/HU-XX-nombre-co
 - [Sprint Backlog de diseño](docs/scrum/sprint-backlog-corte-2.md)
 - [Validaciones pendientes](docs/validaciones_pendientes.md)
 - [HU-09](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/3) y [HU-10](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/4) (issues de implementación; no equivalen a tarjetas de GitHub Projects)
-- **Documento académico:** versión 2.3 revisada localmente; aún pendiente de subida como binario al repositorio.
-- **Figuras PNG:** extraídas del Word; pendientes de subir a `docs/arquitectura/img/`.
+- **Documento académico:** disponible en `docs/`; consultar el archivo más reciente del repositorio.
+- **Figuras PNG:** publicadas en `docs/arquitectura/img/`.
+
+
+## Cierre de prototipo del corte 2
+
+- Administración de clientes y trabajadores: `/app/admin/clientes` y `/app/admin/trabajadores` (datos simulados, validaciones de duplicados y líder por cuadrilla).
+- Reportes administrativos, jornadas y conciliación de planillas: `/app/admin/reportes` y `/app/admin/jornadas`.
+- Verificación automática: `npm run build` y `npm run test:unit`.
+- [Matriz de aceptación y límites de verificación](docs/qa/matriz-aceptacion-prototipo.md).
+
+**Advertencia:** no se debe presentar este prototipo como una solución productiva ni considerar aprobadas las pruebas manuales, permisos reales y decisiones empresariales sin evidencia adicional.

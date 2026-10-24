@@ -31,3 +31,10 @@
 - Se incorporó la comparación por trabajador y fecha y la conciliación solo cuando ambas planillas coinciden; las conciliadas se bloquean.
 - El reporte HU-08 muestra horas de campo, pares conciliados y diferencias para el periodo y cliente filtrados.
 - Build de GitHub Actions superado en la rama; son pantallas de prototipo con datos ficticios, no API ni conexión PostgreSQL.
+
+
+## 2026-10-24 — Cierre técnico preliminar del prototipo
+- Se añadieron pantallas administrativas para crear y editar clientes y trabajadores ficticios, con validaciones de nombre, correo, teléfono, cuadrilla y un líder activo.
+- Se conectaron al AppContext para reflejar nuevos clientes en las consultas; no hay persistencia ni credenciales reales.
+- Se añadieron doce casos unitarios reproducibles y una matriz de aceptación visual de HU-01 a HU-10.
+- El flujo de GitHub Actions ejecuta build y pruebas unitarias; falta documentar ejecuciones manuales en navegador y consultar decisiones de DPM y dirección académica.
