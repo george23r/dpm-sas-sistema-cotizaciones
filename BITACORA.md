@@ -19,3 +19,8 @@
 - Se adaptaron los estados `solicitada`, `borrador`, `enviada`, `aceptada`, `rechazada`, la vigencia de 15 días y la solicitud del cliente.
 - Se retiró el estado demostrativo `incidencia` del prototipo y se restringió el historial a órdenes finalizadas según la decisión académica actual.
 - Datos en memoria; la API Express y PostgreSQL aún no están conectados. Pendiente ejecutar build y pruebas de navegación; las tarifas siguen siendo ilustrativas.
+
+## 2026-10-24 — HU-03 y HU-08, prototipo de diseño
+- Se limitaron nuevas órdenes a cotizaciones aceptadas, se validan zona/cliente y horarios, se evitan cruces por cuadrilla.
+- Se creó una pantalla de reporte de cotizaciones aceptadas y servicios finalizados con filtros de cliente y periodo.
+- No se conecta aún a PostgreSQL ni se simulan cifras verificadas de DPM; los registros continúan ficticios.
