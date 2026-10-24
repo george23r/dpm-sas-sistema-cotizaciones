@@ -11,7 +11,6 @@ const COLOR_BORDE: Record<string, string> = {
   pendiente: "border-l-status-pending",
   en_ejecucion: "border-l-status-progress",
   finalizado: "border-l-status-done",
-  incidencia: "border-l-status-error",
 };
 
 export function MisOrdenes() {

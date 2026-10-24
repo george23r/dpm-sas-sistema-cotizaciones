@@ -17,7 +17,7 @@ export function Historial() {
 
   const historial = useMemo(() => {
     return ordenes
-      .filter((o) => o.clienteId === clienteActualId)
+      .filter((o) => o.clienteId === clienteActualId && o.estado === "finalizado")
       .filter((o) => (desde ? o.fecha >= desde : true))
       .filter((o) => (hasta ? o.fecha <= hasta : true))
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));

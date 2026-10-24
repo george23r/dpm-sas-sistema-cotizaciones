@@ -129,6 +129,6 @@ export const ordenesSeed: OrdenTrabajo[] = [
     horaInicio: "08:00",
     horaFin: "10:00",
     cuadrillaId: "cua-02",
-    estado: "incidencia",
+    estado: "pendiente",
   },
 ];
