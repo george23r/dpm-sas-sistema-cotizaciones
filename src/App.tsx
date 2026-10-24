@@ -15,6 +15,8 @@ import { Programacion } from "@/pages/admin/Programacion";
 import { Cuadrillas } from "@/pages/admin/Cuadrillas";
 import { Jornadas } from "@/pages/admin/Jornadas";
 import { Reportes } from "@/pages/admin/Reportes";
+import { Clientes } from "@/pages/admin/Clientes";
+import { Trabajadores } from "@/pages/admin/Trabajadores";
 import { MisOrdenes } from "@/pages/operario/MisOrdenes";
 import { DetalleOrden } from "@/pages/operario/DetalleOrden";
 
@@ -105,6 +107,8 @@ function AppRoutes() {
             </RutaDeRol>
           }
         />
+        <Route path="admin/clientes" element={<RutaDeRol rolRequerido="administrador"><Clientes /></RutaDeRol>} />
+        <Route path="admin/trabajadores" element={<RutaDeRol rolRequerido="administrador"><Trabajadores /></RutaDeRol>} />
         <Route path="admin/reportes" element={<RutaDeRol rolRequerido="administrador"><Reportes /></RutaDeRol>} />
         <Route path="admin/jornadas" element={<RutaDeRol rolRequerido="administrador"><Jornadas /></RutaDeRol>} />
         <Route

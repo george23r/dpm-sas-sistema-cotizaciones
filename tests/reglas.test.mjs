@@ -1,0 +1,18 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {validarCliente,validarOperario} from "../src/lib/validacionesAdmin.ts";
+import {horasJornada,compararPlanillas,demoJornadas} from "../src/lib/jornadas.ts";
+const clientes=[{id:"cli-1",nombre:"Cliente de prueba",correo:"prueba@example.com",telefono:"3001234567"}];
+const operarios=[{id:"o-1",nombre:"Trabajador Ejemplo",cuadrillaId:"cua-1",esLider:true,activo:true}];
+test("cliente nuevo válido",()=>assert.equal(validarCliente({nombre:"Nuevo cliente",correo:"nuevo@example.com",telefono:"3011234567"},clientes),null));
+test("rechaza correo duplicado",()=>assert.match(validarCliente({nombre:"Otro cliente",correo:"PRUEBA@example.com",telefono:"3011234567"},clientes),/correo/));
+test("rechaza nombres duplicados",()=>assert.match(validarCliente({nombre:"cliente de prueba",correo:"otro@example.com",telefono:"3011234567"},clientes),/nombre/));
+test("permite editar mismo cliente",()=>assert.equal(validarCliente(clientes[0],clientes,"cli-1"),null));
+test("rechaza otro líder de la cuadrilla",()=>assert.match(validarOperario({nombre:"Segundo líder",cuadrillaId:"cua-1",esLider:true},operarios,["cua-1"]),/líder/));
+test("rechaza cuadrilla inexistente",()=>assert.match(validarOperario({nombre:"Operario prueba",cuadrillaId:"inexistente",esLider:false},operarios,["cua-1"]),/cuadrilla/));
+test("permite editar líder existente",()=>assert.equal(validarOperario(operarios[0],operarios,["cua-1"],"o-1"),null));
+test("turno nocturno 18 a 06 = 12 h",()=>assert.equal(horasJornada({inicio:"18:00",fin:"06:00",descansoMin:0}),12));
+test("descuenta descanso",()=>assert.equal(horasJornada({inicio:"06:00",fin:"15:00",descansoMin:60}),8));
+test("rechaza cero horas",()=>assert.ok(Number.isNaN(horasJornada({inicio:"08:00",fin:"08:00",descansoMin:0}))));
+test("identifica discrepancia y coincidencia",()=>{const r=compararPlanillas(demoJornadas,"p-campo-01","p-admin-01");assert.equal(r.length,2);assert.ok(r.some(x=>x.resultado==="coincide"));assert.ok(r.some(x=>x.resultado==="diferente"&&x.diferencia===2));});
+test("identifica registros ausentes",()=>{const r=compararPlanillas(demoJornadas.filter(x=>x.id!=="j-2"),"p-campo-01","p-admin-01");assert.ok(r.some(x=>x.resultado==="solo_campo"));});

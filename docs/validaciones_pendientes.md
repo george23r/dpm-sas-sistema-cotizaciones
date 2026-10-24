@@ -10,8 +10,8 @@
 | Tarifas y unidades | El seed usa valores ilustrativos; los ejemplos reales no se copiaron | Solicitar autorización y confirmar unidades, horas, recargos |
 | Diferencias de planillas | DPM compara manualmente antes del cobro | Confirmar quién resuelve y aprueba discrepancias |
 | Referencias | La bibliografía fue ampliada; solo algunas fuentes se validaron individualmente | Cotejar enlaces, título, autor, año y pertinencia uno por uno antes de entregar |
-| Prototipo | React actual usa modelo por área y estado “Incidencia”; Word 2.2 diseña cotizaciones por líneas | Actualizar y verificar navegación, formularios, reglas y datos ficticios |
+| Prototipo | React ya utiliza cotizaciones por líneas, estados actualizados y módulos de jornadas; autenticación y datos aún simulados | Ejecutar recorridos de la matriz QA y actualizar capturas del Word |
 | Material empresarial | Cotización y planillas tienen posibles datos personales | No publicar originales; conservar pruebas anonimizadas con permiso |
-| Documentación | Los PNG se encuentran incrustados en el Word, extraídos localmente | Subir los ocho recursos binarios a docs/arquitectura/img/ |
+| Documentación | Las figuras PNG están publicadas en docs/arquitectura/img/ | Revisar legibilidad y numeración final en el Word |
 
 **No se presenta como realizada ninguna validación empresarial o aprobación académica que no conste documentalmente.**

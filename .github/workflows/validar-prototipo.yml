@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "tests/**"
       - "package.json"
       - "package-lock.json"
       - "tsconfig*.json"
@@ -21,3 +22,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run test:unit

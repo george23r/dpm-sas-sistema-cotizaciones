@@ -66,6 +66,7 @@ export interface Cotizacion {
   origen: "cliente" | "administrador";
 }
 
+export interface Operario {id:string;nombre:string;cuadrillaId:string;esLider:boolean;activo:boolean}
 export interface Cuadrilla {
   id: string; nombre: string; encargado: string; integrantes: number; disponibleHoy: boolean;
 }
