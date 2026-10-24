@@ -6,6 +6,7 @@ import {
   Leaf,
   History,
   ClipboardList,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import type { Rol } from "@/types";
@@ -27,6 +28,7 @@ export const NAV_POR_ROL: Record<Rol, NavItem[]> = {
     { to: "/app/admin/cotizaciones", label: "Cotizaciones", icon: FileText },
     { to: "/app/admin/programacion", label: "Programación", icon: CalendarDays },
     { to: "/app/admin/cuadrillas", label: "Cuadrillas", icon: Users },
+    { to: "/app/admin/jornadas", label: "Jornadas y conciliación", icon: ClipboardCheck },
   ],
   operario: [{ to: "/app/operario/ordenes", label: "Mis órdenes", icon: ClipboardList }],
 };

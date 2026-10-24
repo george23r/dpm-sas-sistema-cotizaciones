@@ -13,6 +13,7 @@ import { Cotizaciones } from "@/pages/admin/Cotizaciones";
 import { NuevaCotizacion } from "@/pages/admin/NuevaCotizacion";
 import { Programacion } from "@/pages/admin/Programacion";
 import { Cuadrillas } from "@/pages/admin/Cuadrillas";
+import { Jornadas } from "@/pages/admin/Jornadas";
 import { MisOrdenes } from "@/pages/operario/MisOrdenes";
 import { DetalleOrden } from "@/pages/operario/DetalleOrden";
 
@@ -102,6 +103,7 @@ function AppRoutes() {
             </RutaDeRol>
           }
         />
+        <Route path="admin/jornadas" element={<RutaDeRol rolRequerido="administrador"><Jornadas /></RutaDeRol>} />
         <Route
           path="admin/cuadrillas"
           element={

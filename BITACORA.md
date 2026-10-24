@@ -9,3 +9,6 @@
 - Se abrieron los issues [HU-09](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/3) y [HU-10](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/4) para la implementación de registro de jornadas y conciliación de planillas.
 - Se redactó el Sprint Backlog del diseño y una lista de validaciones pendientes. No se registran sesiones ni revisiones que no estén respaldadas.
 - Se revisó en archivo local el Word del corte 2, se regeneraron índices y se extrajeron los ocho diagramas incrustados para su publicación. Subida de binarios por completar.
+
+## 2026-10-24 — Prototipo HU-09/HU-10
+- Se añadió la vista de jornadas y comparación de planillas con datos ficticios de demostración. El resto del flujo de cotización todavía requiere ajuste; esto no constituye integración con PostgreSQL ni API.
