@@ -19,7 +19,7 @@ export function compararPlanillas(registros:Jornada[],campoId:string,adminId:str
  fila[k]=Math.round(((fila[k]??0)+horasJornada(r))*100)/100;
  por.set(clave,fila);
  }
- return [...por.entries()].map(([clave,r])=>({...r,clave,diferencia:Math.round(((r.campo??0)-(r.administrativa??0))*100)/100,resultado:r.campo===null?"solo_administrativa":r.administrativa===null?"solo_campo":Math.abs(r.campo-r.administrativa)<0.005?"coincide":"diferente"})).sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.trabajador.localeCompare(b.trabajador));
+ return [...por.entries()].map(([clave,r])=>({...r,clave,diferencia:Math.round(((r.campo??0)-(r.administrativa??0))*100)/100,resultado:(r.campo===null?"solo_administrativa":r.administrativa===null?"solo_campo":Math.abs(r.campo-r.administrativa)<0.005?"coincide":"diferente") as Comparacion["resultado"]})).sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.trabajador.localeCompare(b.trabajador));
 }
 export const demoPlanillas:Planilla[]=[
  {id:"p-campo-01",clienteId:"cli-01",desde:"2026-10-01",hasta:"2026-10-15",origen:"campo",estado:"borrador"},
