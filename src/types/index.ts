@@ -75,3 +75,6 @@ export interface OrdenTrabajo {
   horaInicio: string; horaFin: string; cuadrillaId: string | null; estado: EstadoOrden;
   finalizacion?: { fecha: string; hora: string; responsable: string; nota?: string };
 }
+
+/** Estructura histórica de precio por área. Conservar solo para migraciones; no se usa para cotizar. */
+export interface DesglosePrecio {areaPorTarifa:number;factorVegetacion:number;factorFrecuencia:number;subtotalArea:number;costoPersonal:number;costoEquipos:number;total:number}
