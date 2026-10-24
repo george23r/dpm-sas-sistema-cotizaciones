@@ -1,83 +1,83 @@
-# Diagramas de componentes y relaciones — DPM S.A.S.
+# Componentes, API y modelos UML — DPM SAS
 
-**Alcance:** arquitectura diseñada para el corte 2 de Trabajo de Grado I. Diferenciar implementación actual y componentes planificados. El diagrama ER de la persistencia está en [database/diagrama_er.md](../../database/diagrama_er.md). La imagen PNG aportada se conserva fuera del repositorio y no forma parte de esta entrega.
+## 1. Componentes por módulo
 
-## 1. Componentes y dependencias
+| Módulo | Aplicación web | API (recursos) | Base de datos |
+|---|---|---|---|
+| Acceso y usuarios | Inicio de sesión | `POST /auth/login` | `usuarios`, `clientes`, `operarios` |
+| Cotizaciones | Solicitar, Mis cotizaciones, Cotizaciones, Nueva cotización | `/cotizaciones/...` | `cotizaciones`, `visitas_tecnicas`, `cotizacion_lineas`, `cotizacion_costos`, `cotizacion_hitos` |
+| Programación | Calendario semanal y mensual | `/ordenes` | `ordenes_trabajo` |
+| Cuadrillas | Disponibilidad y asignación | `/cuadrillas`, `PATCH /ordenes/{id}` | `cuadrillas`, `operarios` |
+| Ejecución en campo | Mis órdenes, detalle y finalización | `/ordenes/mias`, `/ordenes/{id}/iniciar`, `/finalizar` | `ordenes_trabajo`, `v_ordenes_operario` |
+| Historial | Historial de servicios | `GET /clientes/{id}/historial` | `v_historial_servicios` |
+| Reportes | Reporte por periodo (pendiente) | `GET /reportes/periodo` | `fn_reporte_periodo` |
+| Control de jornadas | Planillas y comparación (pendiente) | `/planillas/...` | `planillas_jornada`, `registros_jornada`, `fn_comparar_planillas`, `sp_conciliar_planillas` |
 
-```mermaid
-flowchart LR
-    subgraph UI["Cliente web (existente: React + TypeScript + Vite)"]
-        ROUTES["React Router: rutas por perfil"]
-        VIEWS["Pantallas: cliente, administrador, operario"]
-        CONTEXT["AppContext + src/data (datos simulados)"]
-        ROUTES --> VIEWS
-        VIEWS --> CONTEXT
-    end
-    subgraph BACK["Servidor propuesto: Node.js + Express"]
-        REST["Controladores API REST"]
-        SVC["Servicios: reglas de cotización, órdenes, reportes"]
-        AC["Autenticación / autorización"]
-        REST --> SVC
-        REST --> AC
-    end
-    subgraph DB["Persistencia diseñada: PostgreSQL"]
-        SCHEMA[("Esquema dpm: 12 tablas")]
-        LOGIC["Restricciones, vistas, triggers, funciones"]
-        SCHEMA --- LOGIC
-    end
-    VIEWS -.->|"HTTPS/JSON (por integrar)"| REST
-    SVC -.->|"SQL parametrizado/transacciones"| SCHEMA
-    AC -.->|"Permisos y consulta de identidad"| SCHEMA
-```
+## 2. Recursos propuestos de la API
 
-**Convención:** flechas discontinuas = integración futura. Los datos simulados y el estado local actuales no representan persistencia real.
+| Método y ruta | Rol | Historia | Objeto de base de datos |
+|---|---|---|---|
+| `POST /auth/login` | Público | RNF-04 | `usuarios` |
+| `POST /cotizaciones` | Cliente, administrador | HU-02 | `cotizaciones` |
+| `GET /cotizaciones`, `GET /cotizaciones/{id}` | Cliente (propias), administrador | HU-02 | `v_cotizaciones_detalle` |
+| `POST /cotizaciones/{id}/visitas` | Administrador | HU-01 | `visitas_tecnicas` |
+| `POST /cotizaciones/{id}/lineas` | Administrador | HU-01 | `cotizacion_lineas` |
+| `POST /cotizaciones/{id}/costos` | Administrador | HU-01 | `cotizacion_costos` |
+| `POST /cotizaciones/{id}/hitos` | Administrador | HU-01 | `cotizacion_hitos` |
+| `POST /cotizaciones/{id}/enviar` | Administrador | HU-01 | `sp_enviar_cotizacion` |
+| `POST /cotizaciones/{id}/respuesta` | Cliente | HU-02 | `sp_responder_cotizacion` |
+| `POST /ordenes` | Administrador | HU-03 | `ordenes_trabajo` |
+| `PATCH /ordenes/{id}` (asignar cuadrilla) | Administrador | HU-04 | `ordenes_trabajo` |
+| `GET /cuadrillas` | Administrador | HU-04 | `cuadrillas`, `operarios` |
+| `GET /ordenes/mias` | Operario | HU-05 | `v_ordenes_operario` |
+| `PATCH /ordenes/{id}/iniciar`, `/finalizar` | Operario | HU-06 | `ordenes_trabajo` |
+| `GET /clientes/{id}/historial` | Cliente (propio), administrador | HU-07 | `v_historial_servicios` |
+| `GET /reportes/periodo` | Administrador | HU-08 | `fn_reporte_periodo` |
+| `POST /planillas`, `POST /planillas/{id}/registros` | Administrador | HU-09 | `planillas_jornada`, `registros_jornada` |
+| `GET /planillas/comparar` | Administrador | HU-10 | `fn_comparar_planillas` |
+| `POST /planillas/conciliar` | Administrador | HU-10 | `sp_conciliar_planillas` |
 
-## 2. Secuencia prevista: cotización y programación
+## 3. Casos de uso
 
-```mermaid
-sequenceDiagram
-    actor Cliente
-    participant UI as Frontend React
-    participant API as API Express (propuesta)
-    participant DB as PostgreSQL (diseñado)
-    participant Adm as Administrador
-    Cliente->>UI: Solicitar cotización (HU-02)
-    UI-->>API: Crear solicitud (integración futura)
-    API-->>DB: Guardar pendiente
-    Adm->>UI: Revisar y calcular precio (HU-01)
-    UI-->>API: Solicitar cálculo
-    API-->>DB: Ejecutar lógica y guardar tarifa aplicada
-    DB-->>API: Precio y desglose
-    API-->>UI: Cotización calculada
-    Adm->>UI: Programar y asignar orden (HU-03/HU-04)
-    UI-->>API: Solicitar asignación
-    API-->>DB: Validar ausencia de cruce y registrar
-    DB-->>API: Resultado
-    API-->>UI: Confirmación o conflicto
-```
+![Casos de uso](img/casos_uso.png)
 
-El comportamiento SQL relevante existe en los scripts aportados. Esta secuencia no constituye evidencia de que los endpoints estén codificados.
+## 4. Estados de la cotización
 
-## 3. Modelo de datos
+![Estados de la cotización](img/estados_cotizacion.png)
 
-- Ver [diagrama ER en Mermaid](../../database/diagrama_er.md), basado en las 12 tablas del esquema SQL.
-- Ver `database/diccionario_datos.md` para 12 tablas y sus atributos.
-- Ver `database/01_schema.sql` como definición autoritativa de claves foráneas, `CHECK`, índices, vistas, procedimientos y políticas del esquema.
+## 5. Diagramas de secuencia
 
-**Nota de revisión:** se corrigieron las referencias de `cotizaciones.cliente_id` y `cotizaciones.zona_id` en el diccionario. El esquema SQL define conjuntamente `FOREIGN KEY (zona_id, cliente_id) REFERENCES zonas(id, cliente_id)`.
+**Elaborar, enviar y responder una cotización (HU-01 y HU-02)**
 
-## 4. Matriz rápida de trazabilidad
+![Secuencia de cotización](img/secuencia_cotizacion.png)
 
-| Requisito | Pantalla o comportamiento | Componente previsto | Evidencia de persistencia |
-| --- | --- | --- | --- |
-| HU-01 | Cotizaciones / nueva cotización | Servicio de cotizaciones | `cotizaciones`, cálculo de precio |
-| HU-02 | Solicitar / mis cotizaciones | Servicio de clientes y solicitudes | `clientes`, `zonas`, `cotizaciones` |
-| HU-03 | Programación | Servicio de órdenes | `ordenes_trabajo`, control de cruce |
-| HU-04 | Asignar cuadrillas | Servicio de asignaciones | `cuadrillas`, `ordenes_trabajo` |
-| HU-05 | Mis órdenes | Servicio de órdenes de operario | vista `v_ordenes_operario` |
-| HU-06 | Finalizar orden | Servicio de ejecución | restricciones y validaciones de `ordenes_trabajo` |
-| HU-07 | Historial | Servicio de historial | vista `v_historial_servicios` |
-| HU-08 | Reporte por periodo | Servicio de reportes | función `fn_reporte_periodo` |
-| RNF-02/RNF-04 | Acceso y datos protegidos | AuthN/AuthZ del servidor | hashes previstos, roles y permisos SQL |
+**Programar un mantenimiento y registrar su ejecución (HU-03 a HU-06)**
 
-La trazabilidad de diseño debe revisarse tras la entrevista con DPM y anexarse al informe académico.
+![Secuencia de programación](img/secuencia_programacion.png)
+
+**Comparar y conciliar planillas de jornada (HU-09 y HU-10)**
+
+![Secuencia de planillas](img/secuencia_planillas.png)
+
+## 6. Modelo de datos
+
+![ER: cotizaciones y catálogos](img/er_cotizaciones.png)
+
+![ER: ejecución y jornadas](img/er_ejecucion.png)
+
+El diccionario completo está en [`database/diccionario_datos.md`](../../database/diccionario_datos.md).
+
+## 7. Trazabilidad
+
+| HU | Recurso de la API | Objetos de base de datos | Prueba |
+|---|---|---|---|
+| HU-01 | `/cotizaciones/{id}/visitas`, `/lineas`, `/costos`, `/hitos`, `/enviar` | `cotizaciones`, `visitas_tecnicas`, `cotizacion_lineas`, `cotizacion_costos`, `cotizacion_hitos`, `sp_enviar_cotizacion` | C1, C2, C4 |
+| HU-02 | `POST/GET /cotizaciones`, `/respuesta` | `v_cotizaciones_detalle`, `sp_responder_cotizacion` | C3 |
+| HU-03 | `POST /ordenes` | `ordenes_trabajo`, `trg_ordenes_validar` | C5, C6, C7 |
+| HU-04 | `GET /cuadrillas`, `PATCH /ordenes/{id}` | `cuadrillas`, `operarios`, `v_ordenes_detalle` | C8 |
+| HU-05 | `GET /ordenes/mias` | `v_ordenes_operario` | C10 |
+| HU-06 | `PATCH /ordenes/{id}/iniciar`, `/finalizar` | `ordenes_trabajo` | C9 |
+| HU-07 | `GET /clientes/{id}/historial` | `v_historial_servicios` | C11 |
+| HU-08 | `GET /reportes/periodo` | `fn_reporte_periodo` | C15 |
+| HU-09 | `POST /planillas`, `/registros` | `planillas_jornada`, `registros_jornada` | C12 |
+| HU-10 | `GET /planillas/comparar`, `POST /planillas/conciliar` | `fn_comparar_planillas`, `sp_conciliar_planillas` | C13, C14 |
