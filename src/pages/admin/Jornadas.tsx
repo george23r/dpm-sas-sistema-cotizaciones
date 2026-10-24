@@ -1,60 +1,44 @@
 import { useMemo, useState } from "react";
+import { useApp } from "@/context/AppContext";
+import { compararPlanillas, horasJornada } from "@/lib/jornadas";
 import { HuTag } from "@/components/shared/HuTag";
-
-type Origen = "campo" | "administrativa";
-type Registro = { id: number; origen: Origen; fecha: string; trabajador: string; lote: string; inicio: string; fin: string; descanso: number; festivo: boolean };
-const EJEMPLO: Registro[] = [
-  { id: 1, origen: "campo", fecha: "2026-10-07", trabajador: "Operario ejemplo A", lote: "Lote 002", inicio: "18:00", fin: "06:00", descanso: 0, festivo: false },
-  { id: 2, origen: "administrativa", fecha: "2026-10-07", trabajador: "Operario ejemplo A", lote: "Lote 002", inicio: "18:00", fin: "06:00", descanso: 0, festivo: false },
-  { id: 3, origen: "campo", fecha: "2026-10-07", trabajador: "Operario ejemplo B", lote: "Lote 005", inicio: "06:00", fin: "14:00", descanso: 0, festivo: false },
-  { id: 4, origen: "administrativa", fecha: "2026-10-07", trabajador: "Operario ejemplo B", lote: "Lote 005", inicio: "06:00", fin: "12:00", descanso: 0, festivo: false },
-];
-function horas(r:Registro):number {
- const [hi,mi]=r.inicio.split(":").map(Number),[hf,mf]=r.fin.split(":").map(Number);
- const a=hi*60+mi,b=hf*60+mf; return Math.max(0,Math.round(((b<=a?b+1440:b)-a-r.descanso)*100/60)/100);
-}
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 export function Jornadas(){
- const [registros,setRegistros]=useState<Registro[]>(EJEMPLO);
- const [origen,setOrigen]=useState<Origen>("campo");
- const [trabajador,setTrabajador]=useState(""); const [lote,setLote]=useState("");
- const [fecha,setFecha]=useState("2026-10-24"); const [inicio,setInicio]=useState("08:00"); const [fin,setFin]=useState("16:00");
- const [descanso,setDescanso]=useState(0); const [festivo,setFestivo]=useState(false);
- const [tab,setTab]=useState<"registro"|"comparar">("registro");
- const [conciliada,setConciliada]=useState(false);
- const rows=useMemo(()=>{
- const keys=[...new Set(registros.map(r=>r.trabajador+"|"+r.fecha+"|"+r.lote))];
- return keys.map(key=>{
- const same=registros.filter(r=>[r.trabajador,r.fecha,r.lote].join("|")===key);
- const a=same.find(r=>r.origen==="campo"),b=same.find(r=>r.origen==="administrativa");
- const resultado=!a?"solo administrativa":!b?"solo campo":Math.abs(horas(a)-horas(b))<0.001?"coincide":"diferente";
- return {key,a,b,resultado};
- });
- },[registros]);
- const pendientes=rows.filter(x=>x.resultado!=="coincide").length;
- function agregar(e: React.FormEvent){e.preventDefault();if(!trabajador.trim()||!lote.trim()||!fecha)return;
- setRegistros(old=>[...old,{id:Math.max(0,...old.map(r=>r.id))+1,origen,fecha,trabajador:trabajador.trim(),lote:lote.trim(),inicio,fin,descanso:Number(descanso),festivo}]);setConciliada(false);setTrabajador("");}
- return <div className="relative space-y-5">
-  <HuTag id={tab==="registro"?"HU-09":"HU-10"}/>
-  <div><h1 className="font-heading text-2xl font-semibold text-ink">Jornadas y conciliación</h1><p className="text-sm text-muted">Prototipo con datos ficticios en memoria. Sin integración de API ni generación de facturas.</p></div>
-  <div className="flex gap-2"><button className="rounded-lg border border-line p-3" onClick={()=>setTab("registro")}>Registrar jornadas · HU-09</button><button className="rounded-lg border border-line p-3" onClick={()=>setTab("comparar")}>Comparar planillas · HU-10</button></div>
-  {tab==="registro"?<>
-   <form onSubmit={agregar} className="grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-3">
-    <label className="text-sm">Origen<select className="block w-full rounded border p-2" value={origen} onChange={e=>setOrigen(e.target.value as Origen)}><option value="campo">Campo</option><option value="administrativa">Administrativa</option></select></label>
-    <label className="text-sm">Fecha<input className="block w-full rounded border p-2" type="date" value={fecha} onChange={e=>setFecha(e.target.value)}/></label>
-    <label className="text-sm">Trabajador<input className="block w-full rounded border p-2" value={trabajador} onChange={e=>setTrabajador(e.target.value)} required placeholder="Nombre ficticio"/></label>
-    <label className="text-sm">Lote<input className="block w-full rounded border p-2" value={lote} onChange={e=>setLote(e.target.value)} required/></label>
-    <label className="text-sm">Inicio<input className="block w-full rounded border p-2" type="time" value={inicio} onChange={e=>setInicio(e.target.value)}/></label>
-    <label className="text-sm">Fin<input className="block w-full rounded border p-2" type="time" value={fin} onChange={e=>setFin(e.target.value)}/></label>
-    <label className="text-sm">Descanso (minutos)<input className="block w-full rounded border p-2" type="number" min={0} max={1440} value={descanso} onChange={e=>setDescanso(Number(e.target.value))}/></label>
-    <label className="text-sm"><input type="checkbox" checked={festivo} onChange={e=>setFestivo(e.target.checked)}/> Dominical/festivo</label>
-    <button type="submit" className="rounded-lg bg-primary p-2 text-white">Agregar registro de prueba</button>
-   </form>
-   <div className="overflow-x-auto rounded-xl border border-line"><table className="w-full text-left text-sm"><thead><tr>{["Origen","Trabajador","Fecha","Lote","Horario","Horas"].map(x=><th key={x} className="border-b p-3">{x}</th>)}</tr></thead><tbody>{registros.map(r=><tr key={r.id}><td className="p-3">{r.origen}</td><td className="p-3">{r.trabajador}</td><td className="p-3">{r.fecha}</td><td className="p-3">{r.lote}</td><td className="p-3">{r.inicio}–{r.fin}</td><td className="p-3">{horas(r).toFixed(2)}</td></tr>)}</tbody></table></div>
-  </>:<>
-    <p className="text-sm text-muted">Comparación demostrativa por trabajador, fecha y lote. Las diferencias bloquean la conciliación.</p>
-    <div className="overflow-x-auto rounded-xl border border-line"><table className="w-full text-left text-sm"><thead><tr>{["Registro","Horas campo","Horas administración","Resultado"].map(x=><th key={x} className="border-b p-3">{x}</th>)}</tr></thead><tbody>{rows.map(r=><tr key={r.key}><td className="p-3">{r.key.replaceAll("|"," · ")}</td><td className="p-3">{r.a?horas(r.a).toFixed(2):"—"}</td><td className="p-3">{r.b?horas(r.b).toFixed(2):"—"}</td><td className="p-3 font-semibold">{r.resultado}</td></tr>)}</tbody></table></div>
-    <p className="text-sm">{pendientes===0?"Sin diferencias":pendientes+" registro(s) con diferencias"} · {conciliada?"Conciliación simulada completada":"Sin conciliar"}</p>
-    <button className="rounded-lg bg-primary p-3 text-white disabled:opacity-40" disabled={pendientes!==0||conciliada||rows.length===0} onClick={()=>setConciliada(true)}>Conciliar planillas (simulación)</button>
-  </>}
+ const {clientes,zonas,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas}=useApp();
+ const [clienteId,setClienteId]=useState(clientes[0]?.id??"");
+ const [desde,setDesde]=useState("2026-10-01"),[hasta,setHasta]=useState("2026-10-15");
+ const [parId,setParId]=useState("p-campo-01");
+ const [origen,setOrigen]=useState<"campo"|"administrativa">("campo");
+ const [trabajador,setTrabajador]=useState(""),[labor,setLabor]=useState("Poda");
+ const [fecha,setFecha]=useState("2026-10-07"),[zonaId,setZonaId]=useState("");
+ const [inicio,setInicio]=useState("08:00"),[fin,setFin]=useState("16:00"),[descanso,setDescanso]=useState(0),[festivo,setFestivo]=useState(false);
+ const [mensaje,setMensaje]=useState("");
+ const campo=planillas.find(p=>p.id===parId&&p.origen==="campo");
+ const admin=planillas.find(p=>p.clienteId===campo?.clienteId&&p.desde===campo.desde&&p.hasta===campo.hasta&&p.origen==="administrativa");
+ const planilla=origen==="campo"?campo:admin;
+ const zonasValidas=zonas.filter(z=>z.clienteId===campo?.clienteId);
+ const zonaActual=zonasValidas.some(z=>z.id===zonaId)?zonaId:zonasValidas[0]?.id??"";
+ const resultado=useMemo(()=>campo&&admin?compararPlanillas(jornadas,campo.id,admin.id):[],[jornadas,campo,admin]);
+ const diferencia=resultado.filter(r=>r.resultado!=="coincide").length;
+ const hrsCampo=jornadas.filter(r=>r.planillaId===campo?.id).reduce((t,r)=>t+horasJornada(r),0);
+ const hrsAdmin=jornadas.filter(r=>r.planillaId===admin?.id).reduce((t,r)=>t+horasJornada(r),0);
+ const cerrado=campo?.estado==="conciliada";
+ function crear(){const r=crearParejaPlanillas(clienteId,desde,hasta);setMensaje(r.ok?"Pareja creada para comparar.":r.error);if(r.ok){setParId(r.campoId);setFecha(desde);}}
+ function agregar(e:React.FormEvent){e.preventDefault();if(!planilla)return;
+ const r=agregarJornada({planillaId:planilla.id,trabajador:trabajador.trim(),fecha,zonaId:zonaActual,labor,inicio,fin,descansoMin:descanso,festivo});
+ setMensaje(r.ok?"Jornada guardada en el prototipo.":r.error);if(r.ok)setTrabajador("");
+ }
+ function conciliar(){if(!campo||!admin)return;const r=conciliarPlanillas(campo.id,admin.id);setMensaje(r.ok?"Planillas conciliadas y bloqueadas.":r.error);}
+ return <div className="relative space-y-5"><HuTag id="HU-09"/><h1 className="font-heading text-2xl font-semibold text-ink">Jornadas y conciliación</h1><p className="text-sm text-muted">HU-09 y HU-10 · Datos ficticios compartidos con Reportes. Sin facturación ni conexión a PostgreSQL.</p>
+ <Card><CardContent className="space-y-3 p-4"><h2 className="font-semibold">Crear par de planillas</h2><div className="grid gap-2 sm:grid-cols-4"><label className="text-sm">Cliente<Select value={clienteId} onChange={e=>setClienteId(e.target.value)}>{clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}</Select></label><label className="text-sm">Desde<Input type="date" value={desde} onChange={e=>setDesde(e.target.value)}/></label><label className="text-sm">Hasta<Input type="date" value={hasta} onChange={e=>setHasta(e.target.value)}/></label><Button className="self-end" onClick={crear}>Crear par</Button></div></CardContent></Card>
+ <Card><CardContent className="space-y-3 p-4"><label className="block text-sm">Par de planillas<Select value={parId} onChange={e=>{setParId(e.target.value);setMensaje("");}}>{planillas.filter(p=>p.origen==="campo").map(p=><option key={p.id} value={p.id}>{clientes.find(c=>c.id===p.clienteId)?.nombre} · {p.desde} a {p.hasta} · {p.estado}</option>)}</Select></label>
+ {campo&&admin&&<><div className="grid gap-2 sm:grid-cols-3"><p>Campo: <strong>{hrsCampo.toFixed(2)} h</strong></p><p>Administración: <strong>{hrsAdmin.toFixed(2)} h</strong></p><p>Diferencias: <strong>{diferencia}</strong></p></div>
+ <form className="grid gap-3 sm:grid-cols-3" onSubmit={agregar}><label className="text-sm">Origen<Select disabled={cerrado} value={origen} onChange={e=>setOrigen(e.target.value as "campo"|"administrativa")}><option value="campo">Campo</option><option value="administrativa">Administración</option></Select></label><label className="text-sm">Trabajador ficticio<Input disabled={cerrado} required value={trabajador} onChange={e=>setTrabajador(e.target.value)}/></label><label className="text-sm">Zona<Select disabled={cerrado} value={zonaActual} onChange={e=>setZonaId(e.target.value)}>{zonasValidas.map(z=><option key={z.id} value={z.id}>{z.nombre}</option>)}</Select></label><label className="text-sm">Fecha<Input disabled={cerrado} type="date" min={campo.desde} max={campo.hasta} value={fecha} onChange={e=>setFecha(e.target.value)}/></label><label className="text-sm">Labor<Input disabled={cerrado} required value={labor} onChange={e=>setLabor(e.target.value)}/></label><label className="text-sm">Descanso (minutos)<Input disabled={cerrado} type="number" min={0} max={1439} value={descanso} onChange={e=>setDescanso(Number(e.target.value))}/></label><label className="text-sm">Inicio<Input disabled={cerrado} type="time" value={inicio} onChange={e=>setInicio(e.target.value)}/></label><label className="text-sm">Fin<Input disabled={cerrado} type="time" value={fin} onChange={e=>setFin(e.target.value)}/></label><label className="text-sm self-center"><input disabled={cerrado} type="checkbox" checked={festivo} onChange={e=>setFestivo(e.target.checked)}/> Dominical o festivo</label><Button disabled={cerrado} type="submit">Registrar jornada</Button></form>
+ <h3 className="font-semibold">Comparación HU-10</h3><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="p-2">Operario / Fecha</th><th className="p-2">Campo</th><th className="p-2">Administración</th><th className="p-2">Diferencia</th><th className="p-2">Resultado</th></tr></thead><tbody>{resultado.map(r=><tr key={r.clave} className="border-b"><td className="p-2">{r.trabajador} · {r.fecha}</td><td className="p-2">{r.campo??"—"}</td><td className="p-2">{r.administrativa??"—"}</td><td className="p-2">{r.diferencia}</td><td className="p-2">{r.resultado.replace("_"," ")}</td></tr>)}</tbody></table></div>
+ <Button disabled={cerrado||!resultado.length||diferencia>0} onClick={conciliar}>{cerrado?"Conciliadas":"Conciliar planillas"}</Button></>}
+ {mensaje&&<p role="status" className="text-sm text-primary">{mensaje}</p>}</CardContent></Card>
  </div>;
 }
