@@ -1,9 +1,11 @@
 import * as React from "react";
 import { createContext, useContext, useMemo, useState } from "react";
-import type { Cotizacion, EstadoOrden, OrdenTrabajo, Rol } from "@/types";
+import type { Cliente, Operario, Cotizacion, EstadoOrden, OrdenTrabajo, Rol } from "@/types";
 import { clientes, CLIENTE_DEMO_ID } from "@/data/clientes";
 import { zonas } from "@/data/zonas";
 import { cuadrillas, OPERARIO_DEMO_CUADRILLA_ID, OPERARIO_DEMO_NOMBRE } from "@/data/cuadrillas";
+import { operariosSeed } from "@/data/operarios";
+import { validarCliente, validarOperario } from "@/lib/validacionesAdmin";
 import { cotizacionesSeed } from "@/data/cotizaciones";
 import { ordenesSeed } from "@/data/ordenes";
 import { compararPlanillas, demoPlanillas, demoJornadas, horasJornada, type Planilla, type Jornada } from "@/lib/jornadas";
@@ -14,7 +16,9 @@ interface ProgramarOrdenInput {cotizacionId:string|null;clienteId:string;zonaId:
 interface FinalizarOrdenInput { nota?:string }
 interface AppContextValue {
  rol:Rol;setRol:(r:Rol)=>void;autenticado:boolean;iniciarSesion:()=>void;cerrarSesion:()=>void;mostrarHU:boolean;alternarHU:()=>void;
- clientes:typeof clientes;zonas:typeof zonas;cuadrillas:typeof cuadrillas;clienteActualId:string;cuadrillaActualId:string;operarioActualNombre:string;
+ clientes:Cliente[];operarios:Operario[];zonas:typeof zonas;cuadrillas:typeof cuadrillas;
+ guardarCliente:(input:Omit<Cliente,"id">,id?:string)=>{ok:true}|{ok:false;error:string};
+ guardarOperario:(input:Omit<Operario,"id">,id?:string)=>{ok:true}|{ok:false;error:string};clienteActualId:string;cuadrillaActualId:string;operarioActualNombre:string;
  cotizaciones:Cotizacion[];
  crearCotizacion:(input:NuevaCotizacionInput)=>Cotizacion;
  editarCotizacion:(id:string,input:Pick<Cotizacion,"objeto"|"servicio"|"fechaVisita"|"lineas"|"costos"|"hitos"|"observaciones">)=>void;
@@ -35,11 +39,27 @@ let contador=100;
 function nuevoId(prefijo:string){contador+=1;return prefijo+"-"+contador;}
 function haySolape(a:string,b:string,c:string,d:string){return a<d&&c<b;}
 export function AppProvider({children}:{children:React.ReactNode}){
+ const [listaClientes,setListaClientes]=useState<Cliente[]>(clientes);
+ const [operarios,setOperarios]=useState<Operario[]>(operariosSeed);
  const [rol,setRol]=useState<Rol>("cliente");const [autenticado,setAutenticado]=useState(false);const [mostrarHU,setMostrarHU]=useState(true);
  const [cotizaciones,setCotizaciones]=useState<Cotizacion[]>(cotizacionesSeed);
  const [ordenes,setOrdenes]=useState<OrdenTrabajo[]>(ordenesSeed);
  const [planillas,setPlanillas]=useState<Planilla[]>(demoPlanillas);
  const [jornadas,setJornadas]=useState<Jornada[]>(demoJornadas);
+ const guardarCliente:AppContextValue["guardarCliente"]=(input,id)=>{
+  const error=validarCliente(input,listaClientes,id);
+  if(error)return {ok:false,error};
+  if(id&&!listaClientes.some(c=>c.id===id))return {ok:false,error:"Cliente inexistente."};
+  setListaClientes(prev=>id?prev.map(c=>c.id===id?{...input,id}:c):[...prev,{...input,id:nuevoId("cli")}]);
+  return {ok:true};
+ };
+ const guardarOperario:AppContextValue["guardarOperario"]=(input,id)=>{
+  const error=validarOperario(input,operarios,cuadrillas.map(c=>c.id),id);
+  if(error)return {ok:false,error};
+  if(id&&!operarios.some(o=>o.id===id))return {ok:false,error:"Trabajador inexistente."};
+  setOperarios(prev=>id?prev.map(o=>o.id===id?{...input,id}:o):[...prev,{...input,id:nuevoId("op")}]);
+  return {ok:true};
+ };
  const crearCotizacion=(input:NuevaCotizacionInput):Cotizacion=>{
   const nueva:Cotizacion={...input,id:nuevoId("cot"),fechaSolicitud:new Date().toLocaleDateString("en-CA",{timeZone:"America/Bogota"}),fechaEnvio:null,vigenciaDias:15,precio:input.estado==="solicitada"?null:totalLineas(input.lineas)};
   setCotizaciones(prev=>[nueva,...prev]);return nueva;
@@ -114,7 +134,7 @@ export function AppProvider({children}:{children:React.ReactNode}){
  if(!comparacion.length||comparacion.some(r=>r.resultado!=="coincide")){setPlanillas(p=>p.map(x=>x.id===campoId||x.id===adminId?{...x,estado:"en_comparacion"}:x));return {ok:false,error:"Existen diferencias o faltan registros; revisa antes de conciliar."};}
  setPlanillas(p=>p.map(x=>x.id===campoId||x.id===adminId?{...x,estado:"conciliada"}:x));return {ok:true};
  };
- const value=useMemo<AppContextValue>(()=>({rol,setRol,autenticado,iniciarSesion:()=>setAutenticado(true),cerrarSesion:()=>setAutenticado(false),mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden}),[rol,autenticado,mostrarHU,cotizaciones,ordenes,planillas,jornadas]);
+ const value=useMemo<AppContextValue>(()=>({rol,setRol,autenticado,iniciarSesion:()=>setAutenticado(true),cerrarSesion:()=>setAutenticado(false),mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes:listaClientes,operarios,guardarCliente,guardarOperario,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden}),[rol,autenticado,mostrarHU,cotizaciones,ordenes,planillas,jornadas,listaClientes,operarios]);
  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 export function useApp(){const c=useContext(AppContext);if(!c)throw new Error("useApp debe usarse dentro de AppProvider");return c;}
