@@ -91,7 +91,7 @@ export function AppProvider({children}:{children:React.ReactNode}){
    }:o));
  };
  const crearParejaPlanillas:AppContextValue["crearParejaPlanillas"]=(clienteId,desde,hasta)=>{
- if(!clientes.some(c=>c.id===clienteId)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(desde)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(hasta)||desde>hasta)return {ok:false,error:"Cliente o periodo inválido."};
+ if(!clientes.some(c=>c.id===clienteId)||!/^\d{4}-\d{2}-\d{2}$/.test(desde)||!/^\d{4}-\d{2}-\d{2}$/.test(hasta)||desde>hasta)return {ok:false,error:"Cliente o periodo inválido."};
  if(planillas.some(p=>p.clienteId===clienteId&&p.desde===desde&&p.hasta===hasta))return {ok:false,error:"Ya existen planillas para este cliente y periodo."};
  const campoId=nuevoId("campo"),adminId=nuevoId("admin");
  setPlanillas(p=>[...p,{id:campoId,clienteId,desde,hasta,origen:"campo",estado:"borrador"},{id:adminId,clienteId,desde,hasta,origen:"administrativa",estado:"borrador"}]);
