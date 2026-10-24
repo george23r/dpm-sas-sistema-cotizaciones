@@ -11,12 +11,12 @@ const EN_7_DIAS = "2026-10-24";
 export function Panel() {
   const { cotizaciones, ordenes, clientes } = useApp();
 
-  const pendientes = cotizaciones.filter((c) => c.estado === "pendiente");
+  const pendientes = cotizaciones.filter((c) => c.estado === "solicitada" || c.estado === "borrador");
   const estaSemana = ordenes.filter((o) => o.fecha >= HOY && o.fecha <= EN_7_DIAS);
   const enEjecucion = ordenes.filter((o) => o.estado === "en_ejecucion");
 
   const actividad = [...ordenes]
-    .filter((o) => o.estado === "finalizado" || o.estado === "incidencia")
+    .filter((o) => o.estado === "finalizado")
     .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
     .slice(0, 5);
 
@@ -98,12 +98,10 @@ export function Panel() {
                 </div>
                 <span
                   className={
-                    o.estado === "incidencia"
-                      ? "text-xs font-medium text-status-error"
-                      : "text-xs font-medium text-status-done"
+                    "text-xs font-medium text-status-done"
                   }
                 >
-                  {o.estado === "incidencia" ? "Incidencia" : "Finalizado"}
+                  Finalizado
                 </span>
               </div>
             ))

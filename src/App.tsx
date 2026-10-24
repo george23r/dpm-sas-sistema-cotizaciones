@@ -95,6 +95,7 @@ function AppRoutes() {
             </RutaDeRol>
           }
         />
+        <Route path="admin/cotizaciones/editar/:cotizacionId" element={<RutaDeRol rolRequerido="administrador"><NuevaCotizacion /></RutaDeRol>} />
         <Route
           path="admin/programacion"
           element={

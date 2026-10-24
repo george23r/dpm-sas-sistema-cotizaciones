@@ -1,73 +1,17 @@
 import { Link } from "react-router-dom";
-import { Plus, FileText } from "lucide-react";
+import { useState } from "react";
 import { useApp } from "@/context/AppContext";
-import { FRECUENCIAS, TIPOS_VEGETACION } from "@/types";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { EstadoCotizacionBadge } from "@/components/shared/EstadoBadge";
-import { HuTag } from "@/components/shared/HuTag";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { cotizacionVigente, consecutivoCotizacion, fechaVencimiento } from "@/lib/cotizaciones";
 import { formatCOP, formatFecha } from "@/lib/utils";
-
-export function MisCotizaciones() {
-  const { cotizaciones, clienteActualId } = useApp();
-  const misCotizaciones = cotizaciones
-    .filter((c) => c.clienteId === clienteActualId)
-    .sort((a, b) => (a.fechaSolicitud < b.fechaSolicitud ? 1 : -1));
-
-  return (
-    <div className="relative space-y-5">
-      <HuTag id="HU-02" />
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-heading text-xl font-semibold text-ink sm:text-2xl">Mis cotizaciones</h1>
-          <p className="text-sm text-muted">Consulta el estado de tus solicitudes y el precio calculado.</p>
-        </div>
-        <Button asChild>
-          <Link to="/app/cliente/cotizaciones/nueva">
-            <Plus className="size-4" />
-            Nueva solicitud
-          </Link>
-        </Button>
-      </div>
-
-      {misCotizaciones.length === 0 ? (
-        <EmptyState
-          icon={FileText}
-          title="No tienes cotizaciones todavía"
-          description="Solicita tu primera cotización desde tus zonas verdes."
-          action={
-            <Button asChild variant="secondary">
-              <Link to="/app/cliente/cotizaciones/nueva">Solicitar cotización</Link>
-            </Button>
-          }
-        />
-      ) : (
-        <div className="grid gap-3">
-          {misCotizaciones.map((c) => (
-            <Card key={c.id}>
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-heading text-sm font-semibold text-ink">{c.zonaNombre}</p>
-                    <EstadoCotizacionBadge estado={c.estado} />
-                  </div>
-                  <p className="text-xs text-muted">
-                    {TIPOS_VEGETACION[c.tipoVegetacion]} · {FRECUENCIAS[c.frecuencia]} ·{" "}
-                    {c.areaM2.toLocaleString("es-CO")} m² · Solicitada el {formatFecha(c.fechaSolicitud)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted">Precio</p>
-                  <p className="font-heading text-lg font-semibold text-ink">
-                    {c.precio !== null ? formatCOP(c.precio) : "Por calcular"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+import { EstadoCotizacionBadge } from "@/components/shared/EstadoBadge";
+import { Card, CardContent } from "@/components/ui/card";import { Button } from "@/components/ui/button";import { HuTag } from "@/components/shared/HuTag";
+export function MisCotizaciones(){
+ const {cotizaciones,clienteActualId,responderCotizacion}=useApp();const [error,setError]=useState("");
+ const mis=cotizaciones.filter(c=>c.clienteId===clienteActualId).sort((a,b)=>b.fechaSolicitud.localeCompare(a.fechaSolicitud));
+ function responder(id:string,aceptar:boolean){setError("");const r=responderCotizacion(id,aceptar);if(!r.ok)setError(r.error);}
+ return <div className="space-y-5"><HuTag id="HU-02"/><div className="flex items-center justify-between"><div><h1 className="font-heading text-2xl font-semibold">Mis cotizaciones</h1><p className="text-sm text-muted">Consulta estados y responde cotizaciones vigentes desde tu panel.</p></div><Button asChild><Link to="/app/cliente/cotizaciones/nueva">Nueva solicitud</Link></Button></div>
+ {error&&<p role="alert" className="text-status-error">{error}</p>}
+ {mis.map(c=><Card key={c.id}><CardContent className="space-y-3 p-5"><div className="flex flex-wrap items-center justify-between gap-2"><strong>{consecutivoCotizacion(c.id)} · {c.objeto}</strong><EstadoCotizacionBadge estado={c.estado}/></div><p className="text-xs text-muted">{c.zonaNombre} · Solicitada {formatFecha(c.fechaSolicitud)}</p>{c.precio!==null&&<p className="text-lg font-semibold">{formatCOP(c.precio)}</p>}{fechaVencimiento(c)&&<p className="text-sm">Vence el {formatFecha(fechaVencimiento(c)!)}</p>}{!!c.lineas.length&&c.estado!=="solicitada"&&<ul className="text-sm">{c.lineas.map(l=><li key={l.id}>{l.concepto}: {l.cantidad} {l.unidad} × {formatCOP(l.valorUnitario)}</li>)}</ul>}
+ {c.estado==="enviada"&&<div className="flex gap-2">{cotizacionVigente(c)?<><Button onClick={()=>responder(c.id,true)}>Aceptar</Button><Button variant="outline" onClick={()=>responder(c.id,false)}>Rechazar</Button></>:<p className="text-sm text-status-error">La cotización venció; solicita una nueva.</p>}</div>}</CardContent></Card>)}
+ {!mis.length&&<p className="text-sm text-muted">Aún no tienes cotizaciones.</p>}</div>;
 }
