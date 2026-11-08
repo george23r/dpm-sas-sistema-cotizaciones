@@ -38,3 +38,14 @@
 - Se conectaron al AppContext para reflejar nuevos clientes en las consultas; no hay persistencia ni credenciales reales.
 - Se añadieron doce casos unitarios reproducibles y una matriz de aceptación visual de HU-01 a HU-10.
 - El flujo de GitHub Actions ejecuta build y pruebas unitarias; falta documentar ejecuciones manuales en navegador y consultar decisiones de DPM y dirección académica.
+
+## 2026-11-08 — Fases 1 a 4: integración real y rediseño operativo
+
+- Se auditó el repositorio existente y se conservó la arquitectura React/Vite + Express/TypeScript + PostgreSQL. `AppContext` conserva semillas únicamente cuando `VITE_DEMO_MODE=true`; en modo real los módulos consultan la API.
+- Se implementaron autenticación por cookie HttpOnly, `/auth/login`, `/auth/me`, `/auth/logout`, roles, propiedad de cliente/zona/cotización, membresía de cuadrilla, rate limit de login y validación estricta de origen para mutaciones.
+- Se conectaron cotizaciones, líneas, visitas, costos internos, hitos, órdenes, cuadrillas, clientes, zonas, trabajadores, planillas, conciliación, historial y reportes a PostgreSQL. Las reglas críticas permanecen en servidor y base de datos.
+- Se rediseñaron el centro operativo, cotizaciones, agenda, cuadrillas, jornadas, reportes y portales diferenciados. El dashboard utiliza `GET /api/v1/reportes/resumen` para no calcular métricas sobre páginas parciales.
+- Se añadieron filtros y paginación de cotizaciones en servidor, contrato OpenAPI y evidencias específicas de CSRF, resumen operativo, paginación y navegador.
+- Verificación local: frontend build PASS, 15/15 unitarias PASS, backend build/lint PASS, integración PostgreSQL PASS y smoke E2E Chromium 4/4 PASS. Las advertencias de lint existentes están documentadas y no se presentan como cero advertencias.
+- Pendientes: ejecución CI remota del commit actual, despliegue, capturas representativas completas, pruebas en dispositivos reales y validación empresarial de tarifas, vigencia, liderazgo, recargos y políticas de conciliación. Estos pendientes no se consideran requisitos aprobados.
+
