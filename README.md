@@ -11,6 +11,10 @@ Este proyecto corresponde al trabajo de grado para optar al título de Ingeniero
 - Jorge Luis Ramos Perdomo
 - Richard Esteban Sevillano Cuaran
 
+## Estado de implementación
+
+El repositorio contiene actualmente un prototipo navegable en React + TypeScript + Vite. La autenticación, la API Express, PostgreSQL y la persistencia aún están pendientes de integración; las pantallas demostrativas no deben confundirse con funcionalidades productivas. La auditoría de Fase 0 está documentada en [`docs/auditoria-fase-0.md`](docs/auditoria-fase-0.md), con la línea base, diferencias frente al alcance aprobado y bloqueos.
+
 ## Metodología
 
 El desarrollo se gestiona con Scrum. El Product Backlog y el detalle de las historias de usuario (HU-01 a HU-10) se encuentran documentados en `/docs`.
@@ -29,6 +33,10 @@ El desarrollo se gestiona con Scrum. El Product Backlog y el detalle de las hist
 | HU-08 | Generar reporte por periodo | Baja | 5 |
 | HU-09 | Registrar jornadas de campo | Media | 5 |
 | HU-10 | Comparar y conciliar planillas | Media | 5 |
+
+## Backend y persistencia
+
+La Fase 1 del backend está preparada en [`backend/`](backend/) para autenticación, sesión segura y salud de servicio. Su evidencia está en [`docs/backend-fase-1-evidencia.md`](docs/backend-fase-1-evidencia.md). La base SQL de Corte 2 está en [`database/`](database/); contiene 12 tablas reales y no incluye todavía líneas de cotización ni planillas de jornadas.
 
 ## Estructura del repositorio
 

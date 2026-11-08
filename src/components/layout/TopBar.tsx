@@ -20,7 +20,7 @@ const ROL_INICIALES: Record<Rol, string> = {
 };
 
 export function TopBar() {
-  const { rol, setRol, mostrarHU, alternarHU, cerrarSesion } = useApp();
+  const { rol, setRol, usuarioActual, mostrarHU, alternarHU, cerrarSesion, modoDemo } = useApp();
   const navigate = useNavigate();
 
   const cambiarRol = (nuevoRol: Rol) => {
@@ -28,8 +28,8 @@ export function TopBar() {
     navigate(RUTA_INICIAL_POR_ROL[nuevoRol]);
   };
 
-  const salir = () => {
-    cerrarSesion();
+  const salir = async () => {
+    await cerrarSesion();
     navigate("/login");
   };
 
@@ -43,38 +43,25 @@ export function TopBar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
-        <label className="hidden items-center gap-2 md:flex">
-          <span className="text-xs font-medium text-muted">Ver como:</span>
-          <Select
-            value={rol}
-            onChange={(e) => cambiarRol(e.target.value as Rol)}
-            className="h-9 w-40 text-sm"
-            aria-label="Selector de rol de demostración"
-          >
-            <option value="cliente">Cliente</option>
-            <option value="administrador">Administrador</option>
-            <option value="operario">Operario</option>
-          </Select>
-        </label>
+        {modoDemo && rol && (
+          <>
+            <label className="hidden items-center gap-2 md:flex">
+              <span className="text-xs font-medium text-muted">Ver como:</span>
+              <Select value={rol} onChange={(e) => cambiarRol(e.target.value as Rol)} className="h-9 w-40 text-sm" aria-label="Selector de rol de demostración">
+                <option value="cliente">Cliente</option>
+                <option value="administrador">Administrador</option>
+                <option value="operario">Operario</option>
+              </Select>
+            </label>
+            <Select value={rol} onChange={(e) => cambiarRol(e.target.value as Rol)} className="h-9 w-[7.5rem] text-xs md:hidden" aria-label="Selector de rol de demostración">
+              <option value="cliente">Cliente</option>
+              <option value="administrador">Admin</option>
+              <option value="operario">Operario</option>
+            </Select>
+          </>
+        )}
 
-        <Select
-          value={rol}
-          onChange={(e) => cambiarRol(e.target.value as Rol)}
-          className="h-9 w-[7.5rem] text-xs md:hidden"
-          aria-label="Selector de rol de demostración"
-        >
-          <option value="cliente">Cliente</option>
-          <option value="administrador">Admin</option>
-          <option value="operario">Operario</option>
-        </Select>
-
-        <Button
-          variant={mostrarHU ? "secondary" : "ghost"}
-          size="icon"
-          className="hidden sm:flex"
-          onClick={alternarHU}
-          title={mostrarHU ? "Ocultar etiquetas HU" : "Mostrar etiquetas HU"}
-        >
+        <Button variant={mostrarHU ? "secondary" : "ghost"} size="icon" className="hidden sm:flex" onClick={alternarHU} title={mostrarHU ? "Ocultar etiquetas HU" : "Mostrar etiquetas HU"}>
           <Tag className="size-4" />
         </Button>
 
@@ -82,11 +69,11 @@ export function TopBar() {
 
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarFallback>{ROL_INICIALES[rol]}</AvatarFallback>
+            <AvatarFallback>{rol ? ROL_INICIALES[rol] : "US"}</AvatarFallback>
           </Avatar>
           <div className="hidden leading-tight lg:block">
-            <p className="text-sm font-medium text-ink">{ROL_LABEL[rol]}</p>
-            <p className="text-xs text-muted">Modo demostración</p>
+            <p className="text-sm font-medium text-ink">{usuarioActual?.nombre ?? (rol ? ROL_LABEL[rol] : "Usuario")}</p>
+            <p className="text-xs text-muted">{modoDemo ? "Modo demostración" : usuarioActual?.correo}</p>
           </div>
         </div>
 

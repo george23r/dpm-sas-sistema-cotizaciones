@@ -10,21 +10,25 @@ import { HuTag } from "@/components/shared/HuTag";
 import { RUTA_INICIAL_POR_ROL } from "@/components/layout/nav";
 
 export function Login() {
-  const { iniciarSesion, rol } = useApp();
+  const { iniciarSesion, authCargando, authError, modoDemo } = useApp();
   const navigate = useNavigate();
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!correo.trim() || !clave.trim()) {
       setError("Ingresa tu correo y contraseña para continuar.");
       return;
     }
     setError(null);
-    iniciarSesion();
-    navigate(RUTA_INICIAL_POR_ROL[rol]);
+    const resultado = await iniciarSesion(correo.trim(), clave);
+    if (!resultado.ok) {
+      setError(resultado.error);
+      return;
+    }
+    navigate(RUTA_INICIAL_POR_ROL[resultado.rol]);
   };
 
   return (
@@ -47,15 +51,7 @@ export function Login() {
               <Label htmlFor="correo">Correo electrónico</Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
-                <Input
-                  id="correo"
-                  type="email"
-                  placeholder="nombre@empresa.com"
-                  className="pl-10"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                  aria-invalid={!!error}
-                />
+                <Input id="correo" type="email" placeholder="nombre@empresa.com" className="pl-10" value={correo} onChange={(e) => setCorreo(e.target.value)} aria-invalid={Boolean(error || authError)} />
               </div>
             </div>
 
@@ -63,27 +59,19 @@ export function Login() {
               <Label htmlFor="clave">Contraseña</Label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
-                <Input
-                  id="clave"
-                  type="password"
-                  placeholder="••••••••"
-                  className="pl-10"
-                  value={clave}
-                  onChange={(e) => setClave(e.target.value)}
-                  aria-invalid={!!error}
-                />
+                <Input id="clave" type="password" placeholder="••••••••" className="pl-10" value={clave} onChange={(e) => setClave(e.target.value)} aria-invalid={Boolean(error || authError)} />
               </div>
             </div>
 
-            {error && <p className="text-sm text-status-error">{error}</p>}
+            {(error || authError) && <p className="text-sm text-status-error" role="alert" aria-live="polite">{error ?? authError}</p>}
 
-            <Button type="submit" size="lg" className="mt-1 w-full">
-              Ingresar
+            <Button type="submit" size="lg" className="mt-1 w-full" disabled={authCargando}>
+              {authCargando ? "Verificando…" : "Ingresar"}
             </Button>
           </form>
 
           <p className="text-center text-xs text-muted">
-            Prototipo visual · sin autenticación real. Ingresa cualquier dato para continuar.
+            {modoDemo ? "Modo demo habilitado: los datos no representan autorización real." : "Acceso mediante la API de autenticación de DPM S.A.S."}
           </p>
         </CardContent>
       </Card>

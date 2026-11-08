@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const { rol } = useApp();
+  if (!rol) return null;
   const items = NAV_POR_ROL[rol];
 
   return (
