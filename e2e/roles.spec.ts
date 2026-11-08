@@ -13,24 +13,31 @@ async function login(page: Page, role: keyof typeof credentials) {
   await page.getByRole("button", { name: /Ingresar al sistema/ }).click();
 }
 
+async function capture(page: Page, name: string) {
+  if (process.env.E2E_CAPTURE !== "1") return;
+  await page.screenshot({ path: `evidencias/cross-browser-${test.info().project.name}-${name}.png`, fullPage: true });
+}
+
 test("administra el centro operativo y no depende del selector demo", async ({ page }) => {
   await login(page, "admin");
   await expect(page).toHaveURL(/\/app\/admin\/panel$/);
   await expect(page.getByRole("heading", { name: "Vista operativa" })).toBeVisible();
   await expect(page.getByText("Actividad temporal")).toBeVisible();
   await expect(page.getByText("Disponibilidad de cuadrillas")).toBeVisible();
-
+  await capture(page, "admin-panel-1366");
   await page.getByRole("link", { name: "Programación" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/programacion$/);
   await expect(page.getByRole("button", { name: "Mes" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Semana" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Lista" })).toBeVisible();
+  await capture(page, "admin-programacion-1366");
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
   await login(page, "cliente");
   await expect(page).toHaveURL(/\/app\/cliente\/zonas$/);
   await expect(page.getByRole("heading", { name: "Mis zonas verdes" })).toBeVisible();
+  await capture(page, "cliente-zonas-360");
   await page.goto("/app/admin/panel");
   await expect(page).toHaveURL(/\/app\/cliente\/zonas$/);
   await expect(page.getByText("Centro de operaciones")).not.toBeVisible();
@@ -42,6 +49,7 @@ test("operario ve únicamente órdenes asignadas y portal mobile-first", async (
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
   await expect(page.getByRole("heading", { name: "Mis órdenes" })).toBeVisible();
   await expect(page.getByText("Servicios asignados a tu cuadrilla")).toBeVisible();
+  await capture(page, "operario-ordenes-360");
   await page.goto("/app/admin/clientes");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
 });

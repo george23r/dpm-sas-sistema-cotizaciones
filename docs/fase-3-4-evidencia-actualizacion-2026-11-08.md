@@ -64,7 +64,7 @@ Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `
 
 - Falta validación empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya está disponible para administración y la restricción de líder único la aplica PostgreSQL.
 - Falta completar mutaciones adicionales del portal operario; el smoke E2E de login, aislamiento por rol y navegacion de los tres perfiles ya tiene PASS en CI con Chromium.
-- Las capturas cross-browser todavía no se generaron. RNF-03 sí cuenta ahora con una medición local documentada en `performance/evidencia-2026-11-08.md`: 2.010 muestras, 0 errores y P95 de 4–5 ms para las cuatro operaciones de consulta. El resultado usa PostgreSQL 16 aislado, datos ficticios y no constituye un SLA de producción.
+- Las capturas cross-browser representativas ya se generaron para Chromium, Firefox y WebKit; se mantienen como evidencia local en `evidencias/cross-browser-*.png`. RNF-03 cuenta con una medición local documentada en `performance/evidencia-2026-11-08.md`: 2.010 muestras, 0 errores y P95 de 4–5 ms para las cuatro operaciones de consulta. El resultado usa PostgreSQL 16 aislado, datos ficticios y no constituye un SLA de producción.
 
 ### Correccion de rate limit y E2E multiplataforma
 
@@ -75,3 +75,8 @@ La ejecucion CI `42524261979` termino `success` con 9 pruebas: 3 en Chromium, 3 
 ## Medición RNF-03
 
 Se ejecutó Apache JMeter 5.6.3 contra la API Express compilada y un contenedor PostgreSQL 16 aislado. El escenario usó 10 usuarios concurrentes, login por cookie HttpOnly y 50 iteraciones por cada consulta. Las operaciones de cotizaciones, historial operativo, reporte de periodo y comparación de planillas obtuvieron 500 muestras cada una, 0 errores y P95 de 4, 4, 5 y 4 ms respectivamente. Se conservaron el JTL y `statistics.json` en `performance/evidencia-2026-11-08/`.
+## Evidencia cross-browser local
+
+La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programaciÃ³n administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
+
+La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditorÃ­a completa de todas las pantallas ni una validaciÃ³n empresarial.
