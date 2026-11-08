@@ -58,7 +58,7 @@ jobs:
           psql -h localhost -U dpm_test -d dpm_test -v ON_ERROR_STOP=1 -f database/04_seed_e2e.sql
       - run: npm run build
         working-directory: backend
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox webkit
       - name: Iniciar API
         run: nohup npm start > "$RUNNER_TEMP/dpm-api.log" 2>&1 &
         working-directory: backend
