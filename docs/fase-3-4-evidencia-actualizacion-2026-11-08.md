@@ -89,3 +89,6 @@ La API ahora verifica que la zona de una cotización pertenezca al cliente auten
 ## Contraejemplos API verificados
 
 La integraciÃ³n ampliada ejecutada contra PostgreSQL 16 aislado verificÃ³: envÃ­o sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), ediciÃ³n posterior al envÃ­o (`409 QUOTE_IMMUTABLE`), doble programaciÃ³n por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminÃ³ `1 passed`, `0 failed`, `0 skipped`.
+## Detalle de cotizaciones en frontend real
+
+Se incorporÃ³ `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administraciÃ³n y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administraciÃ³n y el cliente puede responder Ãºnicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutÃ³ con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.

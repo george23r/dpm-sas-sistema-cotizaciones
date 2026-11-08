@@ -17,6 +17,17 @@ export interface CotizacionApi {
   zona: string;
 }
 
+export interface CotizacionDetalleApi extends CotizacionApi {
+  incluye: string | null;
+  tiempo_ejecucion: string | null;
+  observaciones: string | null;
+  vence_el: string | null;
+  lineas: Array<{ id: number; concepto: string; cantidad: string | number; valor_unitario: string | number; valor_total: string | number }>;
+  visitas: Array<{ id: number; fecha: string; observaciones: string | null }>;
+  hitos: Array<{ orden: number; descripcion: string; porcentaje: string | number }>;
+  costos?: Array<{ id: number; tipo: string; descripcion: string; cantidad: string | number; valor_unitario: string | number; subtotal: string | number }>;
+}
+
 export function obtenerCotizacionesApi(params: { estado?: EstadoCotizacion; clienteId?: number } = {}) {
   const query = new URLSearchParams();
   if (params.estado) query.set("estado", params.estado);
@@ -26,7 +37,7 @@ export function obtenerCotizacionesApi(params: { estado?: EstadoCotizacion; clie
 }
 
 export function obtenerCotizacionApi(id: number) {
-  return apiFetch<{ data: CotizacionApi }>(`/api/v1/cotizaciones/${id}`);
+  return apiFetch<{ data: CotizacionDetalleApi }>(`/api/v1/cotizaciones/${id}`);
 }
 
 export function crearCotizacionApi(input: {

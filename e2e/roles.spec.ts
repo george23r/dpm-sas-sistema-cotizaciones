@@ -31,6 +31,11 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByRole("button", { name: "Semana" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Lista" })).toBeVisible();
   await capture(page, "admin-programacion-1366");
+  await page.getByRole("link", { name: "Cotizaciones" }).click();
+  await expect(page).toHaveURL(/\/app\/admin\/cotizaciones$/);
+  await page.getByRole("link", { name: "Ver detalle" }).first().click();
+  await expect(page.getByText("Detalle de propuesta")).toBeVisible();
+  await expect(page.getByText("Costos internos")).toBeVisible();
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
@@ -38,6 +43,10 @@ test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
   await expect(page).toHaveURL(/\/app\/cliente\/zonas$/);
   await expect(page.getByRole("heading", { name: "Mis zonas verdes" })).toBeVisible();
   await capture(page, "cliente-zonas-360");
+  await page.goto("/app/cliente/cotizaciones");
+  await page.getByRole("link", { name: "Ver detalle" }).first().click();
+  await expect(page.getByText("Detalle de propuesta")).toBeVisible();
+  await expect(page.getByText("Costos internos")).not.toBeVisible();
   await page.goto("/app/admin/panel");
   await expect(page).toHaveURL(/\/app\/cliente\/zonas$/);
   await expect(page.getByText("Centro de operaciones")).not.toBeVisible();

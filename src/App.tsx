@@ -20,6 +20,7 @@ import { Trabajadores } from "@/pages/admin/Trabajadores";
 import { Servicios } from "@/pages/admin/Servicios";
 import { MisOrdenes } from "@/pages/operario/MisOrdenes";
 import { DetalleOrden } from "@/pages/operario/DetalleOrden";
+import { CotizacionDetalle } from "@/pages/CotizacionDetalle";
 
 function IndiceApp() {
   const { rol } = useApp();
@@ -100,6 +101,8 @@ function AppRoutes() {
           }
         />
         <Route path="admin/cotizaciones/editar/:cotizacionId" element={<RutaDeRol rolRequerido="administrador"><NuevaCotizacion /></RutaDeRol>} />
+        <Route path="admin/cotizaciones/:cotizacionId" element={<RutaDeRol rolRequerido="administrador"><CotizacionDetalle /></RutaDeRol>} />
+        <Route path="cliente/cotizaciones/:cotizacionId" element={<RutaDeRol rolRequerido="cliente"><CotizacionDetalle /></RutaDeRol>} />
         <Route
           path="admin/programacion"
           element={
