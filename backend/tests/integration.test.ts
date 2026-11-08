@@ -89,6 +89,16 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(paginatedQuotes.body.meta.pageSize, 1);
     assert.ok(paginatedQuotes.body.meta.total >= 1);
     assert.ok(paginatedQuotes.body.data.length <= 1);
+    const composite = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, zonaId: zone.id, objeto: `Composición atómica ${Date.now()}`, visita: { fecha: "2027-01-10", observaciones: "Visita compuesta" }, lineas: [{ concepto: "Servicio compuesto", cantidad: 1, valorUnitario: 75000 }], hitos: [{ orden: 1, descripcion: "Pago único", porcentaje: 100 }], enviar: true }) }, admin.cookie);
+    assert.equal(composite.response.status, 201);
+    const compositeDetail = await request(`/api/v1/cotizaciones/${composite.body.data.id}`, {}, admin.cookie);
+    assert.equal(compositeDetail.response.status, 200);
+    assert.equal(compositeDetail.body.data.estado, "enviada");
+    const atomicFailureObject = `Fallo atómico ${Date.now()}`;
+    const atomicFailure = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, zonaId: zone.id, objeto: atomicFailureObject, visita: { fecha: "2027-01-10" }, lineas: [{ concepto: "Sin hito", cantidad: 1, valorUnitario: 1 }], enviar: true }) }, admin.cookie);
+    assert.equal(atomicFailure.response.status, 409);
+    const failedSearch = await request(`/api/v1/cotizaciones?search=${encodeURIComponent(atomicFailureObject)}&pageSize=1`, {}, admin.cookie);
+    assert.equal(failedSearch.body.meta.total, 0);
 
     const incompleteSend = await request(`/api/v1/cotizaciones/${quoteId}/enviar`, { method: "POST" }, admin.cookie);
     assert.equal(incompleteSend.response.status, 409);
