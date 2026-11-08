@@ -35,6 +35,13 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await page.getByRole("button", { name: "Periodo siguiente" }).click();
   await expect(monthTitle).not.toHaveText(initialMonth ?? "");
   await capture(page, "admin-programacion-1366");
+  await page.getByRole("button", { name: "Lista" }).click();
+  const orderLink = page.getByRole("button", { name: /Ver orden/ }).first();
+  await expect(orderLink).toBeVisible();
+  await orderLink.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Asignar cuadrilla")).toBeVisible();
+  await page.getByRole("button", { name: "Cerrar detalle" }).click();
   await page.getByRole("link", { name: "Cotizaciones" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/cotizaciones$/);
   await page.getByRole("link", { name: "Ver detalle" }).first().click();
@@ -79,3 +86,4 @@ test("permite recorrer el login con teclado", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeFocused();
   await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeVisible();
 });
+
