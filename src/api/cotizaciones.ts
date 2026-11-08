@@ -28,12 +28,19 @@ export interface CotizacionDetalleApi extends CotizacionApi {
   costos?: Array<{ id: number; tipo: string; descripcion: string; cantidad: string | number; valor_unitario: string | number; subtotal: string | number }>;
 }
 
-export function obtenerCotizacionesApi(params: { estado?: EstadoCotizacion; clienteId?: number } = {}) {
+export interface PaginacionApi { page: number; pageSize: number; total: number; totalPages: number }
+
+export function obtenerCotizacionesApi(params: { estado?: EstadoCotizacion; clienteId?: number; search?: string; desde?: string; hasta?: string; page?: number; pageSize?: number } = {}) {
   const query = new URLSearchParams();
   if (params.estado) query.set("estado", params.estado);
   if (params.clienteId) query.set("clienteId", String(params.clienteId));
+  if (params.search) query.set("search", params.search);
+  if (params.desde) query.set("desde", params.desde);
+  if (params.hasta) query.set("hasta", params.hasta);
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("pageSize", String(params.pageSize));
   const suffix = query.toString() ? `?${query.toString()}` : "";
-  return apiFetch<{ data: CotizacionApi[] }>(`/api/v1/cotizaciones${suffix}`);
+  return apiFetch<{ data: CotizacionApi[]; meta: PaginacionApi }>(`/api/v1/cotizaciones${suffix}`);
 }
 
 export function obtenerCotizacionApi(id: number) {
@@ -79,3 +86,4 @@ export function enviarCotizacionApi(id: number) {
 export function responderCotizacionApi(id: number, acepta: boolean) {
   return apiFetch<{ data: { id: number; estado: string } }>(`/api/v1/cotizaciones/${id}/respuesta`, { method: "POST", body: JSON.stringify({ acepta }) });
 }
+
