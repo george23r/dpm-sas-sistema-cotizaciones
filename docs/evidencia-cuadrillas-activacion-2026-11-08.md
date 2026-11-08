@@ -20,4 +20,10 @@ E2E Chromium: 1 passed (4.3s)
 
 La prueba abriÃ³ el mÃ³dulo de cuadrillas desde la sesiÃ³n administrativa real y verificÃ³ la presencia del control `Activa`. No se modificÃ³ una cuadrilla persistente durante la prueba.
 
+Capturas generadas por la misma ejecuciÃ³n:
+
+- `evidencias/cross-browser-chromium-admin-cuadrillas-1366.png`
+- `evidencias/cross-browser-firefox-admin-cuadrillas-1366.png`
+- `evidencias/cross-browser-webkit-admin-cuadrillas-1366.png`
+
 
