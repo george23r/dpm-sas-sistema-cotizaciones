@@ -207,7 +207,7 @@ function DialogProgramarServicio({
   const cotizacion=aceptadas.find(c=>c.id===cotizacionId);
   const cliente=clientes.find(c=>c.id===cotizacion?.clienteId);
   const zona=zonas.find(z=>z.id===cotizacion?.zonaId);
-  const [fecha,setFecha]=useState(new Date().toLocaleDateString("en-CA",{timeZone:"America/Bogota"}));
+  const [fecha,setFecha]=useState(() => new Date().toLocaleDateString("en-CA",{timeZone:"America/Bogota"}));
   const [horaInicio,setHoraInicio]=useState("08:00");
   const [horaFin,setHoraFin]=useState("10:00");
   const [cuadrillaId,setCuadrillaId]=useState("");
