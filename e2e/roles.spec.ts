@@ -30,6 +30,10 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByRole("button", { name: "Mes" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Semana" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Lista" })).toBeVisible();
+  const monthTitle = page.getByRole("heading", { level: 2 }).first();
+  const initialMonth = await monthTitle.textContent();
+  await page.getByRole("button", { name: "Periodo siguiente" }).click();
+  await expect(monthTitle).not.toHaveText(initialMonth ?? "");
   await capture(page, "admin-programacion-1366");
   await page.getByRole("link", { name: "Cotizaciones" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/cotizaciones$/);
