@@ -200,6 +200,8 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
     const adminSheet = { body: { data: sheetPair.body.data.find((sheet: { origen: string }) => sheet.origen === "administrativa") } };
     assert.ok(fieldSheet.body.data?.id);
     assert.ok(adminSheet.body.data?.id);
+    const duplicatePair = await request("/api/v1/planillas/par", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd }) }, admin.cookie);
+    assert.equal(duplicatePair.response.status, 409);
     const recordInput = { operarioId: worker.id, fecha: periodStart, zonaId: zone.id, actividad: "Mantenimiento", labor: "Prueba de conciliaciÃ³n", inicio: "08:00", fin: "17:00", descansoHoras: 1, dominicalFestivo: false };
     const fieldRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify(recordInput) }, admin.cookie);
     const adminRecord = await request(`/api/v1/planillas/${adminSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify(recordInput) }, admin.cookie);
