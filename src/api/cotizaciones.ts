@@ -56,6 +56,11 @@ export function crearCotizacionApi(input: {
   tiempoEjecucion?: string;
   observaciones?: string;
   vigenciaDias?: number;
+  visita?: { fecha: string; observaciones?: string };
+  lineas?: Array<{ concepto: string; cantidad: number; valorUnitario: number; servicioId?: number | null }>;
+  costos?: Array<{ tipo: string; descripcion: string; cantidad: number; valorUnitario: number }>;
+  hitos?: Array<{ orden: number; descripcion: string; porcentaje: number }>;
+  enviar?: boolean;
 }) {
   return apiFetch<{ data: { id: number } }>("/api/v1/cotizaciones", {
     method: "POST",
