@@ -26,3 +26,6 @@ backend/.env.*
 *.sln
 *.sw?
 .playwright-mcp/
+e2e-report/
+test-results/
+
