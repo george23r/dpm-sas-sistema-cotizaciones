@@ -116,6 +116,11 @@ paths:
       operationId: createOrder
       security: [{ sessionCookie: [] }]
       responses: { '201': { description: Orden creada desde cotización aceptada }, '409': { description: Conflicto de horario o regla de negocio } }
+  /api/v1/ordenes/mias:
+    get:
+      operationId: listMyOrders
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Ordenes de la cuadrilla del operario autenticado }, '403': { description: Solo operarios } }
   /api/v1/ordenes/{id}/iniciar:
     patch:
       operationId: startOrder

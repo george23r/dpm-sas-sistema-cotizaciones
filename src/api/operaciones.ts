@@ -6,6 +6,7 @@ export interface PlanillaApi { id: number; cliente_id: number; cliente: string; 
 export interface ComparacionApi { operario: string; fecha: string; horas_campo: string | null; horas_admin: string | null; diferencia: string; resultado: "coincide" | "diferente" | "solo_campo" | "solo_administrativa"; }
 
 export function obtenerOrdenesApi(params: { estado?: string } = {}) { const query = params.estado ? `?estado=${encodeURIComponent(params.estado)}` : ""; return apiFetch<{ data: OrdenApi[] }>(`/api/v1/ordenes${query}`); }
+export function obtenerMisOrdenesApi(params: { estado?: string } = {}) { const query = params.estado ? `?estado=${encodeURIComponent(params.estado)}` : ""; return apiFetch<{ data: OrdenApi[] }>(`/api/v1/ordenes/mias${query}`); }
 export function obtenerOrdenApi(id: number) { return apiFetch<{ data: OrdenApi }>(`/api/v1/ordenes/${id}`); }
 export function obtenerCuadrillasApi() { return apiFetch<{ data: CuadrillaApi[] }>("/api/v1/cuadrillas"); }
 export function obtenerPlanillasApi(clienteId?: number) { return apiFetch<{ data: PlanillaApi[] }>(clienteId ? `/api/v1/planillas?clienteId=${clienteId}` : "/api/v1/planillas"); }

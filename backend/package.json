@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
     "test": "node --import tsx --test tests/*.test.ts",
+    "test:integration": "node --import tsx --test tests/integration.test.ts",
     "lint": "oxlint src tests"
   },
   "dependencies": {

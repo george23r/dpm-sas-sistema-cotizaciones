@@ -23,6 +23,19 @@ GET  /api/v1/operarios        200, 12 registros
 
 La comprobacion fue ejecutada con una sesion administrativa y origen permitido. No prueba propiedad de cliente porque no se promovieron credenciales reales.
 
+## Prueba de integracion reproducible
+
+Se anadio `backend/tests/integration.test.ts` y el script `npm run test:integration`. La prueba es opt-in y requiere una base temporal, credenciales ficticias y `RUN_INTEGRATION=1`; sin esas variables queda `SKIP`, no se presenta como PASS.
+
+Ejecutada el 2026-11-08 contra `dpm_codex_test_20261108`:
+
+```text
+flujo integrado de cotizacion, orden y permisos: PASS
+1 test, 0 fallos, 0 omitidos
+```
+
+El flujo comprobo login y `/auth/me`, propiedad de zonas, creacion de solicitud por cliente, rechazo de acceso administrativo por rol, visita, linea, costo privado, hito al 100 %, envio, ocultamiento de costos al cliente, aceptacion, creacion de orden desde cotizacion aceptada y consulta restringida de `/ordenes/mias` para operario.
+
 ## CI
 
 Se publico `.github/workflows/validar-backend.yml` en `main`, commit `f5b0b3a`. El workflow levanta PostgreSQL 16, aplica esquema, seed y `03_consultas_comprobacion.sql`, y ejecuta build, lint y tests backend. Al momento de la revision el proveedor no mostro un estado de check asociado al commit.

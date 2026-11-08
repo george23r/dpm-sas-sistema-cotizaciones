@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { assign, create, detail, finish, list, start } from "./ordenes.controller.js";
+import { assign, create, detail, finish, list, mine, start } from "./ordenes.controller.js";
 
 export const ordenesRouter = Router();
 ordenesRouter.get("/", ...list);
+ordenesRouter.get("/mias", ...mine);
 ordenesRouter.post("/", ...create);
 ordenesRouter.get("/:id", ...detail);
 ordenesRouter.patch("/:id", ...assign);

@@ -22,6 +22,12 @@ export const list = [authenticate, requireRole("administrador", "cliente", "oper
   response.json({ data: result.rows });
 })];
 
+export const mine = [authenticate, requireRole("operario"), asyncRoute(async (request, response) => {
+  const current = user(request);
+  const result = await pool.query(`SELECT o.id, o.cotizacion_id, o.zona_id, z.nombre AS zona, z.direccion, c.id AS cliente_id, c.nombre AS cliente, o.tipo_servicio, o.cuadrilla_id, q.nombre AS cuadrilla, o.inicio, o.fin, o.estado, o.iniciada_en, o.finalizada_en, o.nota_finalizacion FROM dpm.ordenes_trabajo o JOIN dpm.zonas z ON z.id=o.zona_id JOIN dpm.clientes c ON c.id=z.cliente_id LEFT JOIN dpm.cuadrillas q ON q.id=o.cuadrilla_id WHERE o.cuadrilla_id=(SELECT cuadrilla_id FROM dpm.operarios WHERE usuario_id=$1 AND activo=true) ORDER BY o.inicio`, [current.id]);
+  response.json({ data: result.rows });
+})];
+
 export const detail = [authenticate, requireRole("administrador", "cliente", "operario"), asyncRoute(async (request, response) => {
   const current = user(request); const orderId = pathId(request); const result = await pool.query(`SELECT o.id, o.cotizacion_id, o.zona_id, z.nombre AS zona, z.direccion, c.id AS cliente_id, c.nombre AS cliente, o.tipo_servicio, o.cuadrilla_id, q.nombre AS cuadrilla, o.inicio, o.fin, o.estado, o.iniciada_en, o.finalizada_en, o.nota_finalizacion FROM dpm.ordenes_trabajo o JOIN dpm.zonas z ON z.id=o.zona_id JOIN dpm.clientes c ON c.id=z.cliente_id LEFT JOIN dpm.cuadrillas q ON q.id=o.cuadrilla_id WHERE o.id=$1 AND ($2='administrador' OR ($2='cliente' AND c.usuario_id=$3) OR ($2='operario' AND o.cuadrilla_id=(SELECT cuadrilla_id FROM dpm.operarios WHERE usuario_id=$3 AND activo=true)))`, [orderId, current.rol, current.id]);
   if (!result.rows[0]) throw new HttpError(404, "ORDER_NOT_FOUND", "La orden no existe o no está disponible."); response.json({ data: result.rows[0] });
