@@ -26,3 +26,7 @@ npx playwright test
 Resultado real: `12 passed (36.3s)` en Chromium, Firefox y WebKit; incluye panel administrativo, portal cliente, portal operario y recorrido de teclado del login.
 
 La base usada es ficticia y local. Esto no constituye una configuración de producción ni una validación empresarial de credenciales.
+
+## Verificación backend adicional
+
+Con la misma base local y variables de integración ficticias se ejecutó `npm run test:integration` desde `backend`: `1 passed`, `0 failed`, `0 skipped`. El flujo comprobó autenticación, propiedad de zonas, cotización, aceptación, orden, permisos de operario, jornadas, conciliación y CRUD administrativo.
