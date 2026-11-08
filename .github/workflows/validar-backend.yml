@@ -12,6 +12,19 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://dpm_test:dpm_test@localhost:5432/dpm_test
+      CORS_ORIGIN: http://127.0.0.1:5173
+      SESSION_SECRET: ci-only-session-secret-change-me-32-chars
+      NODE_ENV: test
+      COOKIE_SECURE: "false"
+      RUN_INTEGRATION: "1"
+      INTEGRATION_ADMIN_EMAIL: admin@dpm.example
+      INTEGRATION_ADMIN_PASSWORD: Admin123!
+      INTEGRATION_CLIENT_EMAIL: hacienda@cliente.example
+      INTEGRATION_CLIENT_PASSWORD: Cliente123!
+      INTEGRATION_OPERATOR_EMAIL: luis.gomez@dpm.example
+      INTEGRATION_OPERATOR_PASSWORD: Operario123!
     services:
       postgres:
         image: postgres:16
@@ -41,9 +54,13 @@ jobs:
           psql -h localhost -U dpm_test -d dpm_test -v ON_ERROR_STOP=1 -f database/01_schema.sql
           psql -h localhost -U dpm_test -d dpm_test -v ON_ERROR_STOP=1 -f database/02_seed.sql
           psql -h localhost -U dpm_test -d dpm_test -v ON_ERROR_STOP=1 -f database/03_consultas_comprobacion.sql
+          psql -h localhost -U dpm_test -d dpm_test -v ON_ERROR_STOP=1 -f database/04_seed_e2e.sql
       - run: npm run build
         working-directory: backend
       - run: npm run lint
         working-directory: backend
       - run: npm test
         working-directory: backend
+      - run: npm run test:integration
+        working-directory: backend
+
