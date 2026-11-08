@@ -79,4 +79,3 @@ jobs:
             test-results/
             ${{ runner.temp }}/dpm-api.log
             ${{ runner.temp }}/dpm-web.log
-

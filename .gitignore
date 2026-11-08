@@ -28,4 +28,3 @@ backend/.env.*
 .playwright-mcp/
 e2e-report/
 test-results/
-

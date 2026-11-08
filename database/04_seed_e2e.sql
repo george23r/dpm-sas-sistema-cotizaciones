@@ -1,5 +1,5 @@
--- Credenciales ficticias Ãºnicamente para E2E local/CI.
--- No usar este archivo para producciÃ³n ni como polÃ­tica de contraseÃ±as.
+-- Credenciales ficticias únicamente para E2E local/CI.
+-- No usar este archivo para producción ni como política de contraseñas.
 SET search_path = dpm, public;
 
 UPDATE usuarios
@@ -10,4 +10,3 @@ SET password_hash = CASE correo
   ELSE password_hash
 END
 WHERE correo IN ('admin@dpm.example', 'hacienda@cliente.example', 'luis.gomez@dpm.example');
-

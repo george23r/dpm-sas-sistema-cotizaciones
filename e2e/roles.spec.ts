@@ -8,8 +8,8 @@ const credentials = {
 
 async function login(page: Page, role: keyof typeof credentials) {
   await page.goto("/login");
-  await page.getByLabel("Correo electrÃ³nico").fill(credentials[role].correo);
-  await page.getByLabel("ContraseÃ±a").fill(credentials[role].clave);
+  await page.getByLabel("Correo electrónico").fill(credentials[role].correo);
+  await page.getByLabel("Contraseña").fill(credentials[role].clave);
   await page.getByRole("button", { name: /Ingresar al sistema/ }).click();
 }
 
@@ -20,7 +20,7 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByText("Actividad temporal")).toBeVisible();
   await expect(page.getByText("Disponibilidad de cuadrillas")).toBeVisible();
 
-  await page.getByRole("link", { name: "ProgramaciÃ³n" }).click();
+  await page.getByRole("link", { name: "Programación" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/programacion$/);
   await expect(page.getByRole("button", { name: "Mes" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Semana" })).toBeVisible();
@@ -36,13 +36,12 @@ test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
   await expect(page.getByText("Centro de operaciones")).not.toBeVisible();
 });
 
-test("operario ve Ãºnicamente Ã³rdenes asignadas y portal mobile-first", async ({ page }) => {
+test("operario ve únicamente órdenes asignadas y portal mobile-first", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await login(page, "operario");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
-  await expect(page.getByRole("heading", { name: "Mis Ã³rdenes" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mis órdenes" })).toBeVisible();
   await expect(page.getByText("Servicios asignados a tu cuadrilla")).toBeVisible();
   await page.goto("/app/admin/clientes");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
 });
-

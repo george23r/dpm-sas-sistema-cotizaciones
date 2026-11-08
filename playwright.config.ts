@@ -14,4 +14,3 @@ export default defineConfig({
     ...devices["Desktop Chrome"],
   },
 });
-
