@@ -35,3 +35,5 @@ Los datos usados son ficticios y locales. Esta evidencia no constituye validaci�
 
 La prueba E2E focalizada de Chromium verificó el acceso administrativo al reporte, los indicadores de planillas y el bloque de conciliación por cliente. Captura: `evidencias/cross-browser-chromium-admin-reportes-1366.png`.
 
+Posteriormente se ejecutó la suite completa `npx playwright test e2e/roles.spec.ts` con 18 casos: 6 en Chromium, 6 en Firefox y 6 en WebKit. Resultado real: `18 passed` en 60,0 segundos. También se generaron las capturas equivalentes de reportes para Firefox y WebKit.
+
