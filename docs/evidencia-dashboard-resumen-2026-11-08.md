@@ -24,3 +24,12 @@ frontend npm run test:unit        PASS — 15/15
 
 La prueba de integración valida el resumen filtrado por cliente y periodo. Los datos utilizados son ficticios y locales.
 
+También se ejecutó el smoke E2E con API y Vite locales:
+
+```text
+npx playwright test --project=chromium
+PASS — 4/4 pruebas, 8,1 s
+```
+
+Se verificaron el centro administrativo, aislamiento del portal cliente, órdenes del operario en viewport móvil y navegación por teclado del login.
+
