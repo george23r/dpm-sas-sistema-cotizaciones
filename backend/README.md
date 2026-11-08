@@ -42,6 +42,9 @@ npm start
 - `GET/POST /api/v1/planillas`, `POST /api/v1/planillas/:id/registros`: planillas y jornadas.
 - `GET /api/v1/planillas/comparar` y `POST /api/v1/planillas/conciliar`: comparación y conciliación mediante funciones/procedimientos SQL.
 - `GET /api/v1/reportes/periodo`: reporte HU-08 mediante `dpm.fn_reporte_periodo`.
+- `GET /api/v1/clientes`: catálogo de clientes para administración.
+- `GET /api/v1/zonas?clienteId=`: zonas visibles según rol y propiedad.
+- `GET /api/v1/servicios`: catálogo activo; no expone tarifas ficticias.
 
 La cookie no se expone al navegador mediante JavaScript. En producción se requiere HTTPS, `COOKIE_SAMESITE=none` únicamente si la separación de orígenes lo exige y `DB_SSL=true` con certificado verificable. El backend nunca devuelve `password_hash`.
 
