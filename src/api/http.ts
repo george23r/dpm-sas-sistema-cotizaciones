@@ -1,4 +1,5 @@
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+export const SESSION_EXPIRED_EVENT = "dpm:session-expired";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -25,6 +26,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   });
 
   if (!response.ok) {
+    if (response.status === 401 && !path.endsWith("/auth/login")) window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
     let message = "No fue posible completar la solicitud.";
     try {
       const body = (await response.json()) as { message?: string; error?: string };
@@ -38,3 +40,4 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
+
