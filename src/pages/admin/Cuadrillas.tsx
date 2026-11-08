@@ -1,190 +1,35 @@
-import { useState } from "react";
-import { Users2, UserCog, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Users2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import type { OrdenTrabajo } from "@/types";
+import { asignarCuadrillaApi, obtenerCuadrillasApi, obtenerOrdenesApi, type CuadrillaApi, type OrdenApi } from "@/api/operaciones";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { EstadoOrdenBadge } from "@/components/shared/EstadoBadge";
 import { HuTag } from "@/components/shared/HuTag";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { cn, formatFecha } from "@/lib/utils";
+import type { Cuadrilla, OrdenTrabajo } from "@/types";
+
+type TeamRow = Cuadrilla | CuadrillaApi; type OrderRow = OrdenTrabajo | OrdenApi;
 
 export function Cuadrillas() {
-  const { cuadrillas, ordenes, clientes, asignarCuadrillaAOrden } = useApp();
-  const [ordenActiva, setOrdenActiva] = useState<OrdenTrabajo | null>(null);
-  const [errorAsignacion, setErrorAsignacion] = useState<string | null>(null);
+  const { cuadrillas: demoTeams, ordenes: demoOrders, modoDemo, asignarCuadrillaAOrden } = useApp();
+  const [teams, setTeams] = useState<CuadrillaApi[]>([]); const [orders, setOrders] = useState<OrdenApi[]>([]); const [error, setError] = useState<string | null>(null); const [saving, setSaving] = useState<number | null>(null);
+  useEffect(() => { if (modoDemo) return; let active = true; Promise.all([obtenerCuadrillasApi(), obtenerOrdenesApi()]).then(([teamResult, orderResult]) => { if (active) { setTeams(teamResult.data); setOrders(orderResult.data); setError(null); } }).catch((reason: Error) => { if (active) setError(reason.message); }); return () => { active = false; }; }, [modoDemo]);
+  const teamRows: TeamRow[] = modoDemo ? demoTeams : teams; const orderRows: OrderRow[] = modoDemo ? demoOrders.filter((order) => order.estado !== "finalizado") : orders.filter((order) => order.estado !== "finalizada");
+  const assign = async (order: OrderRow, value: string) => { const teamId = value ? Number(value) : null; setSaving(Number(order.id)); setError(null); if (modoDemo) { const result = asignarCuadrillaAOrden(String(order.id), value); if (!result.ok) setError(result.error); setSaving(null); return; } try { await asignarCuadrillaApi(Number(order.id), teamId); const updated = await obtenerOrdenesApi(); setOrders(updated.data); } catch (reason) { setError(reason instanceof Error ? reason.message : "No fue posible asignar la cuadrilla."); } finally { setSaving(null); } };
 
-  const nombreCliente = (id: string) => clientes.find((c) => c.id === id)?.nombre ?? "Cliente";
-
-  const ordenesPendientes = ordenes
-    .filter((o) => o.estado !== "finalizado")
-    .sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
-
-  const haySolape = (aInicio: string, aFin: string, bInicio: string, bFin: string) =>
-    aInicio < bFin && bInicio < aFin;
-
-  const estaOcupada = (cuadrillaId: string, orden: OrdenTrabajo) =>
-    ordenes.some(
-      (o) =>
-        o.id !== orden.id &&
-        o.cuadrillaId === cuadrillaId &&
-        o.fecha === orden.fecha &&
-        o.estado !== "finalizado" &&
-        haySolape(o.horaInicio, o.horaFin, orden.horaInicio, orden.horaFin),
-    );
-
-  const onAsignar = (cuadrillaId: string) => {
-    if (!ordenActiva) return;
-    const resultado = asignarCuadrillaAOrden(ordenActiva.id, cuadrillaId);
-    if (!resultado.ok) {
-      setErrorAsignacion(resultado.error);
-      return;
-    }
-    setErrorAsignacion(null);
-    setOrdenActiva(null);
-  };
-
-  return (
-    <div className="relative space-y-5">
-      <HuTag id="HU-04" />
-      <div>
-        <h1 className="font-heading text-xl font-semibold text-ink sm:text-2xl">Asignar cuadrilla</h1>
-        <p className="text-sm text-muted">Consulta la disponibilidad del día y asigna cuadrillas a las órdenes.</p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        {cuadrillas.map((c) => (
-          <Card key={c.id}>
-            <CardContent className="flex items-center gap-3.5 p-4">
-              <span className="flex size-11 items-center justify-center rounded-xl bg-soft text-primary">
-                <Users2 className="size-5" />
-              </span>
-              <div className="flex-1">
-                <p className="font-heading text-sm font-semibold text-ink">{c.nombre}</p>
-                <p className="flex items-center gap-1 text-xs text-muted">
-                  <UserCog className="size-3" />
-                  {c.encargado} · {c.integrantes} integrantes
-                </p>
-              </div>
-              <Badge variant={c.disponibleHoy ? "finalizado" : "inactivo"}>
-                {c.disponibleHoy ? "Disponible hoy" : "Ocupada hoy"}
-              </Badge>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Órdenes por asignar o en curso</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {ordenesPendientes.length === 0 ? (
-            <EmptyState icon={Users2} title="No hay órdenes pendientes de asignación" />
-          ) : (
-            ordenesPendientes.map((orden) => (
-              <div
-                key={orden.id}
-                className="flex flex-col gap-3 rounded-[var(--radius-btn)] border border-line p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-ink">{orden.tipoServicio}</p>
-                    <EstadoOrdenBadge estado={orden.estado} />
-                  </div>
-                  <p className="text-xs text-muted">
-                    {nombreCliente(orden.clienteId)} · {orden.zonaNombre} · {formatFecha(orden.fecha)} ·{" "}
-                    {orden.horaInicio}-{orden.horaFin}
-                  </p>
-                  <p className="text-xs text-muted">
-                    Cuadrilla asignada:{" "}
-                    <span className="font-medium text-ink">
-                      {cuadrillas.find((c) => c.id === orden.cuadrillaId)?.nombre ?? "Sin asignar"}
-                    </span>
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setErrorAsignacion(null);
-                    setOrdenActiva(orden);
-                  }}
-                >
-                  Asignar cuadrilla
-                </Button>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      <Dialog open={!!ordenActiva} onOpenChange={(open) => !open && setOrdenActiva(null)}>
-        <DialogContent>
-          {ordenActiva && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Asignar cuadrilla</DialogTitle>
-                <DialogDescription>
-                  {ordenActiva.tipoServicio} · {formatFecha(ordenActiva.fecha)} · {ordenActiva.horaInicio}-
-                  {ordenActiva.horaFin}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="mt-4 space-y-2">
-                {cuadrillas.map((c) => {
-                  const ocupada = estaOcupada(c.id, ordenActiva);
-                  const esActual = ordenActiva.cuadrillaId === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      disabled={ocupada}
-                      onClick={() => onAsignar(c.id)}
-                      className={cn(
-                        "flex w-full items-center justify-between rounded-[var(--radius-btn)] border p-3.5 text-left transition-colors",
-                        ocupada
-                          ? "cursor-not-allowed border-line bg-app-bg opacity-60"
-                          : "border-line hover:border-primary hover:bg-soft",
-                        esActual && "border-primary bg-soft",
-                      )}
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-ink">{c.nombre}</p>
-                        <p className="text-xs text-muted">{c.encargado} · {c.integrantes} integrantes</p>
-                      </div>
-                      {esActual ? (
-                        <Badge variant="primary">
-                          <CheckCircle2 className="size-3" />
-                          Asignada
-                        </Badge>
-                      ) : ocupada ? (
-                        <Badge variant="inactivo">Ocupada en este horario</Badge>
-                      ) : (
-                        <Badge variant="finalizado">Disponible</Badge>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {errorAsignacion && (
-                <p className="mt-3 flex items-start gap-2 rounded-[var(--radius-btn)] bg-status-error-bg px-3 py-2.5 text-sm text-status-error">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                  {errorAsignacion}
-                </p>
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+  return <div className="space-y-7"><HuTag id="HU-04" /><div><p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">Recursos operativos</p><h1 className="font-heading text-3xl font-semibold tracking-tight text-ink">Cuadrillas</h1><p className="mt-1.5 text-sm text-muted">Integrantes, capacidad registrada y asignaciones de servicio.</p></div>{error && <div className="flex items-start gap-2 rounded-xl border border-status-error/20 bg-status-error-bg px-4 py-3 text-sm text-status-error" role="alert"><AlertTriangle className="mt-0.5 size-4" />{error}</div>}
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{teamRows.map((team) => <Card key={String(team.id)}><CardContent className="p-5"><div className="flex items-start justify-between gap-3"><span className="flex size-11 items-center justify-center rounded-xl bg-soft text-primary"><Users2 className="size-5" /></span><Badge variant={"activa" in team && !team.activa ? "inactivo" : "finalizado"}>{"activa" in team && !team.activa ? "Inactiva" : "Activa"}</Badge></div><h2 className="mt-5 font-heading text-base font-semibold text-ink">{team.nombre}</h2><p className="mt-1 text-sm text-muted">{teamInfo(team)}</p><div className="mt-4 flex items-center gap-2 text-xs text-muted"><CheckCircle2 className="size-3.5 text-primary" /> Disponibilidad basada en órdenes asignadas</div></CardContent></Card>)}</div>
+    <Card><CardHeader><CardTitle>Asignaciones y próximos servicios</CardTitle><p className="mt-1 text-sm text-muted">El servidor valida la cuadrilla y los cruces de horario al guardar.</p></CardHeader><CardContent>{orderRows.length ? <div className="space-y-3">{orderRows.map((order) => <div key={String(order.id)} className="grid gap-3 rounded-xl border border-line p-4 lg:grid-cols-[1fr_auto_auto] lg:items-center"><div><div className="flex flex-wrap items-center gap-2"><p className="font-medium text-ink">{orderService(order)}</p><Status order={order} /></div><p className="mt-1 text-xs text-muted">{orderClient(order)} · {orderZone(order)} · {orderTime(order)}</p></div><div className="flex items-center gap-2 text-xs text-muted"><CalendarDays className="size-4" /> {orderDate(order)}</div><Select className="h-10 min-w-48" value={String("cuadrillaId" in order ? order.cuadrillaId ?? "" : order.cuadrilla_id ?? "")} onChange={(event) => void assign(order, event.target.value)} disabled={saving === Number(order.id)} aria-label={`Asignar cuadrilla para ${orderService(order)}`}><option value="">Sin asignar</option>{teamRows.map((team) => <option key={String(team.id)} value={String(team.id)}>{team.nombre}</option>)}</Select></div>)}</div> : <EmptyState icon={Users2} title="No hay órdenes pendientes de asignación" description="Las órdenes aparecen aquí cuando provienen de una cotización aceptada." />}</CardContent></Card>
+    <div className="rounded-xl border border-line bg-surface px-4 py-3 text-xs leading-5 text-muted"><strong className="text-ink">Nota de alcance:</strong> el esquema actual permite validar un líder activo por cuadrilla, pero la edición de integrantes y permisos administrativos aún requiere endpoints CRUD específicos y validación con DPM.</div>
+  </div>;
 }
+
+function teamInfo(team: TeamRow) { return "servicios_proximos" in team ? `${team.integrantes_activos} activos · ${team.servicios_proximos} servicios próximos` : `${team.integrantes} integrantes · Responsable: ${team.encargado}`; }
+function orderService(order: OrderRow) { return "tipoServicio" in order ? order.tipoServicio : order.tipo_servicio; }
+function orderClient(order: OrderRow) { return "cliente" in order ? order.cliente : "Cliente"; }
+function orderZone(order: OrderRow) { return "zonaNombre" in order ? order.zonaNombre : order.zona; }
+function orderDate(order: OrderRow) { return ("fecha" in order ? order.fecha : order.inicio).slice(0, 10); }
+function orderTime(order: OrderRow) { return "horaInicio" in order ? `${order.horaInicio}–${order.horaFin}` : `${order.inicio.slice(11, 16)}–${order.fin.slice(11, 16)}`; }
+function Status({ order }: { order: OrderRow }) { const state = "estado" in order ? order.estado : "pendiente"; return <EstadoOrdenBadge estado={state === "finalizada" ? "finalizado" : state} />; }

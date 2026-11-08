@@ -36,11 +36,17 @@ npm start
 - `POST /api/v1/cotizaciones/:id/visitas`, `/lineas`, `/costos`, `/hitos`: completa una cotización como administración.
 - `POST /api/v1/cotizaciones/:id/enviar`: ejecuta `dpm.sp_enviar_cotizacion`.
 - `POST /api/v1/cotizaciones/:id/respuesta`: ejecuta `dpm.sp_responder_cotizacion` para el cliente propietario.
+- `GET/POST /api/v1/ordenes`, `GET/PATCH /api/v1/ordenes/:id`: programación y asignación; creación solo desde cotización aceptada.
+- `PATCH /api/v1/ordenes/:id/iniciar` y `/finalizar`: acciones del operario de la cuadrilla asignada.
+- `GET /api/v1/cuadrillas` y `/api/v1/cuadrillas/:id/miembros`: capacidad e integrantes registrados para administración.
+- `GET/POST /api/v1/planillas`, `POST /api/v1/planillas/:id/registros`: planillas y jornadas.
+- `GET /api/v1/planillas/comparar` y `POST /api/v1/planillas/conciliar`: comparación y conciliación mediante funciones/procedimientos SQL.
+- `GET /api/v1/reportes/periodo`: reporte HU-08 mediante `dpm.fn_reporte_periodo`.
 
 La cookie no se expone al navegador mediante JavaScript. En producción se requiere HTTPS, `COOKIE_SAMESITE=none` únicamente si la separación de orígenes lo exige y `DB_SSL=true` con certificado verificable. El backend nunca devuelve `password_hash`.
 
 ## Estado de alcance
 
-Implementado y probado: autenticación contra `dpm.usuarios`, cookies HttpOnly, roles, `/health`, `/ready`, cotizaciones por líneas/visita/costos/hitos y envío/respuesta mediante los procedimientos existentes. Pendiente: órdenes/cuadrillas, jornadas/conciliación, reportes HTTP, CRUD de apoyo y conexión completa de los demás portales.
+Implementado y probado: autenticación contra `dpm.usuarios`, cookies HttpOnly, roles, `/health`, `/ready`, cotizaciones por líneas/visita/costos/hitos, órdenes, cuadrillas, planillas, comparación/conciliación y reportes mediante los procedimientos/funciones existentes. Pendiente: CRUD de apoyo completo, conexión de los portales de cliente/operario a todas sus mutaciones y pruebas E2E de navegador.
 
 La base temporal de integración se ejecutó con PostgreSQL 16 y los 27 checks de `03_consultas_comprobacion.sql` pasaron. La base persistida local no se usa como evidencia limpia porque ya tenía datos modificados y una comprobación falló por falta de visita en una cotización existente.

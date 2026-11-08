@@ -83,6 +83,56 @@ paths:
         '200': { description: Respuesta registrada }
         '403': { description: Cliente no propietario }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/ordenes:
+    get:
+      operationId: listOrders
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Órdenes visibles según rol }, '401': { $ref: '#/components/responses/Unauthorized' } }
+    post:
+      operationId: createOrder
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Orden creada desde cotización aceptada }, '409': { description: Conflicto de horario o regla de negocio } }
+  /api/v1/ordenes/{id}/iniciar:
+    patch:
+      operationId: startOrder
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Orden iniciada }, '409': { description: Operario no pertenece a la cuadrilla o transición inválida } }
+  /api/v1/ordenes/{id}/finalizar:
+    patch:
+      operationId: finishOrder
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Orden finalizada }, '409': { description: Cierre no permitido } }
+  /api/v1/cuadrillas:
+    get:
+      operationId: listTeams
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Cuadrillas e indicadores registrados } }
+  /api/v1/planillas:
+    get:
+      operationId: listSheets
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Planillas administrativas y de campo } }
+    post:
+      operationId: createSheet
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Planilla creada }, '409': { description: Duplicada } }
+  /api/v1/planillas/comparar:
+    get:
+      operationId: compareSheets
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Comparación por operario y fecha } }
+  /api/v1/planillas/conciliar:
+    post:
+      operationId: reconcileSheets
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Planillas conciliadas }, '409': { description: Diferencias bloquean conciliación } }
+  /api/v1/reportes/periodo:
+    get:
+      operationId: periodReport
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Reporte por periodo y cliente } }
 components:
   securitySchemes:
     sessionCookie: { type: apiKey, in: cookie, name: dpm_session }

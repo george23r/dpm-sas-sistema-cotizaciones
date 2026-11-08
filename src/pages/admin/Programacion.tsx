@@ -53,13 +53,17 @@ function aISO(d: Date) {
 const HOY = new Date();
 
 export function Programacion() {
-  const { ordenes, cuadrillas, crearOrden } = useApp();
+  const { ordenes, cuadrillas, clientes, crearOrden } = useApp();
   const [dialogAbierto, setDialogAbierto] = useState(false);
+  const [clienteFiltro, setClienteFiltro] = useState("todos");
+  const [cuadrillaFiltro, setCuadrillaFiltro] = useState("todos");
+  const [estadoFiltro, setEstadoFiltro] = useState("todos");
 
   const diasSemana = useMemo(() => obtenerDiasSemana(HOY), []);
   const diasMes = useMemo(() => obtenerDiasMes(HOY), []);
 
   const nombreCuadrilla = (id: string | null) => cuadrillas.find((c) => c.id === id)?.nombre ?? "Sin asignar";
+  const ordenesVisibles = ordenes.filter((orden) => (clienteFiltro === "todos" || orden.clienteId === clienteFiltro) && (cuadrillaFiltro === "todos" || orden.cuadrillaId === cuadrillaFiltro) && (estadoFiltro === "todos" || orden.estado === estadoFiltro));
 
   return (
     <div className="relative space-y-5">
@@ -67,7 +71,7 @@ export function Programacion() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-semibold text-ink sm:text-2xl">Programar mantenimiento</h1>
-          <p className="text-sm text-muted">Visualiza y programa servicios por semana o por mes.</p>
+          <p className="text-sm text-muted">Agenda servicios por semana, mes o lista. Los cruces definitivos los decide el servidor.</p>
         </div>
         <Button onClick={() => setDialogAbierto(true)}>
           <Plus className="size-4" />
@@ -75,17 +79,20 @@ export function Programacion() {
         </Button>
       </div>
 
+      <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-3"><label className="text-xs font-semibold text-muted">Cliente<Select className="mt-1.5 h-10" value={clienteFiltro} onChange={(event) => setClienteFiltro(event.target.value)}><option value="todos">Todos los clientes</option>{clientes.map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nombre}</option>)}</Select></label><label className="text-xs font-semibold text-muted">Cuadrilla<Select className="mt-1.5 h-10" value={cuadrillaFiltro} onChange={(event) => setCuadrillaFiltro(event.target.value)}><option value="todos">Todas las cuadrillas</option>{cuadrillas.map((cuadrilla) => <option key={cuadrilla.id} value={cuadrilla.id}>{cuadrilla.nombre}</option>)}</Select></label><label className="text-xs font-semibold text-muted">Estado<Select className="mt-1.5 h-10" value={estadoFiltro} onChange={(event) => setEstadoFiltro(event.target.value)}><option value="todos">Todos los estados</option><option value="pendiente">Pendiente</option><option value="en_ejecucion">En ejecución</option><option value="finalizado">Finalizado</option></Select></label></CardContent></Card>
+
       <Tabs defaultValue="semana">
         <TabsList>
           <TabsTrigger value="semana">Semana</TabsTrigger>
           <TabsTrigger value="mes">Mes</TabsTrigger>
+          <TabsTrigger value="lista">Lista</TabsTrigger>
         </TabsList>
 
         <TabsContent value="semana">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {diasSemana.map((dia) => {
               const iso = aISO(dia);
-              const ordenesDelDia = ordenes.filter((o) => o.fecha === iso).sort((a, b) => (a.horaInicio < b.horaInicio ? -1 : 1));
+              const ordenesDelDia = ordenesVisibles.filter((o) => o.fecha === iso).sort((a, b) => (a.horaInicio < b.horaInicio ? -1 : 1));
               const esHoy = iso === aISO(HOY);
               return (
                 <Card key={iso} className={cn(esHoy && "border-primary ring-1 ring-primary/30")}>
@@ -131,7 +138,7 @@ export function Programacion() {
                 {diasMes.map((dia) => {
                   const iso = aISO(dia);
                   const delMismoMes = dia.getMonth() === HOY.getMonth();
-                  const ordenesDelDia = ordenes.filter((o) => o.fecha === iso);
+                  const ordenesDelDia = ordenesVisibles.filter((o) => o.fecha === iso);
                   const esHoy = iso === aISO(HOY);
                   return (
                     <div
@@ -163,6 +170,10 @@ export function Programacion() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="lista">
+          <Card><CardContent className="overflow-x-auto p-0"><table className="w-full min-w-[720px] text-left text-sm"><thead><tr className="border-b border-line text-xs uppercase tracking-wide text-muted"><th className="p-4">Servicio</th><th className="p-4">Cliente / zona</th><th className="p-4">Fecha</th><th className="p-4">Cuadrilla</th><th className="p-4">Estado</th></tr></thead><tbody>{ordenesVisibles.map((orden) => <tr key={orden.id} className="border-b border-line/70 last:border-0"><td className="p-4 font-medium text-ink">{orden.tipoServicio}</td><td className="p-4"><p>{clientes.find((cliente) => cliente.id === orden.clienteId)?.nombre ?? "Cliente"}</p><p className="text-xs text-muted">{orden.zonaNombre}</p></td><td className="p-4 text-muted">{orden.fecha} · {orden.horaInicio}–{orden.horaFin}</td><td className="p-4 text-muted">{nombreCuadrilla(orden.cuadrillaId)}</td><td className="p-4"><EstadoOrdenBadge estado={orden.estado} /></td></tr>)}</tbody></table>{!ordenesVisibles.length && <p className="p-8 text-center text-sm text-muted">No hay servicios para los filtros seleccionados.</p>}</CardContent></Card>
         </TabsContent>
       </Tabs>
 

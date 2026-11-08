@@ -6,8 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { JornadasApiView } from "./JornadasApiView";
 export function Jornadas(){
- const {clientes,zonas,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas}=useApp();
+ const {clientes,zonas,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas,modoDemo}=useApp();
  const [clienteId,setClienteId]=useState(clientes[0]?.id??"");
  const [desde,setDesde]=useState("2026-10-01"),[hasta,setHasta]=useState("2026-10-15");
  const [parId,setParId]=useState("p-campo-01");
@@ -32,6 +33,7 @@ export function Jornadas(){
  setMensaje(r.ok?"Jornada guardada en el prototipo.":r.error);if(r.ok)setTrabajador("");
  }
  function conciliar(){if(!campo||!admin)return;const r=conciliarPlanillas(campo.id,admin.id);setMensaje(r.ok?"Planillas conciliadas y bloqueadas.":r.error);}
+ if (!modoDemo) return <JornadasApiView clientes={clientes.map((cliente) => ({ id: Number(cliente.id), nombre: cliente.nombre }))} />;
  return <div className="relative space-y-5"><HuTag id="HU-09"/><h1 className="font-heading text-2xl font-semibold text-ink">Jornadas y conciliación</h1><p className="text-sm text-muted">HU-09 y HU-10 · Datos ficticios compartidos con Reportes. Sin facturación ni conexión a PostgreSQL.</p>
  <Card><CardContent className="space-y-3 p-4"><h2 className="font-semibold">Crear par de planillas</h2><div className="grid gap-2 sm:grid-cols-4"><label className="text-sm">Cliente<Select value={clienteId} onChange={e=>setClienteId(e.target.value)}>{clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}</Select></label><label className="text-sm">Desde<Input type="date" value={desde} onChange={e=>setDesde(e.target.value)}/></label><label className="text-sm">Hasta<Input type="date" value={hasta} onChange={e=>setHasta(e.target.value)}/></label><Button className="self-end" onClick={crear}>Crear par</Button></div></CardContent></Card>
  <Card><CardContent className="space-y-3 p-4"><label className="block text-sm">Par de planillas<Select value={parId} onChange={e=>{setParId(e.target.value);setMensaje("");}}>{planillas.filter(p=>p.origen==="campo").map(p=><option key={p.id} value={p.id}>{clientes.find(c=>c.id===p.clienteId)?.nombre} · {p.desde} a {p.hasta} · {p.estado}</option>)}</Select></label>

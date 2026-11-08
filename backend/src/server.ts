@@ -8,6 +8,10 @@ import { pool } from "./db/pool.js";
 import { requireSameOrigin } from "./middlewares/auth.js";
 import { authRouter } from "./modules/auth/auth.router.js";
 import { cotizacionesRouter } from "./modules/cotizaciones/cotizaciones.router.js";
+import { ordenesRouter } from "./modules/ordenes/ordenes.router.js";
+import { cuadrillasRouter } from "./modules/cuadrillas/cuadrillas.router.js";
+import { planillasRouter } from "./modules/planillas/planillas.router.js";
+import { reportesRouter } from "./modules/reportes/reportes.router.js";
 import { errorHandler, HttpError } from "./shared/errors.js";
 
 export function buildApp() {
@@ -32,6 +36,10 @@ export function buildApp() {
 
   app.use("/api/v1/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false }), authRouter);
   app.use("/api/v1/cotizaciones", cotizacionesRouter);
+  app.use("/api/v1/ordenes", ordenesRouter);
+  app.use("/api/v1/cuadrillas", cuadrillasRouter);
+  app.use("/api/v1/planillas", planillasRouter);
+  app.use("/api/v1/reportes", reportesRouter);
   app.use((request, _response, next) => next(new HttpError(404, "NOT_FOUND", `Ruta no encontrada: ${request.method} ${request.path}`)));
   app.use(errorHandler);
   return app;

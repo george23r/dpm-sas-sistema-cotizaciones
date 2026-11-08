@@ -1,0 +1,20 @@
+import { apiFetch } from "./http";
+
+export interface OrdenApi { id: number; cotizacion_id: number | null; zona_id: number; zona: string; direccion: string | null; cliente_id: number; cliente: string; tipo_servicio: string; cuadrilla_id: number | null; cuadrilla: string | null; inicio: string; fin: string; estado: "pendiente" | "en_ejecucion" | "finalizada"; iniciada_en: string | null; finalizada_en: string | null; nota_finalizacion: string | null; }
+export interface CuadrillaApi { id: number; nombre: string; activa: boolean; integrantes: number; integrantes_activos: number; servicios_proximos: number; }
+export interface PlanillaApi { id: number; cliente_id: number; cliente: string; periodo_desde: string; periodo_hasta: string; origen: "campo" | "administrativa"; estado: "borrador" | "en_comparacion" | "conciliada"; registrada_por: number; creado_en: string; }
+export interface ComparacionApi { operario: string; fecha: string; horas_campo: string | null; horas_admin: string | null; diferencia: string; resultado: "coincide" | "diferente" | "solo_campo" | "solo_administrativa"; }
+
+export function obtenerOrdenesApi(params: { estado?: string } = {}) { const query = params.estado ? `?estado=${encodeURIComponent(params.estado)}` : ""; return apiFetch<{ data: OrdenApi[] }>(`/api/v1/ordenes${query}`); }
+export function obtenerOrdenApi(id: number) { return apiFetch<{ data: OrdenApi }>(`/api/v1/ordenes/${id}`); }
+export function obtenerCuadrillasApi() { return apiFetch<{ data: CuadrillaApi[] }>("/api/v1/cuadrillas"); }
+export function obtenerPlanillasApi(clienteId?: number) { return apiFetch<{ data: PlanillaApi[] }>(clienteId ? `/api/v1/planillas?clienteId=${clienteId}` : "/api/v1/planillas"); }
+export function compararPlanillasApi(campoId: number, adminId: number) { return apiFetch<{ data: ComparacionApi[] }>(`/api/v1/planillas/comparar?campoId=${campoId}&adminId=${adminId}`); }
+export function crearPlanillaApi(input: { clienteId: number; desde: string; hasta: string; origen: "campo" | "administrativa" }) { return apiFetch<{ data: { id: number } }>("/api/v1/planillas", { method: "POST", body: JSON.stringify(input) }); }
+export function conciliarPlanillasApi(campoId: number, adminId: number) { return apiFetch<{ data: { estado: string } }>("/api/v1/planillas/conciliar", { method: "POST", body: JSON.stringify({ campoId, adminId }) }); }
+export function obtenerReporteApi(desde: string, hasta: string, clienteId?: number) { const query = new URLSearchParams({ desde, hasta }); if (clienteId) query.set("clienteId", String(clienteId)); return apiFetch<{ data: Record<string, unknown>[] }>(`/api/v1/reportes/periodo?${query.toString()}`); }
+
+export function crearOrdenApi(input: { cotizacionId: number; cuadrillaId: number | null; inicio: string; fin: string }) { return apiFetch<{ data: { id: number } }>("/api/v1/ordenes", { method: "POST", body: JSON.stringify(input) }); }
+export function iniciarOrdenApi(id: number) { return apiFetch<{ data: OrdenApi }>(`/api/v1/ordenes/${id}/iniciar`, { method: "PATCH" }); }
+export function finalizarOrdenApi(id: number, nota?: string) { return apiFetch<{ data: OrdenApi }>(`/api/v1/ordenes/${id}/finalizar`, { method: "PATCH", body: JSON.stringify({ nota }) }); }
+export function asignarCuadrillaApi(id: number, cuadrillaId: number | null) { return apiFetch<{ data: { id: number; cuadrilla_id: number | null } }>(`/api/v1/ordenes/${id}`, { method: "PATCH", body: JSON.stringify({ cuadrillaId }) }); }
