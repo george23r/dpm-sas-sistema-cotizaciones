@@ -32,7 +32,7 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByRole("button", { name: "Lista" })).toBeVisible();
   await page.getByRole("button", { name: "Programar servicio" }).click();
   await expect(page.getByRole("heading", { name: "Programar servicio" })).toBeVisible();
-  await expect(page.getByLabel("CotizaciÃ³n aceptada")).toBeVisible();
+  await expect(page.getByLabel("Cotización aceptada")).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
   const monthTitle = page.getByRole("heading", { level: 2 }).first();
   const initialMonth = await monthTitle.textContent();
@@ -54,13 +54,23 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await page.getByRole("link", { name: "Reportes" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/reportes$/);
   await expect(page.getByText("Planillas conciliadas")).toBeVisible();
-  await expect(page.getByText("ConciliaciÃ³n de planillas")).toBeVisible();
+  await expect(page.getByText("Conciliación de planillas")).toBeVisible();
   await capture(page, "admin-reportes-1366");
   await page.getByRole("link", { name: "Cuadrillas" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/cuadrillas$/);
   await expect(page.getByRole("heading", { name: "Cuadrillas" })).toBeVisible();
   await expect(page.getByLabel("Activa")).toBeVisible();
   await capture(page, "admin-cuadrillas-1366");
+  await page.getByRole("link", { name: "Trabajadores" }).click();
+  await expect(page).toHaveURL(/\/app\/admin\/trabajadores$/);
+  await expect(page.getByRole("heading", { name: "Trabajadores" })).toBeVisible();
+  await expect(page.getByText("Ficha operativa persistente")).toBeVisible();
+  await capture(page, "admin-trabajadores-1366");
+  await page.getByRole("link", { name: "Catálogo de servicios" }).click();
+  await expect(page).toHaveURL(/\/app\/admin\/servicios$/);
+  await expect(page.getByRole("heading", { name: "Servicios DPM" })).toBeVisible();
+  await expect(page.getByText(/unidades y tarifas mostradas.*pendientes de validación con DPM/)).toBeVisible();
+  await capture(page, "admin-servicios-1366");
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
@@ -77,18 +87,18 @@ test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
   await expect(page.getByText("Centro de operaciones")).not.toBeVisible();
 });
 
-test("operario ve Ãºnicamente Ã³rdenes asignadas y portal mobile-first", async ({ page }) => {
+test("operario ve únicamente órdenes asignadas y portal mobile-first", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await login(page, "operario");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
-  await expect(page.getByRole("heading", { name: "Mis Ã³rdenes" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mis órdenes" })).toBeVisible();
   await expect(page.getByText("Servicios asignados a tu cuadrilla")).toBeVisible();
   await capture(page, "operario-ordenes-360");
   await page.goto("/app/admin/clientes");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
 });
 
-test("operario puede reintentar si falla la carga de sus Ã³rdenes", async ({ page }) => {
+test("operario puede reintentar si falla la carga de sus órdenes", async ({ page }) => {
   let firstRequest = true;
   await page.route("**/api/v1/ordenes/mias", async (route) => {
     if (firstRequest) {
@@ -117,12 +127,12 @@ test("permite recorrer el login con teclado", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeVisible();
 });
 
-test("informa y redirige cuando expira la sesiÃ³n", async ({ page }) => {
+test("informa y redirige cuando expira la sesión", async ({ page }) => {
   await login(page, "admin");
   await expect(page).toHaveURL(/\/app\/admin\/panel$/);
   await page.context().clearCookies();
   await page.goto("/app/admin/programacion");
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("alert")).toContainText("Tu sesiÃ³n expirÃ³");
+  await expect(page.getByRole("alert")).toContainText("Tu sesión expiró");
 });
 
