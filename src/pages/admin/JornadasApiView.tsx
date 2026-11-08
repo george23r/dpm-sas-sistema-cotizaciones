@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ClipboardPlus, GitCompareArrows, LockKeyhole, Plus, RefreshCw, TriangleAlert } from "lucide-react";
 import { agregarRegistroPlanillaApi, compararPlanillasApi, conciliarPlanillasApi, crearPlanillaApi, obtenerPlanillasApi, type ComparacionApi, type PlanillaApi } from "@/api/operaciones";
 import { obtenerClientesApi, obtenerOperariosApi, obtenerZonasApi, type ClienteApi, type OperarioApi, type ZonaApi } from "@/api/catalogos";
@@ -19,8 +19,8 @@ export function JornadasApiView({ clientes }: { clientes: Array<{ id: number; no
   const [clienteId, setClienteId] = useState(""); const [desde, setDesde] = useState("2026-11-01"); const [hasta, setHasta] = useState("2026-11-15"); const [record, setRecord] = useState<RecordForm>(emptyRecord);
   const [error, setError] = useState<string | null>(null); const [loading, setLoading] = useState(false); const [message, setMessage] = useState("");
 
-  const load = () => { if (!clienteId) return; setLoading(true); obtenerPlanillasApi(Number(clienteId)).then((result) => { setPlanillas(result.data); const field = result.data.find((sheet) => sheet.origen === "campo"); const admin = result.data.find((sheet) => sheet.origen === "administrativa" && sheet.cliente_id === field?.cliente_id && sheet.periodo_desde === field.periodo_desde && sheet.periodo_hasta === field.periodo_hasta); setCampoId(String(field?.id ?? "")); setAdminId(String(admin?.id ?? "")); setRecordSheetId((current) => current || String(field?.id ?? admin?.id ?? "")); setError(null); }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false)); };
-  useEffect(() => { load(); }, [clienteId]);
+  const load = useCallback(() => { if (!clienteId) return; setLoading(true); obtenerPlanillasApi(Number(clienteId)).then((result) => { setPlanillas(result.data); const field = result.data.find((sheet) => sheet.origen === "campo" && sheet.periodo_desde === desde && sheet.periodo_hasta === hasta); const admin = result.data.find((sheet) => sheet.origen === "administrativa" && sheet.periodo_desde === desde && sheet.periodo_hasta === hasta); setCampoId(String(field?.id ?? "")); setAdminId(String(admin?.id ?? "")); setRecordSheetId((current) => current || String(field?.id ?? admin?.id ?? "")); setError(null); }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false)); }, [clienteId, desde, hasta]);
+  useEffect(() => { void load(); }, [load]);
   useEffect(() => { obtenerClientesApi().then((result) => { setClientOptions(result.data.map((client: ClienteApi) => ({ id: client.id, nombre: client.nombre }))); setClienteId((current) => current || String(result.data[0]?.id ?? "")); }).catch((reason: Error) => setError(reason.message)); }, []);
   useEffect(() => { if (!clienteId) return; Promise.all([obtenerOperariosApi(), obtenerZonasApi(Number(clienteId))]).then(([workers, clientZones]) => { setOperarios(workers.data); setZonas(clientZones.data); setRecord((current) => ({ ...current, operarioId: current.operarioId || String(workers.data[0]?.id ?? ""), zonaId: current.zonaId || String(clientZones.data[0]?.id ?? ""), fecha: current.fecha || desde })); }).catch((reason: Error) => setError(reason.message)); }, [clienteId, desde]);
 
