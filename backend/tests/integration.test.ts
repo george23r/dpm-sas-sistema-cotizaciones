@@ -111,6 +111,9 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
     const order = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: activeWorker.cuadrilla_id, inicio: start.toISOString(), fin: end.toISOString() }) }, admin.cookie);
     assert.equal(order.response.status, 201);
+    const duplicateOrder = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: activeWorker.cuadrilla_id, inicio: new Date(end.getTime() + 60 * 60 * 1000).toISOString(), fin: new Date(end.getTime() + 3 * 60 * 60 * 1000).toISOString() }) }, admin.cookie);
+    assert.equal(duplicateOrder.response.status, 409);
+    assert.equal(duplicateOrder.body.code, "QUOTE_ALREADY_SCHEDULED");
 
     const teamId = activeWorker.cuadrilla_id;
     const members = await request(`/api/v1/cuadrillas/${teamId}/miembros`, {}, admin.cookie);

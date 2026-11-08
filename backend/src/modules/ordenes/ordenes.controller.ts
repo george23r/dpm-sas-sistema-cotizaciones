@@ -37,7 +37,22 @@ export const create = [authenticate, requireRole("administrador"), asyncRoute(as
   const current = user(request); const parsed = orderSchema.safeParse(request.body); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "Los datos de programación no son válidos.", parsed.error.flatten().fieldErrors);
   const quote = await pool.query<{ zona_id: number; tipo_servicio: string; cliente_id: number }>(`SELECT q.zona_id, q.objeto AS tipo_servicio, q.cliente_id FROM dpm.cotizaciones q WHERE q.id=$1 AND q.estado='aceptada'`, [parsed.data.cotizacionId]);
   if (!quote.rows[0]) throw new HttpError(409, "QUOTE_NOT_ACCEPTED", "Solo se puede programar una cotización aceptada.");
-  try { const result = await pool.query<{ id: number }>(`INSERT INTO dpm.ordenes_trabajo (cotizacion_id,zona_id,tipo_servicio,cuadrilla_id,inicio,fin) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`, [parsed.data.cotizacionId, quote.rows[0].zona_id, quote.rows[0].tipo_servicio, parsed.data.cuadrillaId ?? null, parsed.data.inicio, parsed.data.fin]); const created = result.rows[0]; if (!created) throw new HttpError(500, "ORDER_CREATE_FAILED", "No fue posible crear la orden."); response.status(201).json({ data: created }); } catch (error) { translate(error); }
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(7002, $1)", [parsed.data.cotizacionId]);
+    const duplicate = await client.query<{ id: number }>("SELECT id FROM dpm.ordenes_trabajo WHERE cotizacion_id=$1 LIMIT 1", [parsed.data.cotizacionId]);
+    if (duplicate.rows[0]) throw new HttpError(409, "QUOTE_ALREADY_SCHEDULED", "La cotización aceptada ya tiene una orden de trabajo.");
+    const result = await client.query<{ id: number }>(`INSERT INTO dpm.ordenes_trabajo (cotizacion_id,zona_id,tipo_servicio,cuadrilla_id,inicio,fin) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`, [parsed.data.cotizacionId, quote.rows[0].zona_id, quote.rows[0].tipo_servicio, parsed.data.cuadrillaId ?? null, parsed.data.inicio, parsed.data.fin]);
+    const created = result.rows[0];
+    if (!created) throw new HttpError(500, "ORDER_CREATE_FAILED", "No fue posible crear la orden.");
+    await client.query("COMMIT");
+    response.status(201).json({ data: created });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    if (error instanceof HttpError) throw error;
+    translate(error);
+  } finally { client.release(); }
   void current;
 })];
 
@@ -46,4 +61,5 @@ export const assign = [authenticate, requireRole("administrador"), asyncRoute(as
 export const start = [authenticate, requireRole("operario"), asyncRoute(async (request, response) => { const current = user(request); const orderId = pathId(request); const result = await pool.query(`UPDATE dpm.ordenes_trabajo SET estado='en_ejecucion', iniciada_en=now() WHERE id=$1 AND cuadrilla_id=(SELECT cuadrilla_id FROM dpm.operarios WHERE usuario_id=$2 AND activo=true) AND estado='pendiente' RETURNING id, estado, iniciada_en`, [orderId, current.id]); if (!result.rows[0]) throw new HttpError(409, "ORDER_START_NOT_ALLOWED", "La orden no está pendiente o no pertenece a tu cuadrilla."); response.json({ data: result.rows[0] }); })];
 
 export const finish = [authenticate, requireRole("operario"), asyncRoute(async (request, response) => { const current = user(request); const parsed = finalizationSchema.safeParse(request.body ?? {}); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "La nota de finalización no es válida."); const orderId = pathId(request); const result = await pool.query(`UPDATE dpm.ordenes_trabajo SET estado='finalizada', finalizada_en=now(), finalizada_por=(SELECT id FROM dpm.operarios WHERE usuario_id=$2 AND activo=true), nota_finalizacion=$3 WHERE id=$1 AND cuadrilla_id=(SELECT cuadrilla_id FROM dpm.operarios WHERE usuario_id=$2 AND activo=true) AND estado='en_ejecucion' RETURNING id, estado, finalizada_en, nota_finalizacion`, [orderId, current.id, parsed.data.nota ?? null]); if (!result.rows[0]) throw new HttpError(409, "ORDER_FINISH_NOT_ALLOWED", "La orden no está en ejecución o no pertenece a tu cuadrilla."); response.json({ data: result.rows[0] }); })];
+
 
