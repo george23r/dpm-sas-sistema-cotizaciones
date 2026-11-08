@@ -3,7 +3,7 @@ import { z } from "zod";
 import { pool } from "../../db/pool.js";
 import { authenticate, requireRole } from "../../middlewares/auth.js";
 import { asyncRoute, HttpError } from "../../shared/errors.js";
-import { addPart, createQuote, findQuote, findQuoteParts, findQuotes, getClientForUser } from "./cotizaciones.repository.js";
+import { addPart, createQuoteWithParts, findQuote, findQuoteParts, findQuotes, getClientForUser } from "./cotizaciones.repository.js";
 
 const idSchema = z.coerce.number().int().positive();
 const quoteListSchema = z.object({ estado: z.enum(["solicitada", "borrador", "enviada", "aceptada", "rechazada"]).optional(), clienteId: idSchema.optional(), search: z.string().trim().max(120).optional(), desde: z.string().date().optional(), hasta: z.string().date().optional(), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) });
@@ -12,6 +12,7 @@ const lineSchema = z.object({ servicioId: z.number().int().positive().nullable()
 const visitSchema = z.object({ fecha: z.string().date(), observaciones: z.string().trim().max(2000).optional() });
 const milestoneSchema = z.object({ orden: z.number().int().positive(), descripcion: z.string().trim().min(1).max(200), porcentaje: z.number().positive().max(100) });
 const costSchema = z.object({ tipo: z.enum(["mano_obra", "maquinaria", "herramientas", "combustible", "transporte", "otro"]), descripcion: z.string().trim().min(1).max(200), cantidad: z.number().positive(), valorUnitario: z.number().nonnegative() });
+const composedQuoteSchema = quoteSchema.extend({ visita: visitSchema.optional(), lineas: z.array(lineSchema).max(100).default([]), costos: z.array(costSchema).max(100).default([]), hitos: z.array(milestoneSchema).max(20).default([]), enviar: z.boolean().default(false) });
 
 function quoteId(request: Request) { const parsed = idSchema.safeParse(request.params.id); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "El identificador no es válido."); return parsed.data; }
 function current(request: { user?: { id: number; rol: string } }) { if (!request.user) throw new HttpError(401, "UNAUTHENTICATED", "La sesión es requerida."); return request.user; }
@@ -22,7 +23,7 @@ export const detail = [authenticate, asyncRoute(async (request, response) => { c
 
 export const create = [authenticate, requireRole("administrador", "cliente"), asyncRoute(async (request, response) => {
   const user = current(request);
-  const parsed = quoteSchema.safeParse(request.body);
+  const parsed = composedQuoteSchema.safeParse(request.body);
   if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "Los datos de la cotización no son válidos.", parsed.error.flatten().fieldErrors);
   const clienteId = user.rol === "cliente" ? await getClientForUser(user.id) : parsed.data.clienteId;
   if (!clienteId) throw new HttpError(403, "CLIENT_PROFILE_REQUIRED", "La cuenta no tiene un cliente asociado.");
@@ -30,7 +31,20 @@ export const create = [authenticate, requireRole("administrador", "cliente"), as
   const zone = await pool.query<{ cliente_id: number }>("SELECT cliente_id FROM dpm.zonas WHERE id=$1", [parsed.data.zonaId]);
   if (!zone.rows[0]) throw new HttpError(404, "ZONE_NOT_FOUND", "La zona no existe.");
   if (zone.rows[0].cliente_id !== clienteId) throw new HttpError(403, "ZONE_NOT_OWNED", "La zona no pertenece al cliente seleccionado.");
-  const id = await createQuote({ ...parsed.data, clienteId, creadaPor: user.id });
+  if (user.rol === "cliente" && (parsed.data.enviar || parsed.data.visita || parsed.data.lineas.length || parsed.data.costos.length || parsed.data.hitos.length)) throw new HttpError(403, "FORBIDDEN", "El cliente solo puede crear una solicitud inicial.");
+  let id: number;
+  try {
+    id = await createQuoteWithParts({ ...parsed.data, clienteId, creadaPor: user.id }, {
+      visita: parsed.data.visita ? { fecha: parsed.data.visita.fecha, realizadaPor: user.id, observaciones: parsed.data.visita.observaciones } : undefined,
+      lineas: parsed.data.lineas,
+      costos: parsed.data.costos,
+      hitos: parsed.data.hitos,
+      enviar: user.rol === "administrador" && parsed.data.enviar,
+    });
+  } catch (error) {
+    if (parsed.data.enviar && error instanceof Error && /hitos|visita|l[ií]neas|cotizaci[oó]n/i.test(error.message)) throw new HttpError(409, "QUOTE_SEND_BLOCKED", error.message);
+    throw error;
+  }
   response.status(201).json({ data: { id } });
 })];
 
