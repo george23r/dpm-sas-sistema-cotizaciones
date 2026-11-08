@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="DPM API - RNF-03" enabled="true">
+      <stringProp name="TestPlan.comments">Prueba de consultas con datos ficticios. No declara resultados.</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="API_HOST" elementType="Argument"><stringProp name="Argument.name">API_HOST</stringProp><stringProp name="Argument.value">http://127.0.0.1:3000</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp>
+          <elementProp name="ADMIN_EMAIL" elementType="Argument"><stringProp name="Argument.name">ADMIN_EMAIL</stringProp><stringProp name="Argument.value">admin@dpm.example</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp>
+          <elementProp name="ADMIN_PASSWORD" elementType="Argument"><stringProp name="Argument.name">ADMIN_PASSWORD</stringProp><stringProp name="Argument.value">Admin123!</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp>
+          <elementProp name="CAMPO_ID" elementType="Argument"><stringProp name="Argument.name">CAMPO_ID</stringProp><stringProp name="Argument.value">1</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp>
+          <elementProp name="ADMIN_ID" elementType="Argument"><stringProp name="Argument.name">ADMIN_ID</stringProp><stringProp name="Argument.value">2</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="Cookie HttpOnly de sesión" enabled="true"><collectionProp name="CookieManager.cookies"/><boolProp name="CookieManager.clearEachIteration">false</boolProp><boolProp name="CookieManager.controlledByThreadGroup">false</boolProp></CookieManager>
+      <hashTree/>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="10 usuarios concurrentes" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="50 iteraciones por operación" enabled="true"><boolProp name="LoopController.continue_forever">false</boolProp><stringProp name="LoopController.loops">50</stringProp></elementProp>
+        <stringProp name="ThreadGroup.num_threads">10</stringProp><stringProp name="ThreadGroup.ramp_time">10</stringProp><longProp name="ThreadGroup.start_time">0</longProp><longProp name="ThreadGroup.end_time">0</longProp><boolProp name="ThreadGroup.scheduler">false</boolProp><stringProp name="ThreadGroup.duration"></stringProp><stringProp name="ThreadGroup.delay"></stringProp><boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Login una vez por usuario" enabled="true"/>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /auth/login" enabled="true"><boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="body" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{"correo":"${ADMIN_EMAIL}","clave":"${ADMIN_PASSWORD}"}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp><stringProp name="HTTPSampler.domain">${__groovy(vars.get('API_HOST').replaceFirst('https?://','').split(':')[0])}</stringProp><stringProp name="HTTPSampler.port">${__groovy((vars.get('API_HOST').replaceFirst('https?://','').split(':').length&gt;1)?vars.get('API_HOST').replaceFirst('https?://','').split(':')[1]:'3000')}</stringProp><stringProp name="HTTPSampler.protocol">http</stringProp><stringProp name="HTTPSampler.path">/api/v1/auth/login</stringProp><stringProp name="HTTPSampler.method">POST</stringProp></HTTPSamplerProxy>
+          <hashTree><HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="JSON" enabled="true"><collectionProp name="HeaderManager.headers"><elementProp name="Content-Type" elementType="Header"><stringProp name="Header.name">Content-Type</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp></collectionProp></HeaderManager><hashTree/></hashTree>
+        </hashTree>
+        <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="50 consultas por operación" enabled="true"><boolProp name="LoopController.continue_forever">false</boolProp><stringProp name="LoopController.loops">50</stringProp></LoopController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET cotizaciones" enabled="true"><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"/></elementProp><stringProp name="HTTPSampler.domain">${__groovy(vars.get('API_HOST').replaceFirst('https?://','').split(':')[0])}</stringProp><stringProp name="HTTPSampler.port">3000</stringProp><stringProp name="HTTPSampler.protocol">http</stringProp><stringProp name="HTTPSampler.path">/api/v1/cotizaciones</stringProp><stringProp name="HTTPSampler.method">GET</stringProp></HTTPSamplerProxy><hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET historial servicios finalizados" enabled="true"><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"/></elementProp><stringProp name="HTTPSampler.domain">${__groovy(vars.get('API_HOST').replaceFirst('https?://','').split(':')[0])}</stringProp><stringProp name="HTTPSampler.port">3000</stringProp><stringProp name="HTTPSampler.protocol">http</stringProp><stringProp name="HTTPSampler.path">/api/v1/ordenes?estado=finalizada</stringProp><stringProp name="HTTPSampler.method">GET</stringProp></HTTPSamplerProxy><hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET reporte de periodo" enabled="true"><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"/></elementProp><stringProp name="HTTPSampler.domain">${__groovy(vars.get('API_HOST').replaceFirst('https?://','').split(':')[0])}</stringProp><stringProp name="HTTPSampler.port">3000</stringProp><stringProp name="HTTPSampler.protocol">http</stringProp><stringProp name="HTTPSampler.path">/api/v1/reportes/periodo?desde=2026-01-01&amp;hasta=2026-12-31</stringProp><stringProp name="HTTPSampler.method">GET</stringProp></HTTPSamplerProxy><hashTree/>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET comparación de planillas" enabled="true"><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"/></elementProp><stringProp name="HTTPSampler.domain">${__groovy(vars.get('API_HOST').replaceFirst('https?://','').split(':')[0])}</stringProp><stringProp name="HTTPSampler.port">3000</stringProp><stringProp name="HTTPSampler.protocol">http</stringProp><stringProp name="HTTPSampler.path">/api/v1/planillas/comparar?campoId=${CAMPO_ID}&amp;adminId=${ADMIN_ID}</stringProp><stringProp name="HTTPSampler.method">GET</stringProp></HTTPSamplerProxy><hashTree/>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
