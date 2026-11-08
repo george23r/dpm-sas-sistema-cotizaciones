@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, AlertTriangle, Clock, Users2 } from "lucide-react";
+import { Plus, AlertTriangle, Clock } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ function aISO(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-const HOY = new Date("2026-10-17T00:00:00");
+const HOY = new Date();
 
 export function Programacion() {
   const { ordenes, cuadrillas, crearOrden } = useApp();
@@ -184,53 +184,31 @@ function DialogProgramarServicio({
   onCerrar: () => void;
   onProgramar: ReturnType<typeof useApp>["crearOrden"];
 }) {
-  const { clientes, zonas, cuadrillas } = useApp();
-  const [clienteId, setClienteId] = useState(clientes[0]?.id ?? "");
-  const [zonaId, setZonaId] = useState("");
-  const [tipoServicio, setTipoServicio] = useState("Mantenimiento integral");
-  const [fecha, setFecha] = useState("2026-10-20");
-  const [horaInicio, setHoraInicio] = useState("08:00");
-  const [horaFin, setHoraFin] = useState("10:00");
-  const [cuadrillaId, setCuadrillaId] = useState(cuadrillas[0]?.id ?? "");
-  const [error, setError] = useState<string | null>(null);
-
-  const zonasDelCliente = zonas.filter((z) => z.clienteId === clienteId);
-  const zonaSeleccionada = zonasDelCliente.find((z) => z.id === zonaId) ?? zonasDelCliente[0];
-
+  const { clientes, zonas, cuadrillas, cotizaciones, ordenes } = useApp();
+  const aceptadas = cotizaciones.filter(c=>c.estado==="aceptada");
+  const [cotizacionId,setCotizacionId]=useState(aceptadas[0]?.id??"");
+  const cotizacion=aceptadas.find(c=>c.id===cotizacionId);
+  const cliente=clientes.find(c=>c.id===cotizacion?.clienteId);
+  const zona=zonas.find(z=>z.id===cotizacion?.zonaId);
+  const [fecha,setFecha]=useState(new Date().toLocaleDateString("en-CA",{timeZone:"America/Bogota"}));
+  const [horaInicio,setHoraInicio]=useState("08:00");
+  const [horaFin,setHoraFin]=useState("10:00");
+  const [cuadrillaId,setCuadrillaId]=useState("");
+  const [error,setError]=useState<string|null>(null);
+  const disponibles=aceptadas.filter(c=>!ordenes.some(o=>o.cotizacionId===c.id&&o.estado!=="finalizado"));
   const limpiarYCerrar = () => {
     setError(null);
     onCerrar();
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit=(e:React.FormEvent)=>{
     e.preventDefault();
-    if (!zonaSeleccionada) {
-      setError("Selecciona un cliente con zonas registradas.");
-      return;
-    }
-    if (horaFin <= horaInicio) {
-      setError("La hora de fin debe ser posterior a la hora de inicio.");
-      return;
-    }
-    const resultado = onProgramar({
-      cotizacionId: null,
-      clienteId,
-      zonaId: zonaSeleccionada.id,
-      zonaNombre: zonaSeleccionada.nombre,
-      direccion: zonaSeleccionada.direccion,
-      tipoServicio,
-      fecha,
-      horaInicio,
-      horaFin,
-      cuadrillaId: cuadrillaId || null,
-    });
-    if (!resultado.ok) {
-      setError(resultado.error);
-      return;
-    }
+    if(!cotizacion||!zona){setError("Selecciona una cotización aceptada.");return;}
+    if(horaFin<=horaInicio){setError("La hora de fin debe ser posterior al inicio.");return;}
+    const resultado=onProgramar({cotizacionId:cotizacion.id,clienteId:cotizacion.clienteId,zonaId:zona.id,zonaNombre:zona.nombre,direccion:zona.direccion,tipoServicio:cotizacion.servicio,fecha,horaInicio,horaFin,cuadrillaId:cuadrillaId||null});
+    if(!resultado.ok){setError(resultado.error);return;}
     limpiarYCerrar();
   };
-
   return (
     <Dialog open={abierto} onOpenChange={(open) => !open && limpiarYCerrar()}>
       <DialogContent>
@@ -239,71 +217,27 @@ function DialogProgramarServicio({
           <DialogDescription>Define fecha, horario y cuadrilla responsable.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-4" noValidate>
+        <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="prog-cliente">Cliente</Label>
-            <Select
-              id="prog-cliente"
-              value={clienteId}
-              onChange={(e) => {
-                setClienteId(e.target.value);
-                setZonaId("");
-              }}
-            >
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
+            <Label htmlFor="prog-cot">Cotización aceptada</Label>
+            <Select id="prog-cot" value={cotizacionId} onChange={e=>setCotizacionId(e.target.value)}>
+              {!aceptadas.length&&<option value="">Sin cotizaciones aceptadas</option>}
+              {aceptadas.map(c=><option key={c.id} value={c.id}>{c.id} · {c.objeto}</option>)}
             </Select>
+            {!disponibles.length&&aceptadas.length>0&&<p className="text-xs text-muted">Las cotizaciones ya programadas también pueden corresponder a nuevos servicios; revisa antes de duplicar una orden.</p>}
           </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="prog-zona">Zona / predio</Label>
-            <Select id="prog-zona" value={zonaSeleccionada?.id ?? ""} onChange={(e) => setZonaId(e.target.value)}>
-              {zonasDelCliente.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.nombre}
-                </option>
-              ))}
+          {cotizacion&&<div className="rounded-lg bg-app-bg p-3 text-sm"><p><strong>Cliente:</strong> {cliente?.nombre??"—"}</p><p><strong>Predio:</strong> {zona?.nombre??"—"}</p><p><strong>Servicio:</strong> {cotizacion.servicio}</p></div>}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="text-sm">Fecha<Input type="date" value={fecha} onChange={e=>setFecha(e.target.value)}/></label>
+            <label className="text-sm">Inicio<Input type="time" value={horaInicio} onChange={e=>setHoraInicio(e.target.value)}/></label>
+            <label className="text-sm">Fin<Input type="time" value={horaFin} onChange={e=>setHoraFin(e.target.value)}/></label>
+          </div>
+          <label className="text-sm">Cuadrilla (puedes asignarla después)
+            <Select value={cuadrillaId} onChange={e=>setCuadrillaId(e.target.value)}>
+              <option value="">Sin asignar</option>
+              {cuadrillas.map(c=><option key={c.id} value={c.id}>{c.nombre} · {c.integrantes} integrantes</option>)}
             </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="prog-tipo">Tipo de servicio</Label>
-            <Input id="prog-tipo" value={tipoServicio} onChange={(e) => setTipoServicio(e.target.value)} />
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="prog-fecha">Fecha</Label>
-              <Input id="prog-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="prog-inicio">Inicio</Label>
-              <Input id="prog-inicio" type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="prog-fin">Fin</Label>
-              <Input id="prog-fin" type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="prog-cuadrilla">Cuadrilla</Label>
-            <Select id="prog-cuadrilla" value={cuadrillaId} onChange={(e) => setCuadrillaId(e.target.value)}>
-              {cuadrillas.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre} {!c.disponibleHoy && "(ocupada hoy)"}
-                </option>
-              ))}
-            </Select>
-            <p className="flex items-center gap-1.5 text-xs text-muted">
-              <Users2 className="size-3.5" />
-              {cuadrillas.find((c) => c.id === cuadrillaId)?.integrantes ?? 0} integrantes
-            </p>
-          </div>
-
+          </label>
           {error && (
             <p className="flex items-start gap-2 rounded-[var(--radius-btn)] bg-status-error-bg px-3 py-2.5 text-sm text-status-error">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
@@ -317,7 +251,7 @@ function DialogProgramarServicio({
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Guardar servicio</Button>
+            <Button type="submit" disabled={!cotizacion}>Guardar servicio</Button>
           </DialogFooter>
         </form>
       </DialogContent>

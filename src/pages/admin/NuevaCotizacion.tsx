@@ -1,245 +1,83 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Save } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
-import { calcularPrecio, COSTO_EQUIPO, COSTO_OPERARIO } from "@/lib/precio";
-import {
-  EQUIPOS,
-  FRECUENCIAS,
-  TIPOS_VEGETACION,
-  type Equipo,
-  type Frecuencia,
-  type TipoVegetacion,
-} from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { SERVICIOS_DPM, TIPOS_COSTO, type LineaCotizacion, type CostoInterno, type HitoPago, type TipoCosto } from "@/types";
+import { totalLineas, totalCostos, sumaHitos, validarEnvio } from "@/lib/cotizaciones";
+import { formatCOP } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { HuTag } from "@/components/shared/HuTag";
-import { cn, formatCOP } from "@/lib/utils";
-
-const TODOS_LOS_EQUIPOS = Object.keys(EQUIPOS) as Equipo[];
-
-export function NuevaCotizacion() {
-  const { clientes, zonas, crearCotizacion } = useApp();
-  const navigate = useNavigate();
-
-  const [clienteId, setClienteId] = useState(clientes[0]?.id ?? "");
-  const [zonaNombre, setZonaNombre] = useState("");
-  const [area, setArea] = useState("500");
-  const [tipoVegetacion, setTipoVegetacion] = useState<TipoVegetacion>("cesped_simple");
-  const [frecuencia, setFrecuencia] = useState<Frecuencia>("mensual");
-  const [numeroOperarios, setNumeroOperarios] = useState("2");
-  const [equipos, setEquipos] = useState<Equipo[]>(["guadañadora"]);
-  const [guardado, setGuardado] = useState(false);
-
-  const areaNum = Math.max(0, Number(area) || 0);
-  const operariosNum = Math.max(0, Number(numeroOperarios) || 0);
-
-  const desglose = useMemo(
-    () =>
-      calcularPrecio({
-        areaM2: areaNum,
-        tipoVegetacion,
-        frecuencia,
-        numeroOperarios: operariosNum,
-        equipos,
-      }),
-    [areaNum, tipoVegetacion, frecuencia, operariosNum, equipos],
-  );
-
-  const alternarEquipo = (equipo: Equipo) => {
-    setEquipos((prev) => (prev.includes(equipo) ? prev.filter((e) => e !== equipo) : [...prev, equipo]));
-  };
-
-  const zonaDelCliente = zonas.find((z) => z.clienteId === clienteId);
-
-  const onGuardar = () => {
-    crearCotizacion({
-      clienteId,
-      zonaId: zonaDelCliente?.id ?? "zon-sin-registro",
-      zonaNombre: zonaNombre.trim() || zonaDelCliente?.nombre || "Predio sin nombre",
-      areaM2: areaNum,
-      tipoVegetacion,
-      frecuencia,
-      numeroOperarios: operariosNum,
-      equipos,
-      estado: "enviada",
-      precio: desglose.total,
-      desglose,
-      origen: "administrador",
-    });
-    setGuardado(true);
-  };
-
-  if (guardado) {
-    return (
-      <div className="relative mx-auto max-w-md space-y-5 py-10 text-center">
-        <HuTag id="HU-01" />
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-soft text-primary">
-          <CheckCircle2 className="size-8" />
-        </div>
-        <div>
-          <h1 className="font-heading text-xl font-semibold text-ink">Cotización guardada</h1>
-          <p className="mt-1 text-sm text-muted">
-            Se registró con estado <strong>Enviada</strong> por {formatCOP(desglose.total)}.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button onClick={() => navigate("/app/admin/cotizaciones")}>Ver cotizaciones</Button>
-          <Button variant="outline" onClick={() => setGuardado(false)}>
-            Crear otra cotización
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative space-y-5">
-      <HuTag id="HU-01" />
-      <div>
-        <h1 className="font-heading text-xl font-semibold text-ink sm:text-2xl">Nueva cotización</h1>
-        <p className="text-sm text-muted">Define los parámetros del servicio y revisa el precio calculado en vivo.</p>
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Parámetros del servicio</CardTitle>
-            <CardDescription>Valores de tarifa y factores son ilustrativos.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cliente">Cliente</Label>
-                <Select id="cliente" value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
-                  {clientes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="zona">Nombre del predio</Label>
-                <Input
-                  id="zona"
-                  placeholder={zonaDelCliente?.nombre ?? "Ej. Zona común"}
-                  value={zonaNombre}
-                  onChange={(e) => setZonaNombre(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="area">Área (m²)</Label>
-                <Input id="area" type="number" min={0} value={area} onChange={(e) => setArea(e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="operarios">Número de operarios</Label>
-                <Input
-                  id="operarios"
-                  type="number"
-                  min={0}
-                  value={numeroOperarios}
-                  onChange={(e) => setNumeroOperarios(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="vegetacion">Tipo de vegetación</Label>
-                <Select
-                  id="vegetacion"
-                  value={tipoVegetacion}
-                  onChange={(e) => setTipoVegetacion(e.target.value as TipoVegetacion)}
-                >
-                  {Object.entries(TIPOS_VEGETACION).map(([valor, etiqueta]) => (
-                    <option key={valor} value={valor}>
-                      {etiqueta}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="frecuencia">Frecuencia</Label>
-                <Select
-                  id="frecuencia"
-                  value={frecuencia}
-                  onChange={(e) => setFrecuencia(e.target.value as Frecuencia)}
-                >
-                  {Object.entries(FRECUENCIAS).map(([valor, etiqueta]) => (
-                    <option key={valor} value={valor}>
-                      {etiqueta}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label>Equipos requeridos</Label>
-              <div className="flex flex-wrap gap-2">
-                {TODOS_LOS_EQUIPOS.map((equipo) => {
-                  const activo = equipos.includes(equipo);
-                  return (
-                    <button
-                      key={equipo}
-                      type="button"
-                      onClick={() => alternarEquipo(equipo)}
-                      className={cn(
-                        "rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
-                        activo
-                          ? "border-primary bg-soft text-primary"
-                          : "border-line bg-surface text-muted hover:bg-app-bg",
-                      )}
-                    >
-                      {EQUIPOS[equipo]} · {formatCOP(COSTO_EQUIPO[equipo])}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:sticky lg:top-20 lg:self-start">
-          <CardHeader>
-            <CardTitle>Precio calculado</CardTitle>
-            <CardDescription>(área × tarifa) × factor vegetación × factor frecuencia + personal + equipos</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <FilaPrecio etiqueta="Área × tarifa base" valor={formatCOP(desglose.areaPorTarifa)} />
-            <FilaPrecio etiqueta={`Factor vegetación (×${desglose.factorVegetacion})`} valor="" />
-            <FilaPrecio etiqueta={`Factor frecuencia (×${desglose.factorFrecuencia})`} valor="" />
-            <FilaPrecio etiqueta="Subtotal por área" valor={formatCOP(desglose.subtotalArea)} />
-            <FilaPrecio etiqueta={`Personal (${operariosNum} × ${formatCOP(COSTO_OPERARIO)})`} valor={formatCOP(desglose.costoPersonal)} />
-            <FilaPrecio etiqueta="Equipos" valor={formatCOP(desglose.costoEquipos)} />
-            <div className="h-px bg-line" />
-            <div className="flex items-center justify-between pt-1">
-              <span className="font-heading text-sm font-semibold text-ink">Total</span>
-              <span className="font-heading text-2xl font-semibold text-primary">{formatCOP(desglose.total)}</span>
-            </div>
-            <Button className="mt-2 w-full" size="lg" onClick={onGuardar} disabled={areaNum <= 0}>
-              <Save className="size-4" />
-              Guardar cotización
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function FilaPrecio({ etiqueta, valor }: { etiqueta: string; valor: string }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted">{etiqueta}</span>
-      {valor && <span className="font-medium text-ink">{valor}</span>}
-    </div>
-  );
+let seq=0;const uid=()=>String(++seq);
+export function NuevaCotizacion(){
+ const {cotizacionId}=useParams();const nav=useNavigate();
+ const {clientes,zonas,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion}=useApp();
+ const existing=cotizaciones.find(c=>c.id===cotizacionId);
+ const [clienteId,setClienteId]=useState(existing?.clienteId??clientes[0]?.id??"");
+ const zonasDisponibles=zonas.filter(z=>z.clienteId===clienteId);
+ const [zonaId,setZonaId]=useState(existing?.zonaId??"");
+ const zona=zonasDisponibles.find(z=>z.id===zonaId)??zonasDisponibles[0];
+ const [objeto,setObjeto]=useState(existing?.objeto??"");
+ const [servicio,setServicio]=useState(existing?.servicio??SERVICIOS_DPM[0]);
+ const [fechaVisita,setFechaVisita]=useState(existing?.fechaVisita??"");
+ const [observaciones,setObservaciones]=useState(existing?.observaciones??"");
+ const [lineas,setLineas]=useState<LineaCotizacion[]>(existing?.lineas??[{id:uid(),concepto:"",unidad:"unidad",cantidad:1,valorUnitario:0}]);
+ const [costos,setCostos]=useState<CostoInterno[]>(existing?.costos??[]);
+ const [hitos,setHitos]=useState<HitoPago[]>(existing?.hitos??[{id:uid(),descripcion:"Pago único",porcentaje:100}]);
+ const [error,setError]=useState("");
+ const [enviarId,setEnviarId]=useState<string|null>(null);
+ const total=useMemo(()=>totalLineas(lineas),[lineas]);
+ const datos={objeto,servicio,fechaVisita:fechaVisita||null,observaciones,lineas,costos,hitos};
+ const problema=validarEnvio(datos);
+ const editable=!existing||["solicitada","borrador"].includes(existing.estado);
+ useEffect(()=>{
+  if(!enviarId)return;
+  const registro=cotizaciones.find(c=>c.id===enviarId);
+  if(!registro||registro.lineas!==lineas)return;
+  const resultado=enviarCotizacion(enviarId);
+  if(resultado.ok)nav("/app/admin/cotizaciones");
+  else {setError(resultado.error);setEnviarId(null);}
+ },[enviarId,cotizaciones,lineas,enviarCotizacion,nav]);
+ function guardar(enviar=false){
+  setError("");
+  if(!zona||!objeto.trim()){setError("Selecciona una zona e indica el objeto.");return;}
+  if(!lineas.every(l=>l.concepto.trim()&&l.unidad.trim()&&Number.isFinite(l.cantidad)&&l.cantidad>0&&Number.isFinite(l.valorUnitario)&&l.valorUnitario>=0)){setError("Revisa los conceptos, cantidades y precios.");return;}
+  if(!costos.every(c=>c.concepto.trim()&&Number.isFinite(c.cantidad)&&c.cantidad>0&&Number.isFinite(c.valorUnitario)&&c.valorUnitario>=0)){setError("Revisa los costos internos.");return;}
+  if(enviar&&problema){setError(problema);return;}
+  let id=existing?.id;
+  if(existing){editarCotizacion(existing.id,datos);}
+  else id=crearCotizacion({...datos,clienteId,zonaId:zona.id,zonaNombre:zona.nombre,estado:"borrador",origen:"administrador"}).id;
+  if(enviar)setEnviarId(id??null);else nav("/app/admin/cotizaciones");
+ }
+ return <div className="relative space-y-5"><HuTag id="HU-01"/><div><h1 className="font-heading text-2xl font-semibold text-ink">{existing?"Elaborar cotización":"Nueva cotización"}</h1><p className="text-sm text-muted">Prototipo con valores ficticios, sin conexión a la API.</p></div>
+ {!editable?<Card><CardContent className="p-5">Las cotizaciones enviadas no pueden editarse.</CardContent></Card>:<>
+ <Card><CardHeader><CardTitle>Datos y visita técnica</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
+ <label className="text-sm">Cliente<Select value={clienteId} disabled={!!existing} onChange={e=>{setClienteId(e.target.value);setZonaId("");}}>{clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}</Select></label>
+ <label className="text-sm">Zona<Select value={zona?.id??""} disabled={!!existing} onChange={e=>setZonaId(e.target.value)}>{zonasDisponibles.map(z=><option key={z.id} value={z.id}>{z.nombre}</option>)}</Select></label>
+ <label className="text-sm">Servicio<Select value={servicio} onChange={e=>setServicio(e.target.value)}>{SERVICIOS_DPM.map(s=><option key={s}>{s}</option>)}</Select></label>
+ <label className="text-sm">Fecha de visita técnica<Input type="date" value={fechaVisita} onChange={e=>setFechaVisita(e.target.value)}/></label>
+ <label className="text-sm sm:col-span-2">Objeto de cotización<Input value={objeto} onChange={e=>setObjeto(e.target.value)} placeholder="Descripción del trabajo"/></label>
+ <label className="text-sm sm:col-span-2">Observaciones<Textarea value={observaciones} onChange={e=>setObservaciones(e.target.value)}/></label>
+ </CardContent></Card>
+ <Card><CardHeader><CardTitle>Conceptos de cobro</CardTitle></CardHeader><CardContent className="space-y-3">
+ {lineas.map((l,i)=><div key={l.id} className="grid gap-2 rounded-lg border border-line p-3 sm:grid-cols-4">
+ <label className="text-xs">Concepto<Input aria-label={"Concepto "+i} value={l.concepto} onChange={e=>setLineas(p=>p.map(v=>v.id===l.id?{...v,concepto:e.target.value}:v))}/></label>
+ <label className="text-xs">Unidad<Input value={l.unidad} onChange={e=>setLineas(p=>p.map(v=>v.id===l.id?{...v,unidad:e.target.value}:v))}/></label>
+ <label className="text-xs">Cantidad<Input type="number" min="0.01" step="any" value={l.cantidad} onChange={e=>setLineas(p=>p.map(v=>v.id===l.id?{...v,cantidad:Number(e.target.value)}:v))}/></label>
+ <label className="text-xs">Valor unitario<Input type="number" min="0" step="any" value={l.valorUnitario} onChange={e=>setLineas(p=>p.map(v=>v.id===l.id?{...v,valorUnitario:Number(e.target.value)}:v))}/></label>
+ <p className="text-sm sm:col-span-3">Subtotal {formatCOP(l.cantidad*l.valorUnitario)}</p><Button size="sm" variant="outline" onClick={()=>setLineas(p=>p.filter(v=>v.id!==l.id))}>Eliminar</Button>
+ </div>)}<Button variant="outline" onClick={()=>setLineas(p=>[...p,{id:uid(),concepto:"",unidad:"unidad",cantidad:1,valorUnitario:0}])}>Agregar concepto</Button>
+ </CardContent></Card>
+ <Card><CardHeader><CardTitle>Forma de pago</CardTitle></CardHeader><CardContent className="space-y-3">
+ {hitos.map(h=><div key={h.id} className="flex gap-2"><Input aria-label="Hito" value={h.descripcion} onChange={e=>setHitos(p=>p.map(v=>v.id===h.id?{...v,descripcion:e.target.value}:v))}/><Input className="max-w-28" aria-label="Porcentaje" type="number" min={0} max={100} value={h.porcentaje} onChange={e=>setHitos(p=>p.map(v=>v.id===h.id?{...v,porcentaje:Number(e.target.value)}:v))}/><Button variant="outline" onClick={()=>setHitos(p=>p.filter(v=>v.id!==h.id))}>Quitar</Button></div>)}
+ <Button variant="outline" onClick={()=>setHitos(p=>[...p,{id:uid(),descripcion:"",porcentaje:0}])}>Agregar hito</Button><p className={sumaHitos(hitos)===100?"text-primary":"text-status-error"}>Total: {sumaHitos(hitos)} %</p>
+ </CardContent></Card>
+ <Card><CardHeader><CardTitle>Análisis interno de costos</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-xs text-muted">No es visible para el cliente.</p>
+ {costos.map(c=><div key={c.id} className="grid gap-2 sm:grid-cols-5"><Select value={c.tipo} onChange={e=>setCostos(p=>p.map(v=>v.id===c.id?{...v,tipo:e.target.value as TipoCosto}:v))}>{Object.entries(TIPOS_COSTO).map(([v,t])=><option key={v} value={v}>{t}</option>)}</Select><Input aria-label="Concepto de costo" value={c.concepto} onChange={e=>setCostos(p=>p.map(v=>v.id===c.id?{...v,concepto:e.target.value}:v))}/><Input aria-label="Cantidad del costo" type="number" min="0.01" step="any" value={c.cantidad} onChange={e=>setCostos(p=>p.map(v=>v.id===c.id?{...v,cantidad:Number(e.target.value)}:v))}/><Input aria-label="Valor del costo" type="number" min="0" value={c.valorUnitario} onChange={e=>setCostos(p=>p.map(v=>v.id===c.id?{...v,valorUnitario:Number(e.target.value)}:v))}/><Button variant="outline" onClick={()=>setCostos(p=>p.filter(v=>v.id!==c.id))}>Quitar</Button></div>)}
+ <Button variant="outline" onClick={()=>setCostos(p=>[...p,{id:uid(),tipo:"mano_obra",concepto:"",cantidad:1,valorUnitario:0}])}>Agregar costo</Button><p className="text-sm">Costo estimado: {formatCOP(totalCostos(costos))}</p>
+ </CardContent></Card>
+ <Card><CardContent className="space-y-3 p-5"><p className="text-xl font-semibold">Total al cliente: {formatCOP(total)}</p><p className="text-sm text-muted">Vigencia desde el envío: 15 días.</p>{error&&<p role="alert" className="text-status-error">{error}</p>}<div className="flex gap-3"><Button variant="outline" onClick={()=>guardar(false)}>Guardar borrador</Button><Button disabled={!!problema} onClick={()=>guardar(true)}>Enviar cotización</Button></div></CardContent></Card>
+ </>}</div>;
 }
