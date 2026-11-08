@@ -152,6 +152,12 @@ paths:
       operationId: compareSheets
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Comparación por operario y fecha } }
+  /api/v1/planillas/{id}/registros:
+    post:
+      operationId: addSheetRecord
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '201': { description: Turno registrado }, '409': { description: Planilla conciliada o turno duplicado }, '422': { $ref: '#/components/responses/ValidationError' } }
   /api/v1/planillas/conciliar:
     post:
       operationId: reconcileSheets

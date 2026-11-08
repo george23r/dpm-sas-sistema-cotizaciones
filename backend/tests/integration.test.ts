@@ -85,10 +85,37 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
 
     const crews = await request("/api/v1/cuadrillas", {}, admin.cookie);
     assert.equal(crews.response.status, 200);
-    const start = new Date("2026-12-20T13:00:00-05:00");
+    const start = new Date(Date.UTC(2027, quoteId % 12, 5 + (quoteId % 20), 18, 0));
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
     const order = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: crews.body.data[0]?.id ?? null, inicio: start.toISOString(), fin: end.toISOString() }) }, admin.cookie);
     assert.equal(order.response.status, 201);
+
+    const teamId = crews.body.data[0]?.id;
+    const members = await request(`/api/v1/cuadrillas/${teamId}/miembros`, {}, admin.cookie);
+    assert.equal(members.response.status, 200);
+    const worker = members.body.data.find((item: { activo: boolean }) => item.activo);
+    assert.ok(worker?.id, "La cuadrilla de integración debe tener un operario activo");
+    const periodDay = 1 + (quoteId % 20);
+    const periodStart = `2027-${String((quoteId % 12) + 1).padStart(2, "0")}-${String(periodDay).padStart(2, "0")}`;
+    const periodEndDate = new Date(`${periodStart}T00:00:00Z`);
+    periodEndDate.setUTCDate(periodEndDate.getUTCDate() + 4);
+    const periodEnd = periodEndDate.toISOString().slice(0, 10);
+    const fieldSheet = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd, origen: "campo" }) }, admin.cookie);
+    const adminSheet = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd, origen: "administrativa" }) }, admin.cookie);
+    assert.equal(fieldSheet.response.status, 201);
+    assert.equal(adminSheet.response.status, 201);
+    const recordInput = { operarioId: worker.id, fecha: periodStart, zonaId: zone.id, actividad: "Mantenimiento", labor: "Prueba de conciliación", inicio: "08:00", fin: "17:00", descansoHoras: 1, dominicalFestivo: false };
+    const fieldRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify(recordInput) }, admin.cookie);
+    const adminRecord = await request(`/api/v1/planillas/${adminSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify(recordInput) }, admin.cookie);
+    assert.equal(fieldRecord.response.status, 201);
+    assert.equal(adminRecord.response.status, 201);
+    const comparison = await request(`/api/v1/planillas/comparar?campoId=${fieldSheet.body.data.id}&adminId=${adminSheet.body.data.id}`, {}, admin.cookie);
+    assert.equal(comparison.response.status, 200);
+    assert.equal(comparison.body.data[0]?.resultado, "coincide");
+    const reconciled = await request("/api/v1/planillas/conciliar", { method: "POST", body: JSON.stringify({ campoId: fieldSheet.body.data.id, adminId: adminSheet.body.data.id }) }, admin.cookie);
+    assert.equal(reconciled.response.status, 200);
+    const lockedRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify({ ...recordInput, inicio: "09:00" }) }, admin.cookie);
+    assert.equal(lockedRecord.response.status, 409);
 
     const operatorEmail = process.env.INTEGRATION_OPERATOR_EMAIL;
     const operatorPassword = process.env.INTEGRATION_OPERATOR_PASSWORD;
