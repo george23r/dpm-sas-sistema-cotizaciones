@@ -86,3 +86,6 @@ La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-
 ## Endurecimiento de propiedad y errores de negocio
 
 La API ahora verifica que la zona de una cotización pertenezca al cliente autenticado o al cliente seleccionado por administración. La prueba integrada confirmó el rechazo `403 ZONE_NOT_OWNED` para una zona ajena. También se mapearon las restricciones de envío y respuesta de cotizaciones a errores HTTP `409` controlados, manteniendo las validaciones definitivas en PostgreSQL.
+## Contraejemplos API verificados
+
+La integraciÃ³n ampliada ejecutada contra PostgreSQL 16 aislado verificÃ³: envÃ­o sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), ediciÃ³n posterior al envÃ­o (`409 QUOTE_IMMUTABLE`), doble programaciÃ³n por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminÃ³ `1 passed`, `0 failed`, `0 skipped`.

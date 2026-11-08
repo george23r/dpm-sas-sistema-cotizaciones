@@ -85,6 +85,10 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(created.response.status, 201);
     const quoteId = created.body.data.id;
 
+    const incompleteSend = await request(`/api/v1/cotizaciones/${quoteId}/enviar`, { method: "POST" }, admin.cookie);
+    assert.equal(incompleteSend.response.status, 409);
+    assert.equal(incompleteSend.body.code, "QUOTE_SEND_BLOCKED");
+
     const forbiddenCatalog = await request("/api/v1/clientes", {}, client.cookie);
     assert.equal(forbiddenCatalog.response.status, 403);
 
@@ -94,10 +98,18 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(line.response.status, 201);
     const cost = await request(`/api/v1/cotizaciones/${quoteId}/costos`, { method: "POST", body: JSON.stringify({ tipo: "mano_obra", descripcion: "Costo interno de prueba", cantidad: 1, valorUnitario: 50000 }) }, admin.cookie);
     assert.equal(cost.response.status, 201);
-    const milestone = await request(`/api/v1/cotizaciones/${quoteId}/hitos`, { method: "POST", body: JSON.stringify({ orden: 1, descripcion: "Pago total", porcentaje: 100 }) }, admin.cookie);
+    const firstMilestone = await request(`/api/v1/cotizaciones/${quoteId}/hitos`, { method: "POST", body: JSON.stringify({ orden: 1, descripcion: "Anticipo", porcentaje: 50 }) }, admin.cookie);
+    assert.equal(firstMilestone.response.status, 201);
+    const incompleteMilestones = await request(`/api/v1/cotizaciones/${quoteId}/enviar`, { method: "POST" }, admin.cookie);
+    assert.equal(incompleteMilestones.response.status, 409);
+    assert.equal(incompleteMilestones.body.code, "QUOTE_SEND_BLOCKED");
+    const milestone = await request(`/api/v1/cotizaciones/${quoteId}/hitos`, { method: "POST", body: JSON.stringify({ orden: 2, descripcion: "Saldo", porcentaje: 50 }) }, admin.cookie);
     assert.equal(milestone.response.status, 201);
     const sent = await request(`/api/v1/cotizaciones/${quoteId}/enviar`, { method: "POST" }, admin.cookie);
     assert.equal(sent.response.status, 200);
+    const immutableLine = await request(`/api/v1/cotizaciones/${quoteId}/lineas`, { method: "POST", body: JSON.stringify({ concepto: "Cambio posterior", cantidad: 1, valorUnitario: 1 }) }, admin.cookie);
+    assert.equal(immutableLine.response.status, 409);
+    assert.equal(immutableLine.body.code, "QUOTE_IMMUTABLE");
 
     const clientQuote = await request(`/api/v1/cotizaciones/${quoteId}`, {}, client.cookie);
     assert.equal(clientQuote.response.status, 200);
@@ -117,6 +129,17 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
     const order = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: activeWorker.cuadrilla_id, inicio: start.toISOString(), fin: end.toISOString() }) }, admin.cookie);
     assert.equal(order.response.status, 201);
+    const overlappingQuote = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Solape automatizado ${Date.now()}` }) }, client.cookie);
+    assert.equal(overlappingQuote.response.status, 201);
+    const overlappingQuoteId = overlappingQuote.body.data.id;
+    assert.equal((await request(`/api/v1/cotizaciones/${overlappingQuoteId}/visitas`, { method: "POST", body: JSON.stringify({ fecha: "2027-01-10" }) }, admin.cookie)).response.status, 201);
+    assert.equal((await request(`/api/v1/cotizaciones/${overlappingQuoteId}/lineas`, { method: "POST", body: JSON.stringify({ concepto: "Servicio con solape", cantidad: 1, valorUnitario: 50000 }) }, admin.cookie)).response.status, 201);
+    assert.equal((await request(`/api/v1/cotizaciones/${overlappingQuoteId}/hitos`, { method: "POST", body: JSON.stringify({ orden: 1, descripcion: "Pago total", porcentaje: 100 }) }, admin.cookie)).response.status, 201);
+    assert.equal((await request(`/api/v1/cotizaciones/${overlappingQuoteId}/enviar`, { method: "POST" }, admin.cookie)).response.status, 200);
+    assert.equal((await request(`/api/v1/cotizaciones/${overlappingQuoteId}/respuesta`, { method: "POST", body: JSON.stringify({ acepta: true }) }, client.cookie)).response.status, 200);
+    const overlappingOrder = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: overlappingQuoteId, cuadrillaId: activeWorker.cuadrilla_id, inicio: new Date(start.getTime() - 60 * 60 * 1000).toISOString(), fin: new Date(end.getTime() + 60 * 60 * 1000).toISOString() }) }, admin.cookie);
+    assert.equal(overlappingOrder.response.status, 409);
+    assert.equal(overlappingOrder.body.code, "BUSINESS_RULE");
     const clientReport = await request("/api/v1/reportes/periodo?desde=2027-01-01&hasta=2028-01-01", {}, client.cookie);
     assert.equal(clientReport.response.status, 403);
     const started = await request(`/api/v1/ordenes/${order.body.data.id}/iniciar`, { method: "PATCH" }, operator.cookie);
@@ -164,6 +187,21 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(reconciled.response.status, 200);
     const lockedRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify({ ...recordInput, inicio: "09:00" }) }, admin.cookie);
     assert.equal(lockedRecord.response.status, 409);
+
+    const differenceStart = "2028-02-01";
+    const differenceEnd = "2028-02-05";
+    const differenceField = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: differenceStart, hasta: differenceEnd, origen: "campo" }) }, admin.cookie);
+    const differenceAdmin = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: differenceStart, hasta: differenceEnd, origen: "administrativa" }) }, admin.cookie);
+    assert.equal(differenceField.response.status, 201);
+    assert.equal(differenceAdmin.response.status, 201);
+    assert.equal((await request(`/api/v1/planillas/${differenceField.body.data.id}/registros`, { method: "POST", body: JSON.stringify({ ...recordInput, fecha: differenceStart, inicio: "08:00" }) }, admin.cookie)).response.status, 201);
+    assert.equal((await request(`/api/v1/planillas/${differenceAdmin.body.data.id}/registros`, { method: "POST", body: JSON.stringify({ ...recordInput, fecha: differenceStart, inicio: "09:00" }) }, admin.cookie)).response.status, 201);
+    const differenceComparison = await request(`/api/v1/planillas/comparar?campoId=${differenceField.body.data.id}&adminId=${differenceAdmin.body.data.id}`, {}, admin.cookie);
+    assert.equal(differenceComparison.response.status, 200);
+    assert.equal(differenceComparison.body.data[0]?.resultado, "diferente");
+    const blockedReconciliation = await request("/api/v1/planillas/conciliar", { method: "POST", body: JSON.stringify({ campoId: differenceField.body.data.id, adminId: differenceAdmin.body.data.id }) }, admin.cookie);
+    assert.equal(blockedReconciliation.response.status, 409);
+    assert.equal(blockedReconciliation.body.code, "RECONCILIATION_BLOCKED");
 
     const mine = await request("/api/v1/ordenes/mias", {}, operator.cookie);
     assert.equal(mine.response.status, 200);
