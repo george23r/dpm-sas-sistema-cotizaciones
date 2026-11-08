@@ -9,8 +9,8 @@ export function AppShell() {
       <TopBar />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 overflow-x-hidden px-4 pb-20 pt-5 sm:px-6 sm:pb-8 lg:px-8">
-          <div className="mx-auto w-full max-w-6xl">
+        <main className="flex-1 overflow-x-hidden px-4 pb-20 pt-6 sm:px-6 sm:pb-8 lg:px-10">
+          <div className="mx-auto w-full max-w-[1440px]">
             <Outlet />
           </div>
         </main>

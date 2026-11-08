@@ -5,8 +5,9 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { loadEnv } from "./config/env.js";
 import { pool } from "./db/pool.js";
-import { authenticate, requireSameOrigin } from "./middlewares/auth.js";
+import { requireSameOrigin } from "./middlewares/auth.js";
 import { authRouter } from "./modules/auth/auth.router.js";
+import { cotizacionesRouter } from "./modules/cotizaciones/cotizaciones.router.js";
 import { errorHandler, HttpError } from "./shared/errors.js";
 
 export function buildApp() {
@@ -20,7 +21,7 @@ export function buildApp() {
   app.use(requireSameOrigin);
 
   app.get("/health", (_request, response) => response.status(200).json({ status: "ok" }));
-  app.get("/ready", authenticate, async (_request, response, next) => {
+  app.get("/ready", async (_request, response, next) => {
     try {
       await pool.query("SELECT 1");
       response.status(200).json({ status: "ready" });
@@ -30,6 +31,7 @@ export function buildApp() {
   });
 
   app.use("/api/v1/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false }), authRouter);
+  app.use("/api/v1/cotizaciones", cotizacionesRouter);
   app.use((request, _response, next) => next(new HttpError(404, "NOT_FOUND", `Ruta no encontrada: ${request.method} ${request.path}`)));
   app.use(errorHandler);
   return app;

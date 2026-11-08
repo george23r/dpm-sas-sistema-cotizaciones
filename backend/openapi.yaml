@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DPM S.A.S. API
-  version: 0.1.0
-  description: Contrato inicial de infraestructura y autenticación. Las rutas de negocio se agregan por fase.
+  version: 0.2.0
+  description: Contrato de autenticación y HU-01/HU-02 sobre PostgreSQL. Las rutas pendientes se incorporarán por fases.
 servers:
   - url: /
 paths:
@@ -10,33 +10,21 @@ paths:
     get:
       operationId: health
       responses:
-        '200':
-          description: Servicio disponible
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Health' }
+        '200': { description: Servicio disponible }
   /ready:
     get:
       operationId: ready
-      security: [{ sessionCookie: [] }]
       responses:
         '200': { description: Base de datos disponible }
-        '401': { $ref: '#/components/responses/Unauthorized' }
         '503': { description: Base de datos no disponible }
   /api/v1/auth/login:
     post:
       operationId: login
       requestBody:
         required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/LoginRequest' }
+        content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } }
       responses:
-        '200':
-          description: Sesión creada mediante cookie HttpOnly
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '200': { description: Sesión creada mediante cookie HttpOnly }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /api/v1/auth/me:
@@ -44,59 +32,79 @@ paths:
       operationId: me
       security: [{ sessionCookie: [] }]
       responses:
-        '200':
-          description: Usuario autenticado
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '200': { description: Usuario autenticado }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /api/v1/auth/logout:
     post:
       operationId: logout
+      responses: { '204': { description: Sesión cerrada } }
+  /api/v1/cotizaciones:
+    get:
+      operationId: listQuotes
+      security: [{ sessionCookie: [] }]
       responses:
-        '204': { description: Sesión cerrada }
+        '200': { description: Cotizaciones visibles para el rol autenticado }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      operationId: createQuote
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/QuoteRequest' } } }
+      responses:
+        '201': { description: Cotización creada }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/cotizaciones/{id}:
+    get:
+      operationId: getQuote
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses:
+        '200': { description: Detalle; costos internos solo para administración }
+        '404': { description: Cotización no disponible }
+  /api/v1/cotizaciones/{id}/enviar:
+    post:
+      operationId: sendQuote
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses:
+        '200': { description: Enviada mediante sp_enviar_cotizacion }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/cotizaciones/{id}/respuesta:
+    post:
+      operationId: answerQuote
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [acepta], properties: { acepta: { type: boolean } } } } }
+      responses:
+        '200': { description: Respuesta registrada }
+        '403': { description: Cliente no propietario }
+        '422': { $ref: '#/components/responses/ValidationError' }
 components:
   securitySchemes:
-    sessionCookie:
-      type: apiKey
-      in: cookie
-      name: dpm_session
+    sessionCookie: { type: apiKey, in: cookie, name: dpm_session }
   schemas:
-    Health:
-      type: object
-      required: [status]
-      properties:
-        status: { type: string, enum: [ok, ready] }
     LoginRequest:
       type: object
       required: [correo, clave]
       properties:
         correo: { type: string, format: email, maxLength: 160 }
         clave: { type: string, minLength: 1, maxLength: 200 }
-    User:
+    QuoteRequest:
       type: object
-      required: [id, nombre, correo, rol]
+      required: [zonaId, objeto]
       properties:
-        id: { type: integer }
-        nombre: { type: string }
-        correo: { type: string, format: email }
-        rol: { type: string, enum: [administrador, cliente, operario] }
-    AuthResponse:
-      type: object
-      required: [user]
-      properties:
-        user: { $ref: '#/components/schemas/User' }
-  responses:
-    Unauthorized:
-      description: Sesión ausente, inválida o credenciales incorrectas
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/Error' }
-    ValidationError:
-      description: Entrada inválida
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+        clienteId: { type: integer, minimum: 1 }
+        zonaId: { type: integer, minimum: 1 }
+        objeto: { type: string, minLength: 3, maxLength: 200 }
+        alcance: { type: string, maxLength: 5000 }
+        incluye: { type: string, maxLength: 5000 }
+        tiempoEjecucion: { type: string, maxLength: 200 }
+        observaciones: { type: string, maxLength: 5000 }
+        vigenciaDias: { type: integer, minimum: 1, maximum: 90, default: 15 }
     Error:
       type: object
       required: [code, message]
@@ -104,3 +112,10 @@ components:
         code: { type: string }
         message: { type: string }
         details: { type: object, additionalProperties: true }
+  responses:
+    Unauthorized:
+      description: Sesión ausente, inválida o credenciales incorrectas
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ValidationError:
+      description: Entrada inválida
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }

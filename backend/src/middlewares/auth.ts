@@ -26,7 +26,12 @@ export function requireRole(...roles: RolUsuario[]) {
 
 export function requireSameOrigin(request: Request, _response: Response, next: NextFunction) {
   const env = loadEnv();
-  const origin = request.get("origin") ?? request.get("referer");
-  if (origin && !origin.startsWith(env.CORS_ORIGIN)) return next(new HttpError(403, "CSRF_ORIGIN_REJECTED", "El origen de la solicitud no está permitido."));
+  const originHeader = request.get("origin");
+  const refererHeader = request.get("referer");
+  let requestOrigin: string | undefined = originHeader;
+  if (!requestOrigin && refererHeader) {
+    try { requestOrigin = new URL(refererHeader).origin; } catch { requestOrigin = undefined; }
+  }
+  if (requestOrigin && requestOrigin !== env.CORS_ORIGIN) return next(new HttpError(403, "CSRF_ORIGIN_REJECTED", "El origen de la solicitud no está permitido."));
   return next();
 }
