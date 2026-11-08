@@ -179,6 +179,11 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const report = await request(`/api/v1/reportes/periodo?desde=2026-01-01&hasta=2028-01-01&clienteId=${zone.cliente_id}`, {}, admin.cookie);
     assert.equal(report.response.status, 200);
     assert.ok(report.body.data.some((item: { cliente: string; servicios_finalizados: number }) => item.cliente && Number(item.servicios_finalizados) >= 1));
+    const summary = await request(`/api/v1/reportes/resumen?desde=2026-01-01&hasta=2028-01-01&clienteId=${zone.cliente_id}`, {}, admin.cookie);
+    assert.equal(summary.response.status, 200);
+    assert.ok(summary.body.data.cotizaciones);
+    assert.ok(summary.body.data.ordenes);
+    assert.ok(Array.isArray(summary.body.data.actividad));
     const fieldSheet = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd, origen: "campo" }) }, admin.cookie);
     const adminSheet = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd, origen: "administrativa" }) }, admin.cookie);
     assert.equal(fieldSheet.response.status, 201);
