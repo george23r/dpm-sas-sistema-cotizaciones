@@ -71,6 +71,30 @@ paths:
       responses:
         '200': { description: Enviada mediante sp_enviar_cotizacion }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/v1/cotizaciones/{id}/visitas:
+    post:
+      operationId: addTechnicalVisit
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '201': { description: Visita técnica registrada }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /api/v1/cotizaciones/{id}/lineas:
+    post:
+      operationId: addQuoteLine
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '201': { description: Línea registrada }, '422': { $ref: '#/components/responses/ValidationError' } }
+  /api/v1/cotizaciones/{id}/costos:
+    post:
+      operationId: addInternalCost
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '201': { description: Costo interno registrado; solo administración } }
+  /api/v1/cotizaciones/{id}/hitos:
+    post:
+      operationId: addMilestone
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '201': { description: Hito registrado } }
   /api/v1/cotizaciones/{id}/respuesta:
     post:
       operationId: answerQuote
@@ -133,6 +157,27 @@ paths:
       operationId: periodReport
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Reporte por periodo y cliente } }
+  /api/v1/clientes:
+    get:
+      operationId: listClients
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Clientes visibles para administración } }
+  /api/v1/zonas:
+    get:
+      operationId: listZones
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: clienteId, in: query, required: false, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Zonas visibles según rol y propiedad } }
+  /api/v1/servicios:
+    get:
+      operationId: listServices
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Servicios activos sin tarifas } }
+  /api/v1/operarios:
+    get:
+      operationId: listWorkers
+      security: [{ sessionCookie: [] }]
+      responses: { '200': { description: Operarios y carga próxima para administración } }
 components:
   securitySchemes:
     sessionCookie: { type: apiKey, in: cookie, name: dpm_session }
