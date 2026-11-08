@@ -39,6 +39,8 @@ El flujo comprobo login y `/auth/me`, propiedad de zonas, creacion de solicitud 
 
 La misma prueba tambien registro turnos en planilla de campo y administrativa, comparo el resultado `coincide`, concilio ambas planillas y verifico que un registro posterior fuera rechazado con `409` por planilla bloqueada.
 
+En el commit `1fa9309` se agrego una regresion para HU-03: una segunda creacion de orden con la misma cotizacion aceptada devuelve `409 QUOTE_ALREADY_SCHEDULED`. La implementacion usa una transaccion y `pg_advisory_xact_lock` para que la regla tambien sea segura ante concurrencia. El workflow backend `42524997142` termino `success` contra PostgreSQL 16 temporal.
+
 También verificó `POST /clientes`, `POST /zonas`, `PATCH /zonas/:id`, `POST /cuadrillas`, `POST /operarios`, `PATCH /operarios/:id` y el rechazo `409` de un segundo líder activo, usando entidades ficticias aisladas en la base temporal.
 
 ## Evidencia de navegador local
