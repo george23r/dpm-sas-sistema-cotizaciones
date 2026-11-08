@@ -10,7 +10,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { HuTag } from "@/components/shared/HuTag";
-import { agregarCostoApi, agregarHitoApi, agregarLineaApi, agregarVisitaApi, crearCotizacionApi, enviarCotizacionApi } from "@/api/cotizaciones";
+import { crearCotizacionApi } from "@/api/cotizaciones";
 import { obtenerClientesApi, obtenerServiciosApi, obtenerZonasApi, type ClienteApi, type ServicioApi, type ZonaApi } from "@/api/catalogos";
 import { ApiError } from "@/api/http";
 let seq=0;const uid=()=>String(++seq);
@@ -44,12 +44,7 @@ function NuevaCotizacionApi(){
   if(fallos){setError(fallos);return;} if(!clienteId||!zonaId){setError("Cliente y zona son obligatorios.");return;}
   setBusy(true);setError("");setNotice("");
   try{
-   const quote=await crearCotizacionApi({clienteId:Number(clienteId),zonaId:Number(zonaId),objeto,alcance,incluye,tiempoEjecucion:duracion,observaciones,vigenciaDias:Number(vigencia)});
-   if(visita)await agregarVisitaApi(quote.data.id,{fecha:visita,observaciones});
-   for(const linea of lineas)await agregarLineaApi(quote.data.id,{concepto:linea.concepto,cantidad:linea.cantidad,valorUnitario:linea.valorUnitario,servicioId:linea.servicioId?Number(linea.servicioId):null});
-   for(const costo of costos)await agregarCostoApi(quote.data.id,costo);
-   for(const hito of hitos)await agregarHitoApi(quote.data.id,hito);
-   if(enviar)await enviarCotizacionApi(quote.data.id);
+   await crearCotizacionApi({clienteId:Number(clienteId),zonaId:Number(zonaId),objeto,alcance,incluye,tiempoEjecucion:duracion,observaciones,vigenciaDias:Number(vigencia),visita:visita?{fecha:visita,observaciones}:undefined,lineas:lineas.map((linea)=>({concepto:linea.concepto,cantidad:linea.cantidad,valorUnitario:linea.valorUnitario,servicioId:linea.servicioId?Number(linea.servicioId):null})),costos,hitos,enviar});
    setNotice(enviar?"Cotización enviada al portal del cliente.":"Borrador guardado en PostgreSQL.");setTimeout(()=>nav("/app/admin/cotizaciones"),700);
   }catch(e){setError(e instanceof ApiError?e.message:e instanceof Error?e.message:"No fue posible guardar la cotización.");}finally{setBusy(false);}
  }
@@ -138,3 +133,4 @@ function NuevaCotizacionDemo(){
  <Card><CardContent className="space-y-3 p-5"><p className="text-xl font-semibold">Total al cliente: {formatCOP(total)}</p><p className="text-sm text-muted">Vigencia desde el envío: 15 días.</p>{error&&<p role="alert" className="text-status-error">{error}</p>}<div className="flex gap-3"><Button variant="outline" onClick={()=>guardar(false)}>Guardar borrador</Button><Button disabled={!!problema} onClick={()=>guardar(true)}>Enviar cotización</Button></div></CardContent></Card>
  </>}</div>;
 }
+
