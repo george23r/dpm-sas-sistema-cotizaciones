@@ -1,56 +1,46 @@
 # API DPM S.A.S.
 
-Backend Node.js + Express + TypeScript para integrar gradualmente el frontend React con PostgreSQL. Incluye infraestructura, autenticación real y el primer tramo persistente de HU-01/HU-02.
+Backend Node.js, Express y TypeScript para conectar la aplicación React con PostgreSQL. Usa consultas parametrizadas, transacciones, validación de entrada, autorización por rol y sesiones mediante cookie HttpOnly.
 
 ## Desarrollo local
 
-1. Instala PostgreSQL 16 o inicia una base dedicada.
-2. Copia `.env.example` a `.env` y define una `DATABASE_URL` real. La API no debe conectarse como superusuario en un entorno compartido.
-3. En una base desechable, aplica el esquema y seed ficticios:
+1. Instala PostgreSQL 16 y crea una base dedicada.
+2. Copia `.env.example` a `.env` y define `DATABASE_URL`, `CORS_ORIGIN` y `SESSION_SECRET`.
+3. En una base desechable aplica `../database/01_schema.sql` y `../database/02_seed.sql`.
 
-```bash
-psql -v ON_ERROR_STOP=1 "$DATABASE_URL" -f ../database/01_schema.sql
-psql -v ON_ERROR_STOP=1 "$DATABASE_URL" -f ../database/02_seed.sql
-```
-
-`01_schema.sql` borra y recrea `dpm`; nunca se debe ejecutar sobre producción. Los hashes de `02_seed.sql` son marcadores y no permiten iniciar sesión como usuarios reales.
+`01_schema.sql` borra y recrea `dpm`; nunca se debe ejecutar sobre producción. El seed es ficticio.
 
 ```bash
 npm ci
 npm run build
-npm test
 npm run lint
-npm start
+npm test
+npm run dev
 ```
 
-## Rutas implementadas
+## Rutas principales
 
-- `GET /health`: respuesta pública mínima sin detalles internos.
-- `GET /ready`: comprueba PostgreSQL sin requerir sesión y devuelve 503 si no está disponible.
-- `POST /api/v1/auth/login`: valida correo/clave y crea cookie HttpOnly.
-- `GET /api/v1/auth/me`: valida cookie, consulta de nuevo `dpm.usuarios` y devuelve el usuario actual.
-- `POST /api/v1/auth/logout`: limpia la cookie.
-- `GET /api/v1/cotizaciones`: lista cotizaciones filtradas por rol y propiedad.
-- `POST /api/v1/cotizaciones`: crea una solicitud del cliente autenticado o una cotización administrativa.
-- `GET /api/v1/cotizaciones/:id`: devuelve el detalle; los costos internos solo aparecen para administración.
-- `POST /api/v1/cotizaciones/:id/visitas`, `/lineas`, `/costos`, `/hitos`: completa una cotización como administración.
-- `POST /api/v1/cotizaciones/:id/enviar`: ejecuta `dpm.sp_enviar_cotizacion`.
-- `POST /api/v1/cotizaciones/:id/respuesta`: ejecuta `dpm.sp_responder_cotizacion` para el cliente propietario.
-- `GET/POST /api/v1/ordenes`, `GET/PATCH /api/v1/ordenes/:id`: programación y asignación; creación solo desde cotización aceptada.
-- `PATCH /api/v1/ordenes/:id/iniciar` y `/finalizar`: acciones del operario de la cuadrilla asignada.
-- `GET /api/v1/cuadrillas` y `/api/v1/cuadrillas/:id/miembros`: capacidad e integrantes registrados para administración.
-- `GET/POST /api/v1/planillas`, `POST /api/v1/planillas/:id/registros`: planillas y jornadas.
-- `GET /api/v1/planillas/comparar` y `POST /api/v1/planillas/conciliar`: comparación y conciliación mediante funciones/procedimientos SQL.
-- `GET /api/v1/reportes/periodo`: reporte HU-08 mediante `dpm.fn_reporte_periodo`.
-- `GET /api/v1/clientes`: catálogo de clientes para administración.
-- `GET /api/v1/zonas?clienteId=`: zonas visibles según rol y propiedad.
-- `GET /api/v1/servicios`: catálogo activo; no expone tarifas ficticias.
-- `GET /api/v1/operarios`: trabajadores activos/inactivos y carga próxima para administración.
+- `GET /health` y `GET /ready`.
+- `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`.
+- `GET/POST /api/v1/cotizaciones`, `GET/PATCH /api/v1/cotizaciones/:id` y operaciones de visita, líneas, costos, hitos, envío y respuesta.
+- `GET/POST /api/v1/ordenes`, `GET/PATCH /api/v1/ordenes/:id`, `/ordenes/mias`, `/iniciar` y `/finalizar`.
+- `GET/POST/PATCH /api/v1/clientes`, `/zonas`, `/operarios` y `/cuadrillas`, además de miembros de cuadrilla.
+- `GET /api/v1/servicios` sin tarifas ficticias.
+- `GET/POST /api/v1/planillas`, registros, comparación y conciliación.
+- `GET /api/v1/reportes/periodo`.
 
-La cookie no se expone al navegador mediante JavaScript. En producción se requiere HTTPS, `COOKIE_SAMESITE=none` únicamente si la separación de orígenes lo exige y `DB_SSL=true` con certificado verificable. El backend nunca devuelve `password_hash`.
+Las respuestas no exponen `password_hash`, costos internos a clientes ni recursos de otros clientes. La autorización se verifica en el servidor; el selector de rol del frontend no concede permisos.
 
-## Estado de alcance
+## Integración reproducible
 
-Implementado y probado: autenticación contra `dpm.usuarios`, cookies HttpOnly, roles, `/health`, `/ready`, cotizaciones por líneas/visita/costos/hitos, órdenes, cuadrillas, planillas, comparación/conciliación y reportes mediante los procedimientos/funciones existentes. Pendiente: CRUD de apoyo completo, conexión de los portales de cliente/operario a todas sus mutaciones y pruebas E2E de navegador.
+`npm run test:integration` es opt-in y requiere `RUN_INTEGRATION=1`, PostgreSQL temporal y credenciales ficticias definidas mediante variables `INTEGRATION_*`. Comprueba autenticación, propiedad, cotización completa, aceptación, orden, planillas, conciliación bloqueada, CRUD administrativo y líder único.
 
-La base temporal de integración se ejecutó con PostgreSQL 16 y los 27 checks de `03_consultas_comprobacion.sql` pasaron. La base persistida local no se usa como evidencia limpia porque ya tenía datos modificados y una comprobación falló por falta de visita en una cotización existente.
+La evidencia ejecutada el 2026-11-08 está en [`../docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](../docs/fase-3-4-evidencia-actualizacion-2026-11-08.md). La integración pasó con 1 prueba y 0 fallos contra PostgreSQL 16 temporal.
+
+## Seguridad y despliegue
+
+En producción se requiere HTTPS, `COOKIE_SECURE=true`, CORS con origen explícito, `COOKIE_SAMESITE=none` solo cuando sea necesario por separación de orígenes y TLS verificable para PostgreSQL. No se registran credenciales ni se persisten tokens en el navegador. `/ready` comprueba infraestructura y no exige autenticación de usuario.
+
+## Brechas declaradas
+
+La automatización E2E de navegador, las capturas cross-browser y la medición JMeter todavía no están cerradas. Tampoco se presentan como validadas por DPM las reglas de liderazgo, tarifas, recargos, autogestión ni otros supuestos empresariales. No se implementan facturación electrónica, nómina, pagos ni notificaciones automáticas.

@@ -1,78 +1,75 @@
-# DPM SAS - Sistema de Cotizaciones
+# DPM S.A.S. — Sistema de cotizaciones y operaciones
 
-Sistema de información web para la gestión de cotizaciones, programación de servicios y control de jornadas en DPM S.A.S.
+Sistema web para gestionar cotizaciones individualizadas, programación de mantenimientos de zonas verdes, cuadrillas, órdenes, jornadas y reportes de DPM S.A.S.
 
-## Descripción
+## Estado real
 
-Este proyecto corresponde al trabajo de grado para optar al título de Ingeniero de Sistemas (Institución Universitaria Antonio José Camacho). El sistema permite elaborar y enviar cotizaciones por líneas (con visita técnica, pagos por hitos y vigencia), programar mantenimientos, asignar cuadrillas, consultar órdenes e historial de servicios, registrar y comparar planillas de jornada, y generar reportes.
+El repositorio conserva la aplicación React/Vite existente y ahora incluye una API Express/TypeScript conectada a PostgreSQL mediante `pg` y cookies de sesión HttpOnly.
+
+Implementado y probado con datos ficticios de desarrollo:
+
+- Autenticación, sesión, roles y filtros de propiedad.
+- Cotizaciones por visita técnica, líneas, costos internos, hitos, envío y respuesta del cliente.
+- Órdenes desde cotizaciones aceptadas, agenda mensual/semanal/lista y asignación protegida por servidor.
+- Clientes, zonas, trabajadores y cuadrillas con operaciones administrativas persistentes disponibles.
+- Planillas de campo y administrativas, comparación, conciliación y bloqueo posterior.
+- Reportes de periodo y portales diferenciados para administrador, cliente y operario.
+
+Los datos del seed son ficticios. El dashboard no inventa métricas: muestra únicamente información devuelta por la API y estados informativos cuando no existe un dato.
+
+## Ejecutar
+
+Frontend:
+
+```bash
+npm ci
+npm run dev
+```
+
+Backend:
+
+```bash
+cd backend
+npm ci
+Copy-Item .env.example .env
+npm run build
+npm run dev
+```
+
+Configura `VITE_API_URL` en el frontend y `DATABASE_URL`, `CORS_ORIGIN`, `SESSION_SECRET` y las demás variables de `backend/.env.example` en la API. No se guardan JWT ni credenciales en `localStorage`.
+
+## Pruebas
+
+```bash
+npm run build
+npm run lint
+npm run test:unit
+
+cd backend
+npm run build
+npm run lint
+npm test
+npm run test:integration
+```
+
+La integración se activa con `RUN_INTEGRATION=1` y una base PostgreSQL temporal. La evidencia reproducible está en [`docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](docs/fase-3-4-evidencia-actualizacion-2026-11-08.md). Las capturas de navegador se encuentran en [`evidencias/`](evidencias/).
+
+## Base de datos
+
+`database/01_schema.sql` elimina y recrea el esquema `dpm`; úsalo solo en una base local o temporal de desarrollo. Nunca lo ejecutes sobre una base con información que deba conservarse. `database/02_seed.sql` contiene datos ilustrativos y no representa tarifas ni políticas aprobadas por DPM.
+
+## Alcance excluido
+
+No se implementan facturación electrónica, nómina, pasarelas de pago, notificaciones automáticas ni fórmulas obligatorias de precios por área. La autogestión de clientes, tarifas, recargos y permisos empresariales específicos siguen sujetos a validación de DPM.
+
+## Documentación
+
+- [`backend/README.md`](backend/README.md): instalación, rutas y pruebas de API.
+- [`docs/arquitectura/`](docs/arquitectura/): arquitectura y decisiones.
+- [`docs/auditoria-fase-0.md`](docs/auditoria-fase-0.md): línea base y diferencias iniciales.
+- [`BITACORA.md`](BITACORA.md): seguimiento del desarrollo.
 
 ## Autores
 
 - Jorge Luis Ramos Perdomo
 - Richard Esteban Sevillano Cuaran
-
-## Estado de implementación
-
-El repositorio contiene actualmente un prototipo navegable en React + TypeScript + Vite. La autenticación, la API Express, PostgreSQL y la persistencia aún están pendientes de integración; las pantallas demostrativas no deben confundirse con funcionalidades productivas. La auditoría de Fase 0 está documentada en [`docs/auditoria-fase-0.md`](docs/auditoria-fase-0.md), con la línea base, diferencias frente al alcance aprobado y bloqueos.
-
-## Metodología
-
-El desarrollo se gestiona con Scrum. El Product Backlog y el detalle de las historias de usuario (HU-01 a HU-10) se encuentran documentados en `/docs`.
-
-## Historias de usuario (Product Backlog)
-
-| ID | Historia de usuario | Prioridad | Sprint |
-|----|---------------------|-----------|--------|
-| HU-01 | Elaborar y enviar cotización | Alta | 4 |
-| HU-02 | Solicitar y responder cotización (cliente) | Alta | 4 |
-| HU-03 | Programar mantenimiento | Alta | 5 |
-| HU-04 | Asignar cuadrilla | Alta | 5 |
-| HU-05 | Consultar órdenes asignadas | Media | 5 |
-| HU-06 | Registrar ejecución del servicio | Media | 5 |
-| HU-07 | Consultar historial de servicios | Media | 5 |
-| HU-08 | Generar reporte por periodo | Baja | 5 |
-| HU-09 | Registrar jornadas de campo | Media | 5 |
-| HU-10 | Comparar y conciliar planillas | Media | 5 |
-
-## Backend y persistencia
-
-La Fase 1 del backend está preparada en [`backend/`](backend/) para autenticación, sesión segura y salud de servicio. Su evidencia está en [`docs/backend-fase-1-evidencia.md`](docs/backend-fase-1-evidencia.md). La base SQL de Corte 2 está en [`database/`](database/); contiene 12 tablas reales y no incluye todavía líneas de cotización ni planillas de jornadas.
-
-## Estructura del repositorio
-
-- `/database`: scripts de la base de datos PostgreSQL, datos de prueba, pruebas, diccionario y diagramas.
-- `/docs/arquitectura`: arquitectura, componentes, modelos UML y decisiones técnicas.
-- `/docs/capturas`: capturas del prototipo de interfaz.
-- `/src`: prototipo de la aplicación web.
-- `BITACORA.md`: bitácora de trabajo del equipo.
-
-## Control de versiones
-
-Se usa una rama por historia de usuario, con el formato `feature/HU-XX-nombre-corto`, trazable directamente con el Product Backlog.
-
-## Evidencias de diseño — Segundo corte
-
-- [Arquitectura del sistema](docs/arquitectura/arquitectura-sistema.md): estado actual y arquitectura prevista.
-- [Componentes, API y modelos UML](docs/arquitectura/diagrama-componentes.md): componentes, recursos de la API, casos de uso, estados, secuencias y trazabilidad.
-- [Decisiones técnicas](docs/arquitectura/decisiones-tecnicas.md): registro de decisiones, seguridad y pendientes.
-- [Base de datos PostgreSQL](database/README.md): scripts de reconstrucción, diccionario, diagramas entidad-relación y comprobaciones.
-
-**Nota de alcance:** el frontend en `src/` es actualmente un prototipo con datos simulados; la API Express y la integración con PostgreSQL están diseñadas, pero no deben describirse como implementadas hasta comprobarlo. Los datos SQL de prueba son ficticios y no incluyen información real de DPM SAS ni de sus clientes.
-
-## Seguimiento del corte 2
-
-- [Sprint Backlog de diseño](docs/scrum/sprint-backlog-corte-2.md)
-- [Validaciones pendientes](docs/validaciones_pendientes.md)
-- [HU-09](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/3) y [HU-10](https://github.com/george23r/dpm-sas-sistema-cotizaciones/issues/4) (issues de implementación; no equivalen a tarjetas de GitHub Projects)
-- **Documento académico:** disponible en `docs/`; consultar el archivo más reciente del repositorio.
-- **Figuras PNG:** publicadas en `docs/arquitectura/img/`.
-
-
-## Cierre de prototipo del corte 2
-
-- Administración de clientes y trabajadores: `/app/admin/clientes` y `/app/admin/trabajadores` (datos simulados, validaciones de duplicados y líder por cuadrilla).
-- Reportes administrativos, jornadas y conciliación de planillas: `/app/admin/reportes` y `/app/admin/jornadas`.
-- Verificación automática: `npm run build` y `npm run test:unit`.
-- [Matriz de aceptación y límites de verificación](docs/qa/matriz-aceptacion-prototipo.md).
-
-**Advertencia:** no se debe presentar este prototipo como una solución productiva ni considerar aprobadas las pruebas manuales, permisos reales y decisiones empresariales sin evidencia adicional.

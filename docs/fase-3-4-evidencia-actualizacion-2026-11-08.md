@@ -5,7 +5,7 @@ Fecha: 2026-11-08, America/Bogota.
 ## Integracion publicada
 
 - El editor administrativo de cotizaciones usa la API en modo real y persiste cliente/zona, visita, lineas, costos internos, hitos y envio.
-- La agenda real consulta ordenes/cuadrillas, permite vista mensual/lista, filtros, navegacion y asignacion desde panel lateral; el servidor conserva la decision sobre solapes.
+- La agenda real consulta ordenes/cuadrillas, permite vista mensual/semanal/lista, filtros, navegacion y asignacion desde panel lateral; el servidor conserva la decision sobre solapes.
 - El portal cliente consulta sus zonas, crea solicitudes, lista y responde cotizaciones e historial de ordenes finalizadas mediante endpoints filtrados por propiedad.
 - Clientes, trabajadores y servicios administrativos dejaron de usar semillas como fuente en modo real. Clientes y zonas ya cuentan con creación/edición persistente; no se crean cuentas de acceso automáticamente.
 - La agenda real incorpora vistas mes, semana y lista con filtros, panel de detalle y asignación protegida por el servidor.
@@ -41,6 +41,17 @@ La misma prueba tambien registro turnos en planilla de campo y administrativa, c
 
 También verificó `POST /clientes`, `POST /zonas`, `PATCH /zonas/:id`, `POST /cuadrillas`, `POST /operarios`, `PATCH /operarios/:id` y el rechazo `409` de un segundo líder activo, usando entidades ficticias aisladas en la base temporal.
 
+## Evidencia de navegador local
+
+Ejecutada el 2026-11-08 con Vite, Express y PostgreSQL temporal, Chromium controlado por Playwright, sesión real mediante cookie HttpOnly y datos ficticios de desarrollo:
+
+- Administrador: login, panel operativo, clientes, trabajadores, cuadrillas, programación mensual/semanal y reportes a 1366 px.
+- Cliente: portal de zonas a 360 px.
+- Operario: portal de órdenes a 360 px.
+- La vista de jornadas fue revisada después de corregir el uso de IDs demo `NaN`; posteriormente cargó clientes reales desde `GET /api/v1/clientes` sin claves duplicadas.
+
+Capturas versionadas en `evidencias/`: `e2e-dashboard-admin-1366-2026-11-08.png`, `e2e-clientes-1366-2026-11-08.png`, `e2e-trabajadores-1366-2026-11-08.png`, `e2e-cuadrillas-1366-2026-11-08.png`, `e2e-programacion-1366-2026-11-08.png`, `e2e-programacion-semana-1366-2026-11-08.png`, `e2e-jornadas-1366-2026-11-08.png`, `e2e-reportes-1366-2026-11-08.png`, `e2e-portal-cliente-360-2026-11-08.png` y `e2e-portal-operario-360-2026-11-08.png`.
+
 ## CI
 
 Se publico `.github/workflows/validar-backend.yml` en `main`, commit `f5b0b3a`. El workflow levanta PostgreSQL 16, aplica esquema, seed y `03_consultas_comprobacion.sql`, y ejecuta build, lint y tests backend. Al momento de la revision el proveedor no mostro un estado de check asociado al commit.
@@ -48,5 +59,5 @@ Se publico `.github/workflows/validar-backend.yml` en `main`, commit `f5b0b3a`. 
 ## Brechas vigentes
 
 - Falta validación empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya está disponible para administración y la restricción de líder único la aplica PostgreSQL.
-- Falta completar mutaciones del portal operario y pruebas E2E de navegador.
+- Falta completar mutaciones del portal operario y automatizar estas comprobaciones en un workflow E2E dedicado.
 - No se ejecutaron capturas cross-browser ni JMeter; no se declara PASS para RNF-03.
