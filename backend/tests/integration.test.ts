@@ -84,6 +84,11 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const created = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Integración automatizada ${Date.now()}`, alcance: "Prueba de flujo persistente" }) }, client.cookie);
     assert.equal(created.response.status, 201);
     const quoteId = created.body.data.id;
+    const paginatedQuotes = await request(`/api/v1/cotizaciones?search=Integración&page=1&pageSize=1`, {}, admin.cookie);
+    assert.equal(paginatedQuotes.response.status, 200);
+    assert.equal(paginatedQuotes.body.meta.pageSize, 1);
+    assert.ok(paginatedQuotes.body.meta.total >= 1);
+    assert.ok(paginatedQuotes.body.data.length <= 1);
 
     const incompleteSend = await request(`/api/v1/cotizaciones/${quoteId}/enviar`, { method: "POST" }, admin.cookie);
     assert.equal(incompleteSend.response.status, 409);
@@ -216,3 +221,4 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     await pool.end();
   }
 });
+
