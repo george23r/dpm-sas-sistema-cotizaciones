@@ -107,7 +107,7 @@ test("informa y redirige cuando expira la sesiÃ³n", async ({ page }) => {
   await login(page, "admin");
   await expect(page).toHaveURL(/\/app\/admin\/panel$/);
   await page.context().clearCookies();
-  await page.getByRole("link", { name: /Programaci/ }).click();
+  await page.goto("/app/admin/programacion");
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("alert")).toContainText("Tu sesiÃ³n expirÃ³");
 });
