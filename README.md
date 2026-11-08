@@ -56,6 +56,8 @@ npm run test:integration
 
 La integración se activa con `RUN_INTEGRATION=1` y una base PostgreSQL temporal. El E2E requiere una API y PostgreSQL disponibles; en CI lo ejecuta `.github/workflows/validar-e2e.yml` con Chromium y `database/04_seed_e2e.sql`. La evidencia reproducible está en [`docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](docs/fase-3-4-evidencia-actualizacion-2026-11-08.md). Las capturas de navegador se encuentran en [`evidencias/`](evidencias/).
 
+Estado de CI verificado al 2026-11-08: los tres workflows están publicados, pero el proveedor no devolvió ejecuciones asociadas al commit remoto más reciente consultado. Por tanto, los resultados PASS reportados en este repositorio corresponden a ejecuciones locales documentadas o a commits históricos identificados explícitamente; no se presenta un PASS remoto actual sin su ejecución verificable.
+
 ## Base de datos
 
 `database/01_schema.sql` elimina y recrea el esquema `dpm`; úsalo solo en una base local o temporal de desarrollo. Nunca lo ejecutes sobre una base con información que deba conservarse. `database/02_seed.sql` contiene datos ilustrativos y no representa tarifas ni políticas aprobadas por DPM.
@@ -76,3 +78,4 @@ No se implementan facturación electrónica, nómina, pasarelas de pago, notific
 
 - Jorge Luis Ramos Perdomo
 - Richard Esteban Sevillano Cuaran
+
