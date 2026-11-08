@@ -11,7 +11,7 @@ export function BottomNav() {
   if (items.length <= 1) return null;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface/95 backdrop-blur-sm md:hidden">
+    <nav aria-label="Navegación móvil" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface/95 backdrop-blur-sm md:hidden">
       {items.map((item) => (
         <NavLink
           key={item.to}

@@ -8,8 +8,8 @@ const credentials = {
 
 async function login(page: Page, role: keyof typeof credentials) {
   await page.goto("/login");
-  await page.getByLabel("Correo electrónico").fill(credentials[role].correo);
-  await page.getByLabel("Contraseña").fill(credentials[role].clave);
+  await page.getByRole("textbox").first().fill(credentials[role].correo);
+  await page.getByRole("textbox").nth(1).fill(credentials[role].clave);
   await page.getByRole("button", { name: /Ingresar al sistema/ }).click();
 }
 
@@ -25,7 +25,7 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByText("Actividad temporal")).toBeVisible();
   await expect(page.getByText("Disponibilidad de cuadrillas")).toBeVisible();
   await capture(page, "admin-panel-1366");
-  await page.getByRole("link", { name: "Programación" }).click();
+  await page.getByRole("link", { name: /Programaci/ }).click();
   await expect(page).toHaveURL(/\/app\/admin\/programacion$/);
   await expect(page.getByRole("button", { name: "Mes" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Semana" })).toBeVisible();
@@ -61,4 +61,17 @@ test("operario ve únicamente órdenes asignadas y portal mobile-first", async (
   await capture(page, "operario-ordenes-360");
   await page.goto("/app/admin/clientes");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
+});
+
+test("permite recorrer el login con teclado", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/login");
+  await page.getByRole("textbox").first().focus();
+  await page.keyboard.type(credentials.operario.correo);
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("textbox").nth(1)).toBeFocused();
+  await page.keyboard.type(credentials.operario.clave);
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeFocused();
+  await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeVisible();
 });
