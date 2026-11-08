@@ -77,9 +77,9 @@ La ejecucion CI `42524261979` termino `success` con 9 pruebas: 3 en Chromium, 3 
 Se ejecutó Apache JMeter 5.6.3 contra la API Express compilada y un contenedor PostgreSQL 16 aislado. El escenario usó 10 usuarios concurrentes, login por cookie HttpOnly y 50 iteraciones por cada consulta. Las operaciones de cotizaciones, historial operativo, reporte de periodo y comparación de planillas obtuvieron 500 muestras cada una, 0 errores y P95 de 4, 4, 5 y 4 ms respectivamente. Se conservaron el JTL y `statistics.json` en `performance/evidencia-2026-11-08/`.
 ## Evidencia cross-browser local
 
-La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programaciÃ³n administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
+La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programación administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
 
-La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditorÃ­a completa de todas las pantallas ni una validaciÃ³n empresarial.
+La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditoría completa de todas las pantallas ni una validación empresarial.
 ## Flujo integrado ampliado
 
 La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. Además del flujo de cotización, aceptación, programación y planillas, verificó inicio y finalización de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administración y rechazo de acceso del cliente al reporte (`403`).
@@ -88,7 +88,8 @@ La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-
 La API ahora verifica que la zona de una cotización pertenezca al cliente autenticado o al cliente seleccionado por administración. La prueba integrada confirmó el rechazo `403 ZONE_NOT_OWNED` para una zona ajena. También se mapearon las restricciones de envío y respuesta de cotizaciones a errores HTTP `409` controlados, manteniendo las validaciones definitivas en PostgreSQL.
 ## Contraejemplos API verificados
 
-La integraciÃ³n ampliada ejecutada contra PostgreSQL 16 aislado verificÃ³: envÃ­o sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), ediciÃ³n posterior al envÃ­o (`409 QUOTE_IMMUTABLE`), doble programaciÃ³n por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminÃ³ `1 passed`, `0 failed`, `0 skipped`.
+La integración ampliada ejecutada contra PostgreSQL 16 aislado verificó: envío sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), edición posterior al envío (`409 QUOTE_IMMUTABLE`), doble programación por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminó `1 passed`, `0 failed`, `0 skipped`.
 ## Detalle de cotizaciones en frontend real
 
-Se incorporÃ³ `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administraciÃ³n y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administraciÃ³n y el cliente puede responder Ãºnicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutÃ³ con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
+Se incorporó `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administración y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administración y el cliente puede responder únicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutó con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
+
