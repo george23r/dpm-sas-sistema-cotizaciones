@@ -193,6 +193,17 @@ paths:
       operationId: periodReport
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Reporte por periodo y cliente } }
+  /api/v1/reportes/resumen:
+    get:
+      operationId: operationalSummary
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - { name: desde, in: query, required: false, schema: { type: string, format: date } }
+        - { name: hasta, in: query, required: false, schema: { type: string, format: date } }
+        - { name: clienteId, in: query, required: false, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200': { description: Conteos agregados y actividad del centro operativo; no depende de una página de cotizaciones }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /api/v1/clientes:
     get:
       operationId: listClients
@@ -277,6 +288,10 @@ components:
     Unauthorized:
       description: Sesión ausente, inválida o credenciales incorrectas
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: Usuario autenticado sin permisos para el recurso
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     ValidationError:
       description: Entrada inválida
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
