@@ -8,6 +8,7 @@ const clienteIdSchema = z.coerce.number().int().positive();
 const clientSchema = z.object({ nombre: z.string().trim().min(2).max(150), nit: z.string().trim().max(20).optional(), tipo: z.enum(["residencial", "comercial", "institucional", "agricola"]), telefono: z.string().trim().max(30).optional(), correoContacto: z.string().trim().email().max(160).optional() });
 const zoneSchema = z.object({ clienteId: z.number().int().positive(), nombre: z.string().trim().min(2).max(120), direccion: z.string().trim().max(200).optional(), areaM2: z.number().positive().optional(), descripcion: z.string().trim().max(300).optional() });
 const pathId = z.coerce.number().int().positive();
+const workerSchema = z.object({ nombre: z.string().trim().min(2).max(120), cuadrillaId: z.number().int().positive(), esLider: z.boolean().default(false), activo: z.boolean().default(true) });
 
 export const clientes = [authenticate, requireRole("administrador"), asyncRoute(async (_request: Request, response: Response) => {
   const result = await pool.query("SELECT id, nombre, nit, tipo, correo_contacto, telefono FROM dpm.clientes ORDER BY nombre");
@@ -67,10 +68,21 @@ export const servicios = [authenticate, asyncRoute(async (_request: Request, res
 })];
 
 export const operarios = [authenticate, requireRole("administrador"), asyncRoute(async (_request: Request, response: Response) => {
-  const result = await pool.query(`SELECT o.id, o.nombre, o.cuadrilla_id, q.nombre AS cuadrilla, o.es_lider, o.activo,
+  const result = await pool.query(`SELECT o.id, o.usuario_id, o.nombre, o.cuadrilla_id, q.nombre AS cuadrilla, o.es_lider, o.activo,
     count(ot.id) FILTER (WHERE ot.estado <> 'finalizada' AND ot.inicio >= now())::int AS servicios_proximos
     FROM dpm.operarios o JOIN dpm.cuadrillas q ON q.id=o.cuadrilla_id
     LEFT JOIN dpm.ordenes_trabajo ot ON ot.cuadrilla_id=o.cuadrilla_id
     GROUP BY o.id, q.nombre ORDER BY o.nombre`);
   response.json({ data: result.rows });
+})];
+
+export const createOperario = [authenticate, requireRole("administrador"), asyncRoute(async (request: Request, response: Response) => {
+  const parsed = workerSchema.safeParse(request.body); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "Los datos del trabajador no son válidos.", parsed.error.flatten().fieldErrors);
+  try { const result = await pool.query(`INSERT INTO dpm.operarios (nombre,cuadrilla_id,es_lider,activo) VALUES ($1,$2,$3,$4) RETURNING id,nombre,cuadrilla_id,es_lider,activo`, [parsed.data.nombre, parsed.data.cuadrillaId, parsed.data.esLider, parsed.data.activo]); response.status(201).json({ data: result.rows[0] }); } catch (error) { if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "LEADER_ALREADY_EXISTS", "La cuadrilla ya tiene un líder activo."); if (error instanceof Error && /foreign key/i.test(error.message)) throw new HttpError(422, "TEAM_NOT_FOUND", "La cuadrilla seleccionada no existe."); throw error; }
+})];
+
+export const updateOperario = [authenticate, requireRole("administrador"), asyncRoute(async (request: Request, response: Response) => {
+  const workerId = pathId.safeParse(request.params.id); const parsed = workerSchema.partial().safeParse(request.body); if (!workerId.success || !parsed.success || !Object.keys(parsed.data).length) throw new HttpError(422, "VALIDATION_ERROR", "Los datos del trabajador no son válidos.");
+  const fields: string[] = []; const values: unknown[] = []; const entries: Array<[string, unknown]> = [["nombre", parsed.data.nombre], ["cuadrilla_id", parsed.data.cuadrillaId], ["es_lider", parsed.data.esLider], ["activo", parsed.data.activo]]; for (const [column, value] of entries) if (value !== undefined) fields.push(`${column}=$${values.push(value)}`); values.push(workerId.data);
+  try { const result = await pool.query(`UPDATE dpm.operarios SET ${fields.join(",")} WHERE id=$${values.length} RETURNING id,nombre,cuadrilla_id,es_lider,activo`, values); if (!result.rows[0]) throw new HttpError(404, "WORKER_NOT_FOUND", "El trabajador no existe."); response.json({ data: result.rows[0] }); } catch (error) { if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "LEADER_ALREADY_EXISTS", "La cuadrilla ya tiene un líder activo."); if (error instanceof Error && /foreign key/i.test(error.message)) throw new HttpError(422, "TEAM_NOT_FOUND", "La cuadrilla seleccionada no existe."); throw error; }
 })];

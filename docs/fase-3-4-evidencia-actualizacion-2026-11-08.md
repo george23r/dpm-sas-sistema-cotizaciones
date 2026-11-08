@@ -39,7 +39,7 @@ El flujo comprobo login y `/auth/me`, propiedad de zonas, creacion de solicitud 
 
 La misma prueba tambien registro turnos en planilla de campo y administrativa, comparo el resultado `coincide`, concilio ambas planillas y verifico que un registro posterior fuera rechazado con `409` por planilla bloqueada.
 
-También verificó `POST /clientes`, `POST /zonas` y `PATCH /zonas/:id` con una entidad ficticia aislada en la base temporal.
+También verificó `POST /clientes`, `POST /zonas`, `PATCH /zonas/:id`, `POST /cuadrillas`, `POST /operarios`, `PATCH /operarios/:id` y el rechazo `409` de un segundo líder activo, usando entidades ficticias aisladas en la base temporal.
 
 ## CI
 
@@ -47,6 +47,6 @@ Se publico `.github/workflows/validar-backend.yml` en `main`, commit `f5b0b3a`. 
 
 ## Brechas vigentes
 
-- Falta CRUD persistente de trabajadores y cuadrillas.
+- Falta validación empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya está disponible para administración y la restricción de líder único la aplica PostgreSQL.
 - Falta completar mutaciones del portal operario y pruebas E2E de navegador.
 - No se ejecutaron capturas cross-browser ni JMeter; no se declara PASS para RNF-03.

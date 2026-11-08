@@ -10,6 +10,8 @@ const required = [
   "INTEGRATION_ADMIN_PASSWORD",
   "INTEGRATION_CLIENT_EMAIL",
   "INTEGRATION_CLIENT_PASSWORD",
+  "INTEGRATION_OPERATOR_EMAIL",
+  "INTEGRATION_OPERATOR_PASSWORD",
 ] as const;
 const missing = required.filter((key) => !process.env[key]);
 if (process.env.RUN_INTEGRATION !== "1") missing.push("RUN_INTEGRATION");
@@ -58,6 +60,14 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(managedZone.response.status, 201);
     const updatedZone = await request(`/api/v1/zonas/${managedZone.body.data.id}`, { method: "PATCH", body: JSON.stringify({ descripcion: "Zona actualizada" }) }, admin.cookie);
     assert.equal(updatedZone.response.status, 200);
+    const managedTeam = await request("/api/v1/cuadrillas", { method: "POST", body: JSON.stringify({ nombre: `Cuadrilla CRUD ${Date.now()}` }) }, admin.cookie);
+    assert.equal(managedTeam.response.status, 201);
+    const managedWorker = await request("/api/v1/operarios", { method: "POST", body: JSON.stringify({ nombre: "Operario CRUD", cuadrillaId: managedTeam.body.data.id, esLider: true, activo: true }) }, admin.cookie);
+    assert.equal(managedWorker.response.status, 201);
+    const duplicateLeader = await request("/api/v1/operarios", { method: "POST", body: JSON.stringify({ nombre: "Segundo líder", cuadrillaId: managedTeam.body.data.id, esLider: true, activo: true }) }, admin.cookie);
+    assert.equal(duplicateLeader.response.status, 409);
+    const updatedWorker = await request(`/api/v1/operarios/${managedWorker.body.data.id}`, { method: "PATCH", body: JSON.stringify({ activo: false }) }, admin.cookie);
+    assert.equal(updatedWorker.response.status, 200);
 
     const client = await login(process.env.INTEGRATION_CLIENT_EMAIL!, process.env.INTEGRATION_CLIENT_PASSWORD!);
     const zones = await request("/api/v1/zonas", {}, client.cookie);
@@ -92,12 +102,17 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
 
     const crews = await request("/api/v1/cuadrillas", {}, admin.cookie);
     assert.equal(crews.response.status, 200);
+    const operator = await login(process.env.INTEGRATION_OPERATOR_EMAIL!, process.env.INTEGRATION_OPERATOR_PASSWORD!);
+    const workers = await request("/api/v1/operarios", {}, admin.cookie);
+    assert.equal(workers.response.status, 200);
+    const activeWorker = workers.body.data.find((item: { activo: boolean; usuario_id?: number | null }) => item.activo && item.usuario_id === operator.user.id);
+    assert.ok(activeWorker?.cuadrilla_id, "Debe existir un trabajador activo para programar la orden");
     const start = new Date(Date.UTC(2027, quoteId % 12, 5 + (quoteId % 20), 18, 0));
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-    const order = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: crews.body.data[0]?.id ?? null, inicio: start.toISOString(), fin: end.toISOString() }) }, admin.cookie);
+    const order = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: activeWorker.cuadrilla_id, inicio: start.toISOString(), fin: end.toISOString() }) }, admin.cookie);
     assert.equal(order.response.status, 201);
 
-    const teamId = crews.body.data[0]?.id;
+    const teamId = activeWorker.cuadrilla_id;
     const members = await request(`/api/v1/cuadrillas/${teamId}/miembros`, {}, admin.cookie);
     assert.equal(members.response.status, 200);
     const worker = members.body.data.find((item: { activo: boolean }) => item.activo);
@@ -124,14 +139,9 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const lockedRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify({ ...recordInput, inicio: "09:00" }) }, admin.cookie);
     assert.equal(lockedRecord.response.status, 409);
 
-    const operatorEmail = process.env.INTEGRATION_OPERATOR_EMAIL;
-    const operatorPassword = process.env.INTEGRATION_OPERATOR_PASSWORD;
-    if (operatorEmail && operatorPassword) {
-      const operator = await login(operatorEmail, operatorPassword);
-      const mine = await request("/api/v1/ordenes/mias", {}, operator.cookie);
-      assert.equal(mine.response.status, 200);
-      assert.ok(mine.body.data.some((item: { id: number }) => item.id === order.body.data.id));
-    }
+    const mine = await request("/api/v1/ordenes/mias", {}, operator.cookie);
+    assert.equal(mine.response.status, 200);
+    assert.ok(mine.body.data.some((item: { id: number }) => item.id === order.body.data.id));
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await pool.end();

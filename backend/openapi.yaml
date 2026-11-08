@@ -138,6 +138,22 @@ paths:
       operationId: listTeams
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Cuadrillas e indicadores registrados } }
+    post:
+      operationId: createTeam
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Cuadrilla creada }, '409': { description: Nombre duplicado } }
+  /api/v1/cuadrillas/{id}:
+    patch:
+      operationId: updateTeam
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Cuadrilla actualizada }, '404': { description: Cuadrilla inexistente } }
+  /api/v1/cuadrillas/{id}/miembros:
+    get:
+      operationId: listTeamMembers
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Integrantes de la cuadrilla } }
   /api/v1/planillas:
     get:
       operationId: listSheets
@@ -209,6 +225,16 @@ paths:
       operationId: listWorkers
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Operarios y carga próxima para administración } }
+    post:
+      operationId: createWorker
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Operario creado }, '409': { description: Líder activo duplicado } }
+  /api/v1/operarios/{id}:
+    patch:
+      operationId: updateWorker
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Operario actualizado }, '404': { description: Operario inexistente }, '409': { description: Líder activo duplicado } }
 components:
   securitySchemes:
     sessionCookie: { type: apiKey, in: cookie, name: dpm_session }
