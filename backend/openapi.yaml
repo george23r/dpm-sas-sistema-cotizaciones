@@ -38,6 +38,15 @@ paths:
     post:
       operationId: logout
       responses: { '204': { description: Sesión cerrada } }
+  /api/v1/clientes/{id}/historial:
+    get:
+      operationId: clientServiceHistory
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses:
+        '200': { description: Servicios finalizados del cliente autorizado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { description: Cliente no disponible }
   /api/v1/cotizaciones:
     get:
       operationId: listQuotes

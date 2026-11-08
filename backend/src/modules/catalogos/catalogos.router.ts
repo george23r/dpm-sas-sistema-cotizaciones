@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { clientes, createClient, createOperario, createZone, operarios, servicios, updateClient, updateOperario, updateZone, zonas } from "./catalogos.controller.js";
+import { historialCliente } from "./historial.controller.js";
 
 export const catalogosRouter = Router();
+catalogosRouter.get("/clientes/:id/historial", ...historialCliente);
 catalogosRouter.get("/clientes", ...clientes);
 catalogosRouter.post("/clientes", ...createClient);
 catalogosRouter.patch("/clientes/:id", ...updateClient);

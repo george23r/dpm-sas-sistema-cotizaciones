@@ -73,6 +73,8 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const zones = await request("/api/v1/zonas", {}, client.cookie);
     assert.equal(zones.response.status, 200);
     const zone = zones.body.data[0];
+    const ownHistory = await request(`/api/v1/clientes/${zone.cliente_id}/historial`, {}, client.cookie);
+    assert.equal(ownHistory.response.status, 200);
     assert.ok(zone?.id, "El cliente de integración debe tener una zona");
 
     const created = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Integración automatizada ${Date.now()}`, alcance: "Prueba de flujo persistente" }) }, client.cookie);
