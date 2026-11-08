@@ -1,83 +1,53 @@
-# Componentes, API y modelos UML — DPM SAS
+# Componentes, API y trazabilidad â€” DPM S.A.S.
 
-## 1. Componentes por módulo
+Estado actualizado: 2026-11-08. Las rutas indicadas son las implementadas bajo `/api/v1`.
 
-| Módulo | Aplicación web | API (recursos) | Base de datos |
+## 1. Componentes por mÃ³dulo
+
+| MÃ³dulo | Pantallas frontend | API principal | Persistencia |
 |---|---|---|---|
-| Acceso y usuarios | Inicio de sesión | `POST /auth/login` | `usuarios`, `clientes`, `operarios` |
-| Cotizaciones | Solicitar, Mis cotizaciones, Cotizaciones, Nueva cotización | `/cotizaciones/...` | `cotizaciones`, `visitas_tecnicas`, `cotizacion_lineas`, `cotizacion_costos`, `cotizacion_hitos` |
-| Programación | Calendario semanal y mensual | `/ordenes` | `ordenes_trabajo` |
-| Cuadrillas | Disponibilidad y asignación | `/cuadrillas`, `PATCH /ordenes/{id}` | `cuadrillas`, `operarios` |
-| Ejecución en campo | Mis órdenes, detalle y finalización | `/ordenes/mias`, `/ordenes/{id}/iniciar`, `/finalizar` | `ordenes_trabajo`, `v_ordenes_operario` |
-| Historial | Historial de servicios | `GET /clientes/{id}/historial` | `v_historial_servicios` |
-| Reportes | Reporte por periodo (pendiente) | `GET /reportes/periodo` | `fn_reporte_periodo` |
-| Control de jornadas | Planillas y comparación (pendiente) | `/planillas/...` | `planillas_jornada`, `registros_jornada`, `fn_comparar_planillas`, `sp_conciliar_planillas` |
+| Acceso | Login y sesiÃ³n | `POST /auth/login`, `GET /auth/me`, `POST /auth/logout` | `usuarios` |
+| Cotizaciones | Solicitar, mis cotizaciones, listado, editor y detalle | `/cotizaciones`, visitas, lÃ­neas, costos, hitos, enviar, respuesta | `cotizaciones`, `visitas_tecnicas`, `cotizacion_lineas`, `cotizacion_costos`, `cotizacion_hitos` |
+| ProgramaciÃ³n | Agenda mes/semana/lista y panel de orden | `/ordenes`, filtros `estado`, `clienteId`, `cuadrillaId`, asignaciÃ³n | `ordenes_trabajo`, triggers de solape |
+| Cuadrillas | Listado, ediciÃ³n, integrantes y asignaciones | `/cuadrillas`, `/cuadrillas/:id/miembros`, `/operarios` | `cuadrillas`, `operarios` |
+| EjecuciÃ³n | Mis Ã³rdenes y detalle mÃ³vil | `/ordenes/mias`, iniciar, finalizar | `ordenes_trabajo`, `v_ordenes_operario` |
+| Historial | Servicios finalizados del cliente | `/clientes/:id/historial` | `v_historial_servicios` |
+| Jornadas | Planillas, turnos, comparaciÃ³n y conciliaciÃ³n | `/planillas`, `/comparar`, `/conciliar` | `planillas_jornada`, `registros_jornada` |
+| Reportes | Filtros por periodo/cliente y desglose | `/reportes/periodo` | `fn_reporte_periodo` |
+| CatÃ¡logo | Servicios activos sin tarifas no confirmadas | `/servicios` | `servicios` |
 
-## 2. Recursos propuestos de la API
+## 2. AutorizaciÃ³n resumida
 
-| Método y ruta | Rol | Historia | Objeto de base de datos |
-|---|---|---|---|
-| `POST /auth/login` | Público | RNF-04 | `usuarios` |
-| `POST /cotizaciones` | Cliente, administrador | HU-02 | `cotizaciones` |
-| `GET /cotizaciones`, `GET /cotizaciones/{id}` | Cliente (propias), administrador | HU-02 | `v_cotizaciones_detalle` |
-| `POST /cotizaciones/{id}/visitas` | Administrador | HU-01 | `visitas_tecnicas` |
-| `POST /cotizaciones/{id}/lineas` | Administrador | HU-01 | `cotizacion_lineas` |
-| `POST /cotizaciones/{id}/costos` | Administrador | HU-01 | `cotizacion_costos` |
-| `POST /cotizaciones/{id}/hitos` | Administrador | HU-01 | `cotizacion_hitos` |
-| `POST /cotizaciones/{id}/enviar` | Administrador | HU-01 | `sp_enviar_cotizacion` |
-| `POST /cotizaciones/{id}/respuesta` | Cliente | HU-02 | `sp_responder_cotizacion` |
-| `POST /ordenes` | Administrador | HU-03 | `ordenes_trabajo` |
-| `PATCH /ordenes/{id}` (asignar cuadrilla) | Administrador | HU-04 | `ordenes_trabajo` |
-| `GET /cuadrillas` | Administrador | HU-04 | `cuadrillas`, `operarios` |
-| `GET /ordenes/mias` | Operario | HU-05 | `v_ordenes_operario` |
-| `PATCH /ordenes/{id}/iniciar`, `/finalizar` | Operario | HU-06 | `ordenes_trabajo` |
-| `GET /clientes/{id}/historial` | Cliente (propio), administrador | HU-07 | `v_historial_servicios` |
-| `GET /reportes/periodo` | Administrador | HU-08 | `fn_reporte_periodo` |
-| `POST /planillas`, `POST /planillas/{id}/registros` | Administrador | HU-09 | `planillas_jornada`, `registros_jornada` |
-| `GET /planillas/comparar` | Administrador | HU-10 | `fn_comparar_planillas` |
-| `POST /planillas/conciliar` | Administrador | HU-10 | `sp_conciliar_planillas` |
+| Recurso | Administrador | Cliente | Operario |
+|---|---:|---:|---:|
+| Cotizaciones | Todas, ediciÃ³n previa al envÃ­o | Propias, conceptos y respuesta | No |
+| Ã“rdenes | Crear, consultar y asignar | Propias relacionadas | Solo cuadrilla propia |
+| Cuadrillas y trabajadores | Administrar | No | No |
+| Planillas y reportes | Administrar | No | No |
+| Historial | Consultar | Propio | No |
 
-## 3. Casos de uso
+La autorizaciÃ³n se aplica en Express y PostgreSQL segÃºn corresponda; las rutas frontend no conceden privilegios.
 
-![Casos de uso](img/casos_uso.png)
+## 3. Contratos implementados
 
-## 4. Estados de la cotización
+- `POST /api/v1/cotizaciones` y `GET /api/v1/cotizaciones`/`:id`.
+- `POST /api/v1/cotizaciones/:id/visitas`, `/lineas`, `/costos`, `/hitos`, `/enviar` y `/respuesta`.
+- `POST /api/v1/ordenes`, `GET /api/v1/ordenes`, `GET /api/v1/ordenes/mias`, `GET /api/v1/ordenes/:id`, `PATCH /api/v1/ordenes/:id`, `/iniciar` y `/finalizar`.
+- `GET/POST/PATCH /clientes`, `/zonas`, `/operarios`, `/cuadrillas` y `GET /servicios`.
+- `GET/POST /planillas`, `POST /planillas/:id/registros`, `GET /planillas/comparar` y `POST /planillas/conciliar`.
+- `GET /api/v1/reportes/periodo`.
 
-![Estados de la cotización](img/estados_cotizacion.png)
+El contrato OpenAPI estÃ¡ en `backend/openapi.yaml`. Las fechas de API son ISO; la interfaz presenta fechas en `America/Bogota` y valores monetarios en COP.
 
-## 5. Diagramas de secuencia
+## 4. Reglas respaldadas por pruebas
 
-**Elaborar, enviar y responder una cotización (HU-01 y HU-02)**
+| Historia | Regla o flujo | Evidencia |
+|---|---|---|
+| HU-01/HU-02 | Visita, lÃ­neas, hitos al 100 %, envÃ­o, vigencia y respuesta | integraciÃ³n API y C1â€“C4 |
+| HU-03/HU-04 | Orden desde cotizaciÃ³n aceptada, filtros, asignaciÃ³n y solapes | integraciÃ³n API, C5â€“C8 y E2E agenda |
+| HU-05/HU-06/HU-07 | Propiedad de Ã³rdenes, iniciar/finalizar e historial | integraciÃ³n API, C9â€“C11 |
+| HU-08 | Reporte por periodo y cliente | C15 e integraciÃ³n API |
+| HU-09/HU-10 | Turnos, medianoche, comparaciÃ³n, conciliaciÃ³n y bloqueo | C12â€“C14 e integraciÃ³n API |
 
-![Secuencia de cotización](img/secuencia_cotizacion.png)
+Las tarifas, recargos y permisos empresariales no se presentan como validados por DPM.
 
-**Programar un mantenimiento y registrar su ejecución (HU-03 a HU-06)**
-
-![Secuencia de programación](img/secuencia_programacion.png)
-
-**Comparar y conciliar planillas de jornada (HU-09 y HU-10)**
-
-![Secuencia de planillas](img/secuencia_planillas.png)
-
-## 6. Modelo de datos
-
-![ER: cotizaciones y catálogos](img/er_cotizaciones.png)
-
-![ER: ejecución y jornadas](img/er_ejecucion.png)
-
-El diccionario completo está en [`database/diccionario_datos.md`](../../database/diccionario_datos.md).
-
-## 7. Trazabilidad
-
-| HU | Recurso de la API | Objetos de base de datos | Prueba |
-|---|---|---|---|
-| HU-01 | `/cotizaciones/{id}/visitas`, `/lineas`, `/costos`, `/hitos`, `/enviar` | `cotizaciones`, `visitas_tecnicas`, `cotizacion_lineas`, `cotizacion_costos`, `cotizacion_hitos`, `sp_enviar_cotizacion` | C1, C2, C4 |
-| HU-02 | `POST/GET /cotizaciones`, `/respuesta` | `v_cotizaciones_detalle`, `sp_responder_cotizacion` | C3 |
-| HU-03 | `POST /ordenes` | `ordenes_trabajo`, `trg_ordenes_validar` | C5, C6, C7 |
-| HU-04 | `GET /cuadrillas`, `PATCH /ordenes/{id}` | `cuadrillas`, `operarios`, `v_ordenes_detalle` | C8 |
-| HU-05 | `GET /ordenes/mias` | `v_ordenes_operario` | C10 |
-| HU-06 | `PATCH /ordenes/{id}/iniciar`, `/finalizar` | `ordenes_trabajo` | C9 |
-| HU-07 | `GET /clientes/{id}/historial` | `v_historial_servicios` | C11 |
-| HU-08 | `GET /reportes/periodo` | `fn_reporte_periodo` | C15 |
-| HU-09 | `POST /planillas`, `/registros` | `planillas_jornada`, `registros_jornada` | C12 |
-| HU-10 | `GET /planillas/comparar`, `POST /planillas/conciliar` | `fn_comparar_planillas`, `sp_conciliar_planillas` | C13, C14 |
