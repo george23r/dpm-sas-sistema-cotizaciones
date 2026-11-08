@@ -10,7 +10,7 @@ import { cotizacionesSeed } from "@/data/cotizaciones";
 import { ordenesSeed } from "@/data/ordenes";
 import { compararPlanillas, demoPlanillas, demoJornadas, horasJornada, type Planilla, type Jornada } from "@/lib/jornadas";
 import { cotizacionVigente, totalLineas, validarEnvio } from "@/lib/cotizaciones";
-import { ApiError } from "@/api/http";
+import { ApiError, SESSION_EXPIRED_EVENT } from "@/api/http";
 import { cerrarSesionApi, iniciarSesionApi, obtenerUsuarioActual, type UsuarioActual } from "@/api/auth";
 
 type NuevaCotizacionInput = Omit<Cotizacion, "id"|"fechaSolicitud"|"fechaEnvio"|"precio"|"vigenciaDias">;
@@ -57,6 +57,12 @@ export function AppProvider({children}:{children:React.ReactNode}){
   let activo=true;
   obtenerUsuarioActual().then(usuario=>{if(!activo)return;setUsuarioActual(usuario??null);setRolState(usuario?.rol??"cliente");setAutenticado(Boolean(usuario));}).catch((error:unknown)=>{if(!activo)return;if(error instanceof ApiError&&error.status!==401)setAuthError(error.message);setAutenticado(false);}).finally(()=>{if(activo)setAuthCargando(false);});
   return()=>{activo=false;};
+ },[modoDemo]);
+ useEffect(()=>{
+  if(modoDemo)return;
+  const handleExpired=()=>{setUsuarioActual(null);setAutenticado(false);setAuthError("Tu sesión expiró. Inicia sesión nuevamente.");};
+  window.addEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+  return()=>window.removeEventListener(SESSION_EXPIRED_EVENT, handleExpired);
  },[modoDemo]);
  const iniciarSesion=async(correo:string,clave:string)=>{
   if(modoDemo){setAuthError(null);setAutenticado(true);return {ok:true as const,rol};}
@@ -158,3 +164,4 @@ export function AppProvider({children}:{children:React.ReactNode}){
  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 export function useApp(){const c=useContext(AppContext);if(!c)throw new Error("useApp debe usarse dentro de AppProvider");return c;}
+
