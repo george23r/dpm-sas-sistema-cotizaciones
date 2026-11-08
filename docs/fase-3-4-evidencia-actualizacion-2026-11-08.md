@@ -83,3 +83,6 @@ La captura cubre evidencia representativa de los tres perfiles; no sustituye una
 ## Flujo integrado ampliado
 
 La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. Además del flujo de cotización, aceptación, programación y planillas, verificó inicio y finalización de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administración y rechazo de acceso del cliente al reporte (`403`).
+## Endurecimiento de propiedad y errores de negocio
+
+La API ahora verifica que la zona de una cotización pertenezca al cliente autenticado o al cliente seleccionado por administración. La prueba integrada confirmó el rechazo `403 ZONE_NOT_OWNED` para una zona ajena. También se mapearon las restricciones de envío y respuesta de cotizaciones a errores HTTP `409` controlados, manteniendo las validaciones definitivas en PostgreSQL.

@@ -77,6 +77,10 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(ownHistory.response.status, 200);
     assert.ok(zone?.id, "El cliente de integración debe tener una zona");
 
+    const foreignQuote = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: managedZone.body.data.id, objeto: "Zona ajena de prueba" }) }, client.cookie);
+    assert.equal(foreignQuote.response.status, 403);
+    assert.equal(foreignQuote.body.code, "ZONE_NOT_OWNED");
+
     const created = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Integración automatizada ${Date.now()}`, alcance: "Prueba de flujo persistente" }) }, client.cookie);
     assert.equal(created.response.status, 201);
     const quoteId = created.body.data.id;
