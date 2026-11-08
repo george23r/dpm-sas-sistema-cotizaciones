@@ -23,6 +23,15 @@ npm run test:integration PASS — 1/1 con PostgreSQL local, 0 fallos
 
 La prueba de integración consulta `search=Integración&page=1&pageSize=1` y comprueba `meta.pageSize`, `meta.total` y que la cantidad de registros no supera el límite solicitado.
 
+También se ejecutó el flujo navegable administrativo con la API y Vite locales:
+
+```text
+npx playwright test -g "administra el centro" --project=chromium
+PASS — 1 prueba, 5.9 s
+```
+
+El flujo inicia sesión, abre el centro operativo, navega la agenda y consulta el detalle de una cotización desde la interfaz.
+
 ## Límites
 
 La evidencia usa datos ficticios en una base local. No representa volumen de producción ni sustituye una prueba de carga con datos reales anonimizados.
