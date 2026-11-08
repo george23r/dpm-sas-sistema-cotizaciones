@@ -14,6 +14,7 @@ Implementado y probado con datos ficticios de desarrollo:
 - Clientes, zonas, trabajadores y cuadrillas con operaciones administrativas persistentes disponibles.
 - Planillas de campo y administrativas, comparación, conciliación y bloqueo posterior.
 - Reportes de periodo y portales diferenciados para administrador, cliente y operario.
+- Historial de servicios por cliente y plan reproducible de rendimiento RNF-03 con evidencia JMeter local.
 
 Los datos del seed son ficticios. El dashboard no inventa métricas: muestra únicamente información devuelta por la API y estados informativos cuando no existe un dato.
 
@@ -66,6 +67,7 @@ No se implementan facturación electrónica, nómina, pasarelas de pago, notific
 ## Documentación
 
 - [`backend/README.md`](backend/README.md): instalación, rutas y pruebas de API.
+- [`performance/evidencia-2026-11-08.md`](performance/evidencia-2026-11-08.md): medición local reproducible de consultas con JMeter.
 - [`docs/arquitectura/`](docs/arquitectura/): arquitectura y decisiones.
 - [`docs/auditoria-fase-0.md`](docs/auditoria-fase-0.md): línea base y diferencias iniciales.
 - [`BITACORA.md`](BITACORA.md): seguimiento del desarrollo.
