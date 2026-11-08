@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { loadEnv } from "../config/env.js";
 import { HttpError } from "../shared/errors.js";
 import { verifySession } from "../shared/session.js";
+import { refreshUserFromDatabase } from "../modules/auth/auth.service.js";
 import type { RolUsuario } from "../shared/user-role.js";
 
 export function authenticate(request: Request, _response: Response, next: NextFunction) {
@@ -9,8 +10,15 @@ export function authenticate(request: Request, _response: Response, next: NextFu
   const token = request.cookies?.[env.COOKIE_NAME] as string | undefined;
   if (!token) return next(new HttpError(401, "UNAUTHENTICATED", "La sesión es requerida."));
   try {
-    request.user = verifySession(token);
-    return next();
+    const sessionUser = verifySession(token);
+    void refreshUserFromDatabase(sessionUser).then((currentUser) => {
+      request.user = currentUser;
+      next();
+    }).catch((error: unknown) => {
+      if (error instanceof HttpError) next(error);
+      else next(new HttpError(401, "SESSION_REVOKED", "La cuenta está inactiva o ya no existe."));
+    });
+    return;
   } catch {
     return next(new HttpError(401, "SESSION_EXPIRED", "La sesión no es válida o ha expirado."));
   }
