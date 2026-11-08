@@ -87,3 +87,12 @@ test("permite recorrer el login con teclado", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeVisible();
 });
 
+test("informa y redirige cuando expira la sesión", async ({ page }) => {
+  await login(page, "admin");
+  await expect(page).toHaveURL(/\/app\/admin\/panel$/);
+  await page.context().clearCookies();
+  await page.getByRole("link", { name: /Programaci/ }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("alert")).toContainText("Tu sesión expiró");
+});
+
