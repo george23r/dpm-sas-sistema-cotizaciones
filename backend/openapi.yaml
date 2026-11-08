@@ -173,12 +173,32 @@ paths:
       operationId: listClients
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Clientes visibles para administración } }
+    post:
+      operationId: createClient
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Cliente creado }, '409': { description: Nombre o NIT duplicado } }
+  /api/v1/clientes/{id}:
+    patch:
+      operationId: updateClient
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Cliente actualizado }, '404': { description: Cliente inexistente }, '409': { description: Nombre o NIT duplicado } }
   /api/v1/zonas:
     get:
       operationId: listZones
       security: [{ sessionCookie: [] }]
       parameters: [{ name: clienteId, in: query, required: false, schema: { type: integer, minimum: 1 } }]
       responses: { '200': { description: Zonas visibles según rol y propiedad } }
+    post:
+      operationId: createZone
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Zona creada }, '409': { description: Nombre duplicado para el cliente } }
+  /api/v1/zonas/{id}:
+    patch:
+      operationId: updateZone
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Zona actualizada }, '404': { description: Zona inexistente }, '409': { description: Nombre duplicado para el cliente } }
   /api/v1/servicios:
     get:
       operationId: listServices

@@ -52,6 +52,13 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(me.response.status, 200);
     assert.equal(me.body.user.rol, "administrador");
 
+    const managedClient = await request("/api/v1/clientes", { method: "POST", body: JSON.stringify({ nombre: `Cliente CRUD ${Date.now()}`, tipo: "comercial", nit: `TEST-${Date.now()}` }) }, admin.cookie);
+    assert.equal(managedClient.response.status, 201);
+    const managedZone = await request("/api/v1/zonas", { method: "POST", body: JSON.stringify({ clienteId: managedClient.body.data.id, nombre: "Zona principal", direccion: "Dirección de prueba", areaM2: 120 }) }, admin.cookie);
+    assert.equal(managedZone.response.status, 201);
+    const updatedZone = await request(`/api/v1/zonas/${managedZone.body.data.id}`, { method: "PATCH", body: JSON.stringify({ descripcion: "Zona actualizada" }) }, admin.cookie);
+    assert.equal(updatedZone.response.status, 200);
+
     const client = await login(process.env.INTEGRATION_CLIENT_EMAIL!, process.env.INTEGRATION_CLIENT_PASSWORD!);
     const zones = await request("/api/v1/zonas", {}, client.cookie);
     assert.equal(zones.response.status, 200);
