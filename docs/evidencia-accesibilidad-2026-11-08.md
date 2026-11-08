@@ -12,6 +12,7 @@ Navegador probado: Chromium mediante Playwright
 - El login permite pasar por correo, contraseña y acción de ingreso usando teclado.
 - Estados de carga, error y confirmación relevantes usan regiones `status` o `alert` en las pantallas revisadas.
 - La vista de detalle de agenda está marcada como diálogo con título accesible.
+- Cada orden del portal operario se expone como botón de ancho completo, de modo que puede abrirse con teclado y mantiene un área táctil amplia en móvil.
 
 ## Resultado reproducible
 
