@@ -1,12 +1,19 @@
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import {useApp} from "@/context/AppContext";
 import {Card,CardContent} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {HuTag} from "@/components/shared/HuTag";
 import type {Cliente} from "@/types";
+import {obtenerClientesApi,obtenerZonasApi,type ClienteApi,type ZonaApi} from "@/api/catalogos";
 const vacio={nombre:"",correo:"",telefono:""};
 export function Clientes(){
+ const {modoDemo}=useApp();
+ if(!modoDemo)return <ClientesApi />;
+ return <ClientesDemo />;
+}
+
+function ClientesDemo(){
  const {clientes,guardarCliente,zonas,cotizaciones}=useApp();
  const [editId,setEditId]=useState<string|undefined>();
  const [datos,setDatos]=useState(vacio);const [error,setError]=useState("");const [ok,setOk]=useState("");
@@ -20,4 +27,10 @@ export function Clientes(){
  <div className="flex items-end gap-2"><Button type="submit">{editId?"Guardar":"Agregar"}</Button>{editId&&<Button type="button" variant="outline" onClick={()=>{setEditId(undefined);setDatos(vacio)}}>Cancelar</Button>}</div>
  </form>{error&&<p role="alert" className="text-sm text-status-error">{error}</p>}{ok&&<p role="status" className="text-sm text-primary">{ok}</p>}</CardContent></Card>
  <Card><CardContent className="overflow-x-auto p-4"><table className="w-full text-left text-sm"><thead><tr className="border-b border-line">{["Cliente","Correo","Teléfono","Zonas","Cotizaciones","Acción"].map(x=><th key={x} className="p-2">{x}</th>)}</tr></thead><tbody>{clientes.map(c=><tr className="border-b border-line" key={c.id}><td className="p-2 font-medium">{c.nombre}</td><td className="p-2">{c.correo}</td><td className="p-2">{c.telefono}</td><td className="p-2">{zonas.filter(z=>z.clienteId===c.id).length}</td><td className="p-2">{cotizaciones.filter(q=>q.clienteId===c.id).length}</td><td className="p-2"><Button size="sm" variant="outline" onClick={()=>editar(c)}>Editar</Button></td></tr>)}</tbody></table></CardContent></Card></div>;
+}
+
+function ClientesApi(){
+ const [clientes,setClientes]=useState<ClienteApi[]>([]);const [zonas,setZonas]=useState<ZonaApi[]>([]);const [error,setError]=useState("");const [loading,setLoading]=useState(true);
+ useEffect(()=>{Promise.all([obtenerClientesApi(),obtenerZonasApi()]).then(([c,z])=>{setClientes(c.data);setZonas(z.data);}).catch((e:Error)=>setError(e.message)).finally(()=>setLoading(false));},[]);
+ return <div className="space-y-5"><HuTag id="HU-02"/><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-primary">Administración · Datos persistentes</p><h1 className="font-heading text-2xl font-semibold">Clientes y zonas</h1><p className="text-sm text-muted">Consulta alimentada por PostgreSQL. La edición requiere endpoints CRUD administrativos aún pendientes de validación.</p></div>{error&&<p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-status-error">{error}</p>}{loading?<p className="text-sm text-muted">Cargando clientes…</p>:<Card><CardContent className="overflow-x-auto p-4"><table className="w-full min-w-[620px] text-left text-sm"><thead><tr className="border-b border-line text-xs uppercase text-muted"><th className="p-3">Cliente</th><th className="p-3">Contacto</th><th className="p-3">Teléfono</th><th className="p-3">Zonas</th></tr></thead><tbody>{clientes.map(c=><tr className="border-b border-line" key={c.id}><td className="p-3 font-medium">{c.nombre}</td><td className="p-3">{c.correo_contacto??"Sin correo"}</td><td className="p-3">{c.telefono??"Sin teléfono"}</td><td className="p-3">{zonas.filter(z=>z.cliente_id===c.id).length}</td></tr>)}</tbody></table>{!clientes.length&&<p className="p-6 text-center text-sm text-muted">No hay clientes disponibles.</p>}</CardContent></Card>}</div>;
 }

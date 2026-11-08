@@ -31,3 +31,12 @@ export const servicios = [authenticate, asyncRoute(async (_request: Request, res
   const result = await pool.query("SELECT id, nombre, unidad_cobro, activo FROM dpm.servicios WHERE activo=true ORDER BY id");
   response.json({ data: result.rows });
 })];
+
+export const operarios = [authenticate, requireRole("administrador"), asyncRoute(async (_request: Request, response: Response) => {
+  const result = await pool.query(`SELECT o.id, o.nombre, o.cuadrilla_id, q.nombre AS cuadrilla, o.es_lider, o.activo,
+    count(ot.id) FILTER (WHERE ot.estado <> 'finalizada' AND ot.inicio >= now())::int AS servicios_proximos
+    FROM dpm.operarios o JOIN dpm.cuadrillas q ON q.id=o.cuadrilla_id
+    LEFT JOIN dpm.ordenes_trabajo ot ON ot.cuadrilla_id=o.cuadrilla_id
+    GROUP BY o.id, q.nombre ORDER BY o.nombre`);
+  response.json({ data: result.rows });
+})];

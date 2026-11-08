@@ -45,6 +45,7 @@ npm start
 - `GET /api/v1/clientes`: catálogo de clientes para administración.
 - `GET /api/v1/zonas?clienteId=`: zonas visibles según rol y propiedad.
 - `GET /api/v1/servicios`: catálogo activo; no expone tarifas ficticias.
+- `GET /api/v1/operarios`: trabajadores activos/inactivos y carga próxima para administración.
 
 La cookie no se expone al navegador mediante JavaScript. En producción se requiere HTTPS, `COOKIE_SAMESITE=none` únicamente si la separación de orígenes lo exige y `DB_SSL=true` con certificado verificable. El backend nunca devuelve `password_hash`.
 
