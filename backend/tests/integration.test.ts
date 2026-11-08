@@ -231,6 +231,10 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const mine = await request("/api/v1/ordenes/mias", {}, operator.cookie);
     assert.equal(mine.response.status, 200);
     assert.ok(mine.body.data.some((item: { id: number }) => item.id === order.body.data.id));
+    await pool.query("UPDATE dpm.usuarios SET activo=false WHERE id=$1", [admin.user.id]);
+    const revoked = await request("/api/v1/auth/me", {}, admin.cookie);
+    assert.equal(revoked.response.status, 401);
+    assert.equal(revoked.body.code, "SESSION_REVOKED");
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await pool.end();
