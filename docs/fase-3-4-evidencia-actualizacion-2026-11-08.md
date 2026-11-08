@@ -54,12 +54,12 @@ Capturas versionadas en `evidencias/`: `e2e-dashboard-admin-1366-2026-11-08.png`
 
 ## CI
 
-Se publico `.github/workflows/validar-backend.yml` en `main`, commit `f5b0b3a`. El workflow levanta PostgreSQL 16, aplica esquema, seed y `03_consultas_comprobacion.sql`, y ejecuta build, lint y tests backend. Al momento de la revision el proveedor no mostro un estado de check asociado al commit.
+Se publico `.github/workflows/validar-backend.yml` en `main`. Para el commit `a331c57`, el workflow `Verificar API y PostgreSQL` termino `success` en la ejecucion `42523408817`; levanto PostgreSQL 16, aplico esquema, seed y `03_consultas_comprobacion.sql`, y ejecuto build, lint y tests backend.
 
-Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `e2e/roles.spec.ts` y `database/04_seed_e2e.sql`. El arnes reconoce tres pruebas de navegador: centro operativo del administrador, aislamiento del portal cliente y portal mobile-first del operario. `npx playwright test --list` reconocio las tres pruebas en local. La ejecucion completa contra PostgreSQL y Chromium queda delegada al workflow CI; no se marca PASS local porque este equipo no tiene `psql` disponible.
+Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `e2e/roles.spec.ts` y `database/04_seed_e2e.sql`. El arnes reconoce tres pruebas de navegador: centro operativo del administrador, aislamiento del portal cliente y portal mobile-first del operario. `npx playwright test --list` reconocio las tres pruebas en local. La ejecucion CI `42523408808` termino `success` contra PostgreSQL temporal y Chromium; el smoke E2E completo paso despues de corregir la espera de disponibilidad de la API. La limitacion local de este equipo sigue siendo la ausencia de `psql`.
 
 ## Brechas vigentes
 
 - Falta validación empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya está disponible para administración y la restricción de líder único la aplica PostgreSQL.
-- Falta completar mutaciones del portal operario; el smoke E2E ya esta versionado, pero falta observar su primera ejecucion CI con PostgreSQL y Chromium.
+- Falta completar mutaciones adicionales del portal operario; el smoke E2E de login, aislamiento por rol y navegacion de los tres perfiles ya tiene PASS en CI con Chromium.
 - No se ejecutaron capturas cross-browser ni JMeter; no se declara PASS para RNF-03.
