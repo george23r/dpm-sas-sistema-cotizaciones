@@ -63,11 +63,11 @@ jobs:
         run: nohup npm start > "$RUNNER_TEMP/dpm-api.log" 2>&1 &
         working-directory: backend
       - name: Esperar API
-        run: curl --retry 30 --retry-delay 1 --fail http://127.0.0.1:3000/health
+        run: curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:3000/health
       - name: Iniciar frontend
         run: nohup npm run dev -- --host 127.0.0.1 > "$RUNNER_TEMP/dpm-web.log" 2>&1 &
       - name: Esperar frontend
-        run: curl --retry 30 --retry-delay 1 --fail http://127.0.0.1:5173/login
+        run: curl --retry 30 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:5173/login
       - run: npm run test:e2e
       - name: Publicar reporte E2E
         if: always()
