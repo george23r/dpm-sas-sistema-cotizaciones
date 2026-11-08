@@ -26,6 +26,7 @@ export function requireRole(...roles: RolUsuario[]) {
 
 export function requireSameOrigin(request: Request, _response: Response, next: NextFunction) {
   const env = loadEnv();
+  const isMutation = ["POST", "PUT", "PATCH", "DELETE"].includes(request.method.toUpperCase());
   const originHeader = request.get("origin");
   const refererHeader = request.get("referer");
   let requestOrigin: string | undefined = originHeader;
@@ -33,5 +34,7 @@ export function requireSameOrigin(request: Request, _response: Response, next: N
     try { requestOrigin = new URL(refererHeader).origin; } catch { requestOrigin = undefined; }
   }
   if (requestOrigin && requestOrigin !== env.CORS_ORIGIN) return next(new HttpError(403, "CSRF_ORIGIN_REJECTED", "El origen de la solicitud no está permitido."));
+  if (isMutation && !requestOrigin) return next(new HttpError(403, "CSRF_ORIGIN_MISSING", "La solicitud de cambio debe indicar un origen permitido."));
   return next();
 }
+
