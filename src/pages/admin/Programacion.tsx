@@ -19,6 +19,7 @@ import {
 import { HuTag } from "@/components/shared/HuTag";
 import { EstadoOrdenBadge } from "@/components/shared/EstadoBadge";
 import { cn } from "@/lib/utils";
+import { ProgramacionApiView } from "./ProgramacionApiView";
 
 const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -53,6 +54,11 @@ function aISO(d: Date) {
 const HOY = new Date();
 
 export function Programacion() {
+  const { modoDemo } = useApp();
+  return modoDemo ? <ProgramacionDemo /> : <ProgramacionApiView />;
+}
+
+function ProgramacionDemo() {
   const { ordenes, cuadrillas, clientes, crearOrden } = useApp();
   const [dialogAbierto, setDialogAbierto] = useState(false);
   const [clienteFiltro, setClienteFiltro] = useState("todos");

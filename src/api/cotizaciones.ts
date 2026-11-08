@@ -28,3 +28,43 @@ export function obtenerCotizacionesApi(params: { estado?: EstadoCotizacion; clie
 export function obtenerCotizacionApi(id: number) {
   return apiFetch<{ data: CotizacionApi }>(`/api/v1/cotizaciones/${id}`);
 }
+
+export function crearCotizacionApi(input: {
+  clienteId: number;
+  zonaId: number;
+  objeto: string;
+  alcance?: string;
+  incluye?: string;
+  tiempoEjecucion?: string;
+  observaciones?: string;
+  vigenciaDias?: number;
+}) {
+  return apiFetch<{ data: { id: number } }>("/api/v1/cotizaciones", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function agregarVisitaApi(id: number, input: { fecha: string; observaciones?: string }) {
+  return apiFetch<{ data: { id: number } }>(`/api/v1/cotizaciones/${id}/visitas`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function agregarLineaApi(id: number, input: { concepto: string; cantidad: number; valorUnitario: number; servicioId?: number | null }) {
+  return apiFetch<{ data: { id: number } }>(`/api/v1/cotizaciones/${id}/lineas`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function agregarCostoApi(id: number, input: { tipo: string; descripcion: string; cantidad: number; valorUnitario: number }) {
+  return apiFetch<{ data: { id: number } }>(`/api/v1/cotizaciones/${id}/costos`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function agregarHitoApi(id: number, input: { orden: number; descripcion: string; porcentaje: number }) {
+  return apiFetch<{ data: { id: number } }>(`/api/v1/cotizaciones/${id}/hitos`, { method: "POST", body: JSON.stringify(input) });
+}
+
+export function enviarCotizacionApi(id: number) {
+  return apiFetch<{ data: { id: number; estado: string } }>(`/api/v1/cotizaciones/${id}/enviar`, { method: "POST" });
+}
+
+export function responderCotizacionApi(id: number, acepta: boolean) {
+  return apiFetch<{ data: { id: number; estado: string } }>(`/api/v1/cotizaciones/${id}/respuesta`, { method: "POST", body: JSON.stringify({ acepta }) });
+}
