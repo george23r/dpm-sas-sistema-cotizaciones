@@ -8,14 +8,17 @@ const id = z.coerce.number().int().positive();
 const orderSchema = z.object({ cotizacionId: z.number().int().positive(), cuadrillaId: z.number().int().positive().nullable().optional(), inicio: z.string().datetime({ offset: true }), fin: z.string().datetime({ offset: true }) });
 const assignmentSchema = z.object({ cuadrillaId: z.number().int().positive().nullable() });
 const finalizationSchema = z.object({ nota: z.string().trim().max(2000).optional() });
+const listQuerySchema = z.object({ estado: z.enum(["pendiente", "en_ejecucion", "finalizada"]).optional(), clienteId: id.optional(), cuadrillaId: id.optional() });
 
 function user(request: Request) { if (!request.user) throw new HttpError(401, "UNAUTHENTICATED", "La sesión es requerida."); return request.user; }
 function pathId(request: Request) { const parsed = id.safeParse(request.params.id); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "El identificador no es válido."); return parsed.data; }
 function translate(error: unknown): never { const message = error instanceof Error ? error.message : "No fue posible completar la operación."; if (/cuadrilla|cotización|operario|horario|orden/i.test(message)) throw new HttpError(409, "BUSINESS_RULE", message); throw error; }
 
 export const list = [authenticate, requireRole("administrador", "cliente", "operario"), asyncRoute(async (request, response) => {
-  const current = user(request); const estado = typeof request.query.estado === "string" ? request.query.estado : undefined; const params: unknown[] = []; const filters = ["TRUE"];
+  const current = user(request); const parsedQuery = listQuerySchema.safeParse(request.query); if (!parsedQuery.success) throw new HttpError(422, "VALIDATION_ERROR", "Los filtros de órdenes no son válidos.", parsedQuery.error.flatten().fieldErrors); const { estado, clienteId, cuadrillaId } = parsedQuery.data; const params: unknown[] = []; const filters = ["TRUE"];
   if (estado) filters.push(`o.estado = $${params.push(estado)}`);
+  if (clienteId) filters.push(`c.id = $${params.push(clienteId)}`);
+  if (cuadrillaId) filters.push(`o.cuadrilla_id = $${params.push(cuadrillaId)}`);
   if (current.rol === "cliente") filters.push(`z.cliente_id = (SELECT id FROM dpm.clientes WHERE usuario_id = $${params.push(current.id)})`);
   if (current.rol === "operario") filters.push(`o.cuadrilla_id = (SELECT cuadrilla_id FROM dpm.operarios WHERE usuario_id = $${params.push(current.id)} AND activo = true)`);
   const result = await pool.query(`SELECT o.id, o.cotizacion_id, o.zona_id, z.nombre AS zona, z.direccion, c.id AS cliente_id, c.nombre AS cliente, o.tipo_servicio, o.cuadrilla_id, q.nombre AS cuadrilla, o.inicio, o.fin, o.estado, o.iniciada_en, o.finalizada_en, o.nota_finalizacion FROM dpm.ordenes_trabajo o JOIN dpm.zonas z ON z.id=o.zona_id JOIN dpm.clientes c ON c.id=z.cliente_id LEFT JOIN dpm.cuadrillas q ON q.id=o.cuadrilla_id WHERE ${filters.join(" AND ")} ORDER BY o.inicio`, params);

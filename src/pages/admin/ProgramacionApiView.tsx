@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,8 @@ function daysOfWeek(anchor: Date) { const monday = new Date(anchor); monday.setD
 
 export function ProgramacionApiView() {
  const [orders, setOrders] = useState<OrdenApi[]>([]); const [crews, setCrews] = useState<CuadrillaApi[]>([]); const [clients, setClients] = useState<ClienteApi[]>([]); const [anchor, setAnchor] = useState(() => new Date()); const [view, setView] = useState<"mes" | "semana" | "lista">("mes"); const [client, setClient] = useState("todos"); const [crew, setCrew] = useState("todos"); const [status, setStatus] = useState("todos"); const [selected, setSelected] = useState<OrdenApi | null>(null); const [error, setError] = useState("");
- const load = () => Promise.all([obtenerOrdenesApi(), obtenerCuadrillasApi(), obtenerClientesApi()]).then(([o, c, cl]) => { setOrders(o.data); setCrews(c.data); setClients(cl.data); }).catch((reason) => setError(reason instanceof ApiError ? reason.message : "No fue posible cargar la agenda."));
- useEffect(() => { void load(); }, []);
+ const load = useCallback(() => Promise.all([obtenerOrdenesApi({ estado: status === "todos" ? undefined : status, clienteId: client === "todos" ? undefined : Number(client), cuadrillaId: crew === "todos" ? undefined : Number(crew) }), obtenerCuadrillasApi(), obtenerClientesApi()]).then(([o, c, cl]) => { setOrders(o.data); setCrews(c.data); setClients(cl.data); }).catch((reason) => setError(reason instanceof ApiError ? reason.message : "No fue posible cargar la agenda.")), [client, crew, status]);
+ useEffect(() => { void load(); }, [load]);
  const filtered = useMemo(() => orders.filter((order) => (client === "todos" || String(order.cliente_id) === client) && (crew === "todos" || String(order.cuadrilla_id ?? "") === crew) && (status === "todos" || order.estado === status)), [orders, client, crew, status]);
  const cells = daysOfMonth(anchor); const weekCells = daysOfWeek(anchor); const selectedClient = clients.find((item) => String(item.id) === String(selected?.cliente_id));
  const move = (direction: number) => { if (view === "mes") { setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + direction, 1)); return; } const days = view === "semana" ? 7 : 1; setAnchor(new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + direction * days)); };

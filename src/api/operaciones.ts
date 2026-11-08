@@ -6,7 +6,7 @@ export interface MiembroCuadrillaApi { id: number; nombre: string; usuario_id: n
 export interface PlanillaApi { id: number; cliente_id: number; cliente: string; periodo_desde: string; periodo_hasta: string; origen: "campo" | "administrativa"; estado: "borrador" | "en_comparacion" | "conciliada"; registrada_por: number; creado_en: string; }
 export interface ComparacionApi { operario: string; fecha: string; horas_campo: string | null; horas_admin: string | null; diferencia: string; resultado: "coincide" | "diferente" | "solo_campo" | "solo_administrativa"; }
 
-export function obtenerOrdenesApi(params: { estado?: string } = {}) { const query = params.estado ? `?estado=${encodeURIComponent(params.estado)}` : ""; return apiFetch<{ data: OrdenApi[] }>(`/api/v1/ordenes${query}`); }
+export function obtenerOrdenesApi(params: { estado?: string; clienteId?: number; cuadrillaId?: number } = {}) { const query = new URLSearchParams(); if (params.estado) query.set("estado", params.estado); if (params.clienteId) query.set("clienteId", String(params.clienteId)); if (params.cuadrillaId) query.set("cuadrillaId", String(params.cuadrillaId)); const suffix = query.toString() ? `?${query.toString()}` : ""; return apiFetch<{ data: OrdenApi[] }>(`/api/v1/ordenes${suffix}`); }
 export function obtenerMisOrdenesApi(params: { estado?: string } = {}) { const query = params.estado ? `?estado=${encodeURIComponent(params.estado)}` : ""; return apiFetch<{ data: OrdenApi[] }>(`/api/v1/ordenes/mias${query}`); }
 export function obtenerOrdenApi(id: number) { return apiFetch<{ data: OrdenApi }>(`/api/v1/ordenes/${id}`); }
 export function obtenerCuadrillasApi() { return apiFetch<{ data: CuadrillaApi[] }>("/api/v1/cuadrillas"); }

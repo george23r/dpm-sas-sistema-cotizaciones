@@ -129,6 +129,9 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
     const order = await request("/api/v1/ordenes", { method: "POST", body: JSON.stringify({ cotizacionId: quoteId, cuadrillaId: activeWorker.cuadrilla_id, inicio: start.toISOString(), fin: end.toISOString() }) }, admin.cookie);
     assert.equal(order.response.status, 201);
+    const filteredOrders = await request(`/api/v1/ordenes?clienteId=${zone.cliente_id}&cuadrillaId=${activeWorker.cuadrilla_id}&estado=pendiente`, {}, admin.cookie);
+    assert.equal(filteredOrders.response.status, 200);
+    assert.ok(filteredOrders.body.data.some((item: { id: number }) => item.id === order.body.data.id));
     const overlappingQuote = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Solape automatizado ${Date.now()}` }) }, client.cookie);
     assert.equal(overlappingQuote.response.status, 201);
     const overlappingQuoteId = overlappingQuote.body.data.id;
@@ -188,8 +191,10 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const lockedRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify({ ...recordInput, inicio: "09:00" }) }, admin.cookie);
     assert.equal(lockedRecord.response.status, 409);
 
-    const differenceStart = "2028-02-01";
-    const differenceEnd = "2028-02-05";
+    const differenceStartDate = new Date(Date.UTC(2040, 0, 1 + (Date.now() % 10000)));
+    const differenceStart = differenceStartDate.toISOString().slice(0, 10);
+    differenceStartDate.setUTCDate(differenceStartDate.getUTCDate() + 4);
+    const differenceEnd = differenceStartDate.toISOString().slice(0, 10);
     const differenceField = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: differenceStart, hasta: differenceEnd, origen: "campo" }) }, admin.cookie);
     const differenceAdmin = await request("/api/v1/planillas", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: differenceStart, hasta: differenceEnd, origen: "administrativa" }) }, admin.cookie);
     assert.equal(differenceField.response.status, 201);
