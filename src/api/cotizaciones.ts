@@ -30,7 +30,7 @@ export function obtenerCotizacionApi(id: number) {
 }
 
 export function crearCotizacionApi(input: {
-  clienteId: number;
+  clienteId?: number;
   zonaId: number;
   objeto: string;
   alcance?: string;
