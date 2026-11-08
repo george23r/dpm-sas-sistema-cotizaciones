@@ -63,15 +63,31 @@ test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
   await expect(page.getByText("Centro de operaciones")).not.toBeVisible();
 });
 
-test("operario ve únicamente órdenes asignadas y portal mobile-first", async ({ page }) => {
+test("operario ve Ãºnicamente Ã³rdenes asignadas y portal mobile-first", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await login(page, "operario");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
-  await expect(page.getByRole("heading", { name: "Mis órdenes" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mis Ã³rdenes" })).toBeVisible();
   await expect(page.getByText("Servicios asignados a tu cuadrilla")).toBeVisible();
   await capture(page, "operario-ordenes-360");
   await page.goto("/app/admin/clientes");
   await expect(page).toHaveURL(/\/app\/operario\/ordenes$/);
+});
+
+test("operario puede reintentar si falla la carga de sus Ã³rdenes", async ({ page }) => {
+  let firstRequest = true;
+  await page.route("**/api/v1/ordenes/mias", async (route) => {
+    if (firstRequest) {
+      firstRequest = false;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await login(page, "operario");
+  await expect(page.getByRole("alert")).toContainText("No fue posible actualizar");
+  await page.getByRole("button", { name: "Reintentar" }).click();
+  await expect(page.getByText("Servicios asignados a tu cuadrilla")).toBeVisible();
 });
 
 test("permite recorrer el login con teclado", async ({ page }) => {
@@ -87,12 +103,12 @@ test("permite recorrer el login con teclado", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Ingresar al sistema/ })).toBeVisible();
 });
 
-test("informa y redirige cuando expira la sesión", async ({ page }) => {
+test("informa y redirige cuando expira la sesiÃ³n", async ({ page }) => {
   await login(page, "admin");
   await expect(page).toHaveURL(/\/app\/admin\/panel$/);
   await page.context().clearCookies();
   await page.getByRole("link", { name: /Programaci/ }).click();
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("alert")).toContainText("Tu sesión expiró");
+  await expect(page.getByRole("alert")).toContainText("Tu sesiÃ³n expirÃ³");
 });
 
