@@ -189,6 +189,7 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
     const report = await request(`/api/v1/reportes/periodo?desde=2026-01-01&hasta=2028-01-01&clienteId=${zone.cliente_id}`, {}, admin.cookie);
     assert.equal(report.response.status, 200);
     assert.ok(report.body.data.some((item: { cliente: string; servicios_finalizados: number }) => item.cliente && Number(item.servicios_finalizados) >= 1));
+    assert.ok(report.body.data.some((item: { planillas_conciliadas?: number; diferencias_planillas?: number }) => "planillas_conciliadas" in item && "diferencias_planillas" in item));
     const summary = await request(`/api/v1/reportes/resumen?desde=2026-01-01&hasta=2028-01-01&clienteId=${zone.cliente_id}`, {}, admin.cookie);
     assert.equal(summary.response.status, 200);
     assert.ok(summary.body.data.cotizaciones);
