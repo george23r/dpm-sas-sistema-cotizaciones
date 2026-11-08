@@ -51,6 +51,10 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await page.getByRole("link", { name: "Ver detalle" }).first().click();
   await expect(page.getByText("Detalle de propuesta")).toBeVisible();
   await expect(page.getByText("Costos internos")).toBeVisible();
+  await page.getByRole("link", { name: "Cuadrillas" }).click();
+  await expect(page).toHaveURL(/\/app\/admin\/cuadrillas$/);
+  await expect(page.getByRole("heading", { name: "Cuadrillas" })).toBeVisible();
+  await expect(page.getByLabel("Activa")).toBeVisible();
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
