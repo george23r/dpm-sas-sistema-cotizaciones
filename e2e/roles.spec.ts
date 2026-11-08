@@ -55,6 +55,7 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page).toHaveURL(/\/app\/admin\/cuadrillas$/);
   await expect(page.getByRole("heading", { name: "Cuadrillas" })).toBeVisible();
   await expect(page.getByLabel("Activa")).toBeVisible();
+  await capture(page, "admin-cuadrillas-1366");
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
