@@ -80,3 +80,6 @@ Se ejecutó Apache JMeter 5.6.3 contra la API Express compilada y un contenedor 
 La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programaciÃ³n administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
 
 La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditorÃ­a completa de todas las pantallas ni una validaciÃ³n empresarial.
+## Flujo integrado ampliado
+
+La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. Además del flujo de cotización, aceptación, programación y planillas, verificó inicio y finalización de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administración y rechazo de acceso del cliente al reporte (`403`).
