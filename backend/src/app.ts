@@ -1,7 +1,6 @@
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import express from "express";
-import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { loadEnv } from "./config/env.js";
 import { pool } from "./db/pool.js";
@@ -29,7 +28,7 @@ export function buildApp() {
     try { await pool.query("SELECT 1"); response.status(200).json({ status: "ready" }); }
     catch { next(new HttpError(503, "DATABASE_UNAVAILABLE", "La base de datos no está disponible.")); }
   });
-  app.use("/api/v1/auth", rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false }), authRouter);
+  app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/cotizaciones", cotizacionesRouter);
   app.use("/api/v1/ordenes", ordenesRouter);
   app.use("/api/v1/cuadrillas", cuadrillasRouter);
