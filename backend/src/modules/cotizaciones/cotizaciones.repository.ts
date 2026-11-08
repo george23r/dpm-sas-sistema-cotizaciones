@@ -3,13 +3,19 @@ import { pool } from "../../db/pool.js";
 
 export interface QuoteRow extends QueryResultRow { id: number; consecutivo: string; cliente_id: number; zona_id: number; objeto: string; alcance: string | null; incluye: string | null; tiempo_ejecucion: string | null; observaciones: string | null; vigencia_dias: number; estado: string; total: string | null; creada_por: number; solicitada_en: string; enviada_en: string | null; cliente: string; zona: string; }
 
-export async function findQuotes(userId: number, role: string, filters: { estado?: string; clienteId?: number }) {
+export async function findQuotes(userId: number, role: string, filters: { estado?: string; clienteId?: number; search?: string; desde?: string; hasta?: string; page: number; pageSize: number }) {
   const params: unknown[] = [];
   const conditions = [role === "cliente" ? `q.cliente_id = (SELECT id FROM dpm.clientes WHERE usuario_id = $${params.push(userId)})` : "TRUE"];
   if (filters.estado) conditions.push(`q.estado = $${params.push(filters.estado)}`);
   if (role === "administrador" && filters.clienteId) conditions.push(`q.cliente_id = $${params.push(filters.clienteId)}`);
-  const result = await pool.query<QuoteRow>(`SELECT q.*, c.nombre AS cliente, z.nombre AS zona FROM dpm.cotizaciones q JOIN dpm.clientes c ON c.id=q.cliente_id JOIN dpm.zonas z ON z.id=q.zona_id WHERE ${conditions.join(" AND ")} ORDER BY q.solicitada_en DESC`, params);
-  return result.rows;
+  if (filters.search) { const term = `%${filters.search}%`; conditions.push(`(q.objeto ILIKE $${params.push(term)} OR c.nombre ILIKE $${params.length} OR z.nombre ILIKE $${params.length})`); }
+  if (filters.desde) conditions.push(`q.solicitada_en::date >= $${params.push(filters.desde)}`);
+  if (filters.hasta) conditions.push(`q.solicitada_en::date <= $${params.push(filters.hasta)}`);
+  const from = `FROM dpm.cotizaciones q JOIN dpm.clientes c ON c.id=q.cliente_id JOIN dpm.zonas z ON z.id=q.zona_id WHERE ${conditions.join(" AND ")}`;
+  const count = await pool.query<{ total: string }>(`SELECT count(*)::text AS total ${from}`, params);
+  const dataParams = [...params, filters.pageSize, (filters.page - 1) * filters.pageSize];
+  const result = await pool.query<QuoteRow>(`SELECT q.*, c.nombre AS cliente, z.nombre AS zona ${from} ORDER BY q.solicitada_en DESC LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}`, dataParams);
+  return { rows: result.rows, total: Number(count.rows[0]?.total ?? 0) };
 }
 
 export async function findQuote(id: number, userId: number, role: string) {
@@ -47,3 +53,4 @@ export async function addPart(client: PoolClient, quoteId: number, kind: "linea"
   } as const;
   await client.query(queries[kind], [quoteId, ...values]);
 }
+
