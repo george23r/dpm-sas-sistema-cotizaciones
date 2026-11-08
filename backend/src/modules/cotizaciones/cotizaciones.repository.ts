@@ -39,6 +39,28 @@ export async function createQuote(input: { clienteId: number; zonaId: number; ob
   return result.rows[0].id;
 }
 
+export async function createQuoteWithParts(input: { clienteId: number; zonaId: number; objeto: string; alcance?: string; incluye?: string; tiempoEjecucion?: string; observaciones?: string; vigenciaDias?: number; creadaPor: number }, parts: { visita?: { fecha: string; realizadaPor: number; observaciones?: string }; lineas: Array<{ servicioId?: number | null; concepto: string; cantidad: number; valorUnitario: number }>; costos: Array<{ tipo: string; descripcion: string; cantidad: number; valorUnitario: number }>; hitos: Array<{ orden: number; descripcion: string; porcentaje: number }>; enviar: boolean }) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query<{ id: number }>(`INSERT INTO dpm.cotizaciones (cliente_id,zona_id,objeto,alcance,incluye,tiempo_ejecucion,observaciones,vigencia_dias,creada_por) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`, [input.clienteId, input.zonaId, input.objeto, input.alcance ?? null, input.incluye ?? null, input.tiempoEjecucion ?? null, input.observaciones ?? null, input.vigenciaDias ?? 15, input.creadaPor]);
+    const id = result.rows[0]?.id;
+    if (!id) throw new Error("No se pudo crear la cotización.");
+    if (parts.visita) await addPart(client, id, "visita", [parts.visita.fecha, parts.visita.realizadaPor, parts.visita.observaciones ?? null]);
+    for (const line of parts.lineas) await addPart(client, id, "linea", [line.servicioId ?? null, line.concepto, line.cantidad, line.valorUnitario]);
+    for (const cost of parts.costos) await addPart(client, id, "costo", [cost.tipo, cost.descripcion, cost.cantidad, cost.valorUnitario]);
+    for (const milestone of parts.hitos) await addPart(client, id, "hito", [milestone.orden, milestone.descripcion, milestone.porcentaje]);
+    if (parts.enviar) await client.query("CALL dpm.sp_enviar_cotizacion($1)", [id]);
+    await client.query("COMMIT");
+    return id;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getClientForUser(userId: number) {
   const result = await pool.query<{ id: number }>("SELECT id FROM dpm.clientes WHERE usuario_id=$1", [userId]);
   return result.rows[0]?.id;
