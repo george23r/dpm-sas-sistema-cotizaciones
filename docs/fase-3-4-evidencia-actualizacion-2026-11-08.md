@@ -63,3 +63,9 @@ Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `
 - Falta validación empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya está disponible para administración y la restricción de líder único la aplica PostgreSQL.
 - Falta completar mutaciones adicionales del portal operario; el smoke E2E de login, aislamiento por rol y navegacion de los tres perfiles ya tiene PASS en CI con Chromium.
 - No se ejecutaron capturas cross-browser ni JMeter; no se declara PASS para RNF-03.
+
+### Correccion de rate limit y E2E multiplataforma
+
+En la ejecucion inicial de tres navegadores se reprodujo un fallo porque el rate limit estaba aplicado a todo `/auth`, incluyendo `GET /me`; no era un fallo de credenciales ni de compatibilidad del navegador. El commit `ea44d72` dejo el limite exclusivamente en `POST /auth/login`, manteniendo la proteccion contra fuerza bruta sin bloquear la renovacion normal de sesion.
+
+La ejecucion CI `42524261979` termino `success` con 9 pruebas: 3 en Chromium, 3 en Firefox y 3 en WebKit. La ausencia de `psql` continua siendo una limitacion para repetir localmente el arranque de PostgreSQL.

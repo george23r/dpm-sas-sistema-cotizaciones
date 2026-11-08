@@ -45,4 +45,4 @@ En producción se requiere HTTPS, `COOKIE_SECURE=true`, CORS con origen explíci
 
 ## Brechas declaradas
 
-El smoke E2E de navegador tiene PASS en CI con Chromium, PostgreSQL temporal y tres pruebas de perfiles. Aún faltan capturas cross-browser y medición JMeter. Tampoco se presentan como validadas por DPM las reglas de liderazgo, tarifas, recargos, autogestión ni otros supuestos empresariales. No se implementan facturación electrónica, nómina, pagos ni notificaciones automáticas.
+El smoke E2E de navegador tiene PASS en CI con Chromium, Firefox y WebKit, PostgreSQL temporal y nueve pruebas de perfiles. Aún faltan capturas cross-browser y medición JMeter. Tampoco se presentan como validadas por DPM las reglas de liderazgo, tarifas, recargos, autogestión ni otros supuestos empresariales. No se implementan facturación electrónica, nómina, pagos ni notificaciones automáticas.
