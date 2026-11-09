@@ -32,15 +32,15 @@ function NuevaCotizacionApi(){
  useEffect(()=>{Promise.all([obtenerClientesApi(),obtenerServiciosApi()]).then(([c,s])=>{setClientes(c.data);setServicios(s.data);}).catch(e=>setError(e instanceof Error?e.message:"No fue posible cargar los catálogos."));},[]);
  useEffect(()=>{if(!clienteId){setZonas([]);return;} obtenerZonasApi(Number(clienteId)).then(r=>setZonas(r.data)).catch(e=>setError(e instanceof Error?e.message:"No fue posible cargar las zonas."));},[clienteId]);
  const pasos=["Cliente y zona","Visita técnica","Alcance","Conceptos","Costos internos","Hitos y vigencia","Revisión y envío"];
- function validarPaso(){
-  if(step===0&&!clienteId)return "Selecciona un cliente."; if(step===0&&!zonaId)return "Selecciona una zona de intervención.";
-  if(step===2&&!objeto.trim())return "Indica el objeto de la cotización.";
-  if(step===3&&(!lineas.length||lineas.some(l=>!l.concepto.trim()||l.cantidad<=0||l.valorUnitario<0)))return "Revisa los conceptos, cantidades y valores unitarios.";
-  if(step===5&&(totalHitos!==100||hitos.some(h=>!h.descripcion.trim())))return "Los hitos deben tener descripción y sumar exactamente 100 %.";
+ function validarPaso(paso=step){
+  if(paso===0&&!clienteId)return "Selecciona un cliente."; if(paso===0&&!zonaId)return "Selecciona una zona de intervención.";
+  if(paso===2&&!objeto.trim())return "Indica el objeto de la cotización.";
+  if(paso===3&&(!lineas.length||lineas.some(l=>!l.concepto.trim()||l.cantidad<=0||l.valorUnitario<0)))return "Revisa los conceptos, cantidades y valores unitarios.";
+  if(paso===5&&(totalHitos!==100||hitos.some(h=>!h.descripcion.trim())))return "Los hitos deben tener descripción y sumar exactamente 100 %.";
   return "";
  }
  async function guardar(enviar:boolean){
-  const fallos=[0,1,2,3,4,5].map((_,i)=>{const actual=step;setStep(i);const message=validarPaso();setStep(actual);return message;}).find(Boolean);
+  const fallos=[0,1,2,3,4,5].map((paso)=>validarPaso(paso)).find(Boolean);
   if(fallos){setError(fallos);return;} if(!clienteId||!zonaId){setError("Cliente y zona son obligatorios.");return;}
   setBusy(true);setError("");setNotice("");
   try{
