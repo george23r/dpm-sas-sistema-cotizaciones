@@ -29,7 +29,7 @@ export function Login() {
         <div className="absolute -right-32 -top-28 size-96 rounded-full border border-white/10" /><div className="absolute -bottom-48 -left-24 size-[30rem] rounded-full border border-white/10" />
         <div className="relative flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-white/15"><Sprout className="size-5" /></span><span className="font-heading text-lg font-bold tracking-tight">DPM Operations</span></div>
         <div className="relative max-w-md"><p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-emerald-200">Centro operativo</p><h1 className="font-heading text-4xl font-semibold leading-tight xl:text-5xl">Más claridad para cada zona verde.</h1><p className="mt-6 max-w-sm text-sm leading-7 text-emerald-50/75">Cotizaciones, programación y jornadas en un mismo espacio de trabajo para DPM S.A.S.</p><div className="mt-9 space-y-3 text-sm text-emerald-50/90"><p className="flex items-center gap-2"><CheckCircle2 className="size-4 text-emerald-200" /> Información organizada por proceso</p><p className="flex items-center gap-2"><CheckCircle2 className="size-4 text-emerald-200" /> Acceso según el rol autenticado</p><p className="flex items-center gap-2"><CheckCircle2 className="size-4 text-emerald-200" /> Seguimiento operativo con trazabilidad</p></div></div>
-        <p className="relative text-xs text-emerald-100/55">Sistema en evolución · DPM S.A.S.</p>
+            <p className="relative text-xs text-emerald-100">Sistema en evolución · DPM S.A.S.</p>
       </section>
       <section className="flex items-center justify-center px-5 py-10 sm:px-8">
         <div className="w-full max-w-md">
