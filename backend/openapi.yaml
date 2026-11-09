@@ -181,7 +181,10 @@ paths:
     get:
       operationId: compareSheets
       security: [{ sessionCookie: [] }]
-      responses: { '200': { description: Comparación por operario y fecha } }
+      parameters:
+        - { name: campoId, in: query, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: adminId, in: query, required: true, schema: { type: integer, minimum: 1 } }
+      responses: { '200': { description: Comparación por operario y fecha }, '404': { description: Planilla inexistente }, '409': { description: Par inválido por origen, cliente o periodo }, '422': { $ref: '#/components/responses/ValidationError' } }
   /api/v1/planillas/{id}/registros:
     post:
       operationId: addSheetRecord
