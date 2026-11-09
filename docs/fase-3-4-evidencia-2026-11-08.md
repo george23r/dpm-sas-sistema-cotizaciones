@@ -1,20 +1,22 @@
-# Evidencia técnica — Fases 3 y 4
+# Evidencia tÃ©cnica â€” Fases 3 y 4
+
+> Este documento conserva el corte histÃ³rico inicial. Las comprobaciones posteriores y sus resultados vigentes estÃ¡n en `docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`.
 
 Fecha: 2026-11-08, America/Bogota.
 
 ## Backend implementado
 
-- HU-03/HU-04/HU-05/HU-06/HU-07: `/api/v1/ordenes`, acciones de inicio/finalización, asignación de cuadrillas y `/api/v1/cuadrillas`.
-- HU-09/HU-10: `/api/v1/planillas`, registros, comparación y conciliación mediante `fn_comparar_planillas` y `sp_conciliar_planillas`.
+- HU-03/HU-04/HU-05/HU-06/HU-07: `/api/v1/ordenes`, acciones de inicio/finalizaciÃ³n, asignaciÃ³n de cuadrillas y `/api/v1/cuadrillas`.
+- HU-09/HU-10: `/api/v1/planillas`, registros, comparaciÃ³n y conciliaciÃ³n mediante `fn_comparar_planillas` y `sp_conciliar_planillas`.
 - HU-08: `/api/v1/reportes/periodo` mediante `fn_reporte_periodo`.
-- El pool fija `search_path=dpm,public`; no se añadieron tablas ni se ejecutó `DROP SCHEMA` sobre la base persistida.
+- El pool fija `search_path=dpm,public`; no se aÃ±adieron tablas ni se ejecutÃ³ `DROP SCHEMA` sobre la base persistida.
 
 ## Frontend actualizado
 
-- Centro de operaciones: filtros de cliente/periodo, seis métricas de conteo, gráfico temporal basado en registros, próximos mantenimientos, disponibilidad registrada de cuadrillas, alertas de cruces visibles, actividad reciente y accesos rápidos.
-- Reportes: filtros, KPIs, tabla por cliente y estados de API/demo explícitos. No se muestra exportación porque aún no existe endpoint verificado.
-- Cuadrillas: fichas de capacidad, integrantes registrados, servicios próximos y asignación de órdenes con mensaje de validación del servidor.
-- `src/api/operaciones.ts` centraliza DTOs y llamadas de órdenes, cuadrillas, planillas y reportes.
+- Centro de operaciones: filtros de cliente/periodo, seis mÃ©tricas de conteo, grÃ¡fico temporal basado en registros, prÃ³ximos mantenimientos, disponibilidad registrada de cuadrillas, alertas de cruces visibles, actividad reciente y accesos rÃ¡pidos.
+- Reportes: filtros, KPIs, tabla por cliente y estados de API/demo explÃ­citos. No se muestra exportaciÃ³n porque aÃºn no existe endpoint verificado.
+- Cuadrillas: fichas de capacidad, integrantes registrados, servicios prÃ³ximos y asignaciÃ³n de Ã³rdenes con mensaje de validaciÃ³n del servidor.
+- `src/api/operaciones.ts` centraliza DTOs y llamadas de Ã³rdenes, cuadrillas, planillas y reportes.
 
 ## Prueba HTTP contra PostgreSQL 16 temporal
 
@@ -32,9 +34,9 @@ POST /api/v1/planillas/conciliar                 200, estado conciliada
 GET  /api/v1/reportes/periodo                    200
 ```
 
-La base temporal ya contenía las comprobaciones SQL de la fase anterior; la prueba agregó únicamente registros ficticios de integración.
+La base temporal ya contenÃ­a las comprobaciones SQL de la fase anterior; la prueba agregÃ³ Ãºnicamente registros ficticios de integraciÃ³n.
 
-## Verificaciones de código
+## Verificaciones de cÃ³digo
 
 - `npm run build`: PASS.
 - `npm run test:unit`: 15 PASS.
@@ -43,10 +45,11 @@ La base temporal ya contenía las comprobaciones SQL de la fase anterior; la pru
 - `npm test --prefix backend`: 4 PASS.
 - `npm run lint --prefix backend`: PASS.
 
-## Brechas y límites
+## Brechas y lÃ­mites
 
-- `Programacion.tsx`, `Jornadas.tsx` y los portales de cliente/operario aún contienen flujos de UI en memoria; la API ya existe, pero sus mutaciones frontend no están completamente migradas.
-- La edición de integrantes, liderazgo y desactivación de cuadrillas no se habilitó porque no existe todavía un contrato CRUD validado para esas operaciones.
-- El reporte no inventa tendencias, ingresos ni porcentajes; solo muestra la función SQL y datos disponibles.
-- No se agregó facturación, nómina, recargos monetarios, notificaciones, geolocalización ni exportación no soportada.
-- No se ejecutaron todavía Playwright, capturas de navegador ni JMeter; por tanto no se declara evidencia visual cross-browser ni rendimiento RNF-03.
+- `Programacion.tsx`, `Jornadas.tsx` y los portales de cliente/operario aÃºn contienen flujos de UI en memoria; la API ya existe, pero sus mutaciones frontend no estÃ¡n completamente migradas.
+- La ediciÃ³n de integrantes, liderazgo y desactivaciÃ³n de cuadrillas no se habilitÃ³ porque no existe todavÃ­a un contrato CRUD validado para esas operaciones.
+- El reporte no inventa tendencias, ingresos ni porcentajes; solo muestra la funciÃ³n SQL y datos disponibles.
+- No se agregÃ³ facturaciÃ³n, nÃ³mina, recargos monetarios, notificaciones, geolocalizaciÃ³n ni exportaciÃ³n no soportada.
+- No se ejecutaron todavÃ­a Playwright, capturas de navegador ni JMeter; por tanto no se declara evidencia visual cross-browser ni rendimiento RNF-03.
+
