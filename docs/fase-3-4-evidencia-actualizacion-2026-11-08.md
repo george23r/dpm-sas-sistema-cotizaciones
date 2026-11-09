@@ -7,8 +7,8 @@ Fecha: 2026-11-08, America/Bogota.
 - El editor administrativo de cotizaciones usa la API en modo real y persiste cliente/zona, visita, lineas, costos internos, hitos y envio.
 - La agenda real consulta ordenes/cuadrillas, permite vista mensual/semanal/lista, filtros, navegacion y asignacion desde panel lateral; el servidor conserva la decision sobre solapes.
 - El portal cliente consulta sus zonas, crea solicitudes, lista y responde cotizaciones e historial de ordenes finalizadas mediante endpoints filtrados por propiedad.
-- Clientes, trabajadores y servicios administrativos dejaron de usar semillas como fuente en modo real. Clientes y zonas ya cuentan con creaciÃ³n/ediciÃ³n persistente; no se crean cuentas de acceso automÃ¡ticamente.
-- La agenda real incorpora vistas mes, semana y lista con filtros, panel de detalle y asignaciÃ³n protegida por el servidor.
+- Clientes, trabajadores y servicios administrativos dejaron de usar semillas como fuente en modo real. Clientes y zonas ya cuentan con creación/edición persistente; no se crean cuentas de acceso automáticamente.
+- La agenda real incorpora vistas mes, semana y lista con filtros, panel de detalle y asignación protegida por el servidor.
 
 ## Prueba HTTP contra PostgreSQL temporal
 
@@ -41,16 +41,16 @@ La misma prueba tambien registro turnos en planilla de campo y administrativa, c
 
 En el commit `1fa9309` se agrego una regresion para HU-03: una segunda creacion de orden con la misma cotizacion aceptada devuelve `409 QUOTE_ALREADY_SCHEDULED`. La implementacion usa una transaccion y `pg_advisory_xact_lock` para que la regla tambien sea segura ante concurrencia. El workflow backend `42524997142` termino `success` contra PostgreSQL 16 temporal.
 
-TambiÃ©n verificÃ³ `POST /clientes`, `POST /zonas`, `PATCH /zonas/:id`, `POST /cuadrillas`, `POST /operarios`, `PATCH /operarios/:id` y el rechazo `409` de un segundo lÃ­der activo, usando entidades ficticias aisladas en la base temporal.
+También verificó `POST /clientes`, `POST /zonas`, `PATCH /zonas/:id`, `POST /cuadrillas`, `POST /operarios`, `PATCH /operarios/:id` y el rechazo `409` de un segundo líder activo, usando entidades ficticias aisladas en la base temporal.
 
 ## Evidencia de navegador local
 
-Ejecutada el 2026-11-08 con Vite, Express y PostgreSQL temporal, Chromium controlado por Playwright, sesiÃ³n real mediante cookie HttpOnly y datos ficticios de desarrollo:
+Ejecutada el 2026-11-08 con Vite, Express y PostgreSQL temporal, Chromium controlado por Playwright, sesión real mediante cookie HttpOnly y datos ficticios de desarrollo:
 
-- Administrador: login, panel operativo, clientes, trabajadores, cuadrillas, programaciÃ³n mensual/semanal y reportes a 1366 px.
+- Administrador: login, panel operativo, clientes, trabajadores, cuadrillas, programación mensual/semanal y reportes a 1366 px.
 - Cliente: portal de zonas a 360 px.
-- Operario: portal de Ã³rdenes a 360 px.
-- La vista de jornadas fue revisada despuÃ©s de corregir el uso de IDs demo `NaN`; posteriormente cargÃ³ clientes reales desde `GET /api/v1/clientes` sin claves duplicadas.
+- Operario: portal de órdenes a 360 px.
+- La vista de jornadas fue revisada después de corregir el uso de IDs demo `NaN`; posteriormente cargó clientes reales desde `GET /api/v1/clientes` sin claves duplicadas.
 
 Capturas versionadas en `evidencias/`: `e2e-dashboard-admin-1366-2026-11-08.png`, `e2e-clientes-1366-2026-11-08.png`, `e2e-trabajadores-1366-2026-11-08.png`, `e2e-cuadrillas-1366-2026-11-08.png`, `e2e-programacion-1366-2026-11-08.png`, `e2e-programacion-semana-1366-2026-11-08.png`, `e2e-jornadas-1366-2026-11-08.png`, `e2e-reportes-1366-2026-11-08.png`, `e2e-portal-cliente-360-2026-11-08.png` y `e2e-portal-operario-360-2026-11-08.png`.
 
@@ -62,9 +62,9 @@ Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `
 
 ## Brechas vigentes
 
-- Falta validaciÃ³n empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya estÃ¡ disponible para administraciÃ³n y la restricciÃ³n de lÃ­der Ãºnico la aplica PostgreSQL.
+- Falta validación empresarial de permisos de liderazgo; CRUD persistente de trabajadores y cuadrillas ya está disponible para administración y la restricción de líder único la aplica PostgreSQL.
 - Falta completar mutaciones adicionales del portal operario; el smoke E2E de login, aislamiento por rol y navegacion de los tres perfiles ya tiene PASS en CI con Chromium.
-- Las capturas cross-browser representativas ya se generaron para Chromium, Firefox y WebKit; se mantienen como evidencia local en `evidencias/cross-browser-*.png`. RNF-03 cuenta con una mediciÃ³n local documentada en `performance/evidencia-2026-11-08.md`: 2.010 muestras, 0 errores y P95 de 4â€“5 ms para las cuatro operaciones de consulta. El resultado usa PostgreSQL 16 aislado, datos ficticios y no constituye un SLA de producciÃ³n.
+- Las capturas cross-browser representativas ya se generaron para Chromium, Firefox y WebKit; se mantienen como evidencia local en `evidencias/cross-browser-*.png`. RNF-03 cuenta con una medición local documentada en `performance/evidencia-2026-11-08.md`: 2.010 muestras, 0 errores y P95 de 4–5 ms para las cuatro operaciones de consulta. El resultado usa PostgreSQL 16 aislado, datos ficticios y no constituye un SLA de producción.
 
 ### Correccion de rate limit y E2E multiplataforma
 
@@ -72,46 +72,50 @@ En la ejecucion inicial de tres navegadores se reprodujo un fallo porque el rate
 
 La ejecucion CI `42524261979` termino `success` con 9 pruebas: 3 en Chromium, 3 en Firefox y 3 en WebKit. La ausencia de `psql` continua siendo una limitacion para repetir localmente el arranque de PostgreSQL.
 
-## MediciÃ³n RNF-03
+## Medición RNF-03
 
-Se ejecutÃ³ Apache JMeter 5.6.3 contra la API Express compilada y un contenedor PostgreSQL 16 aislado. El escenario usÃ³ 10 usuarios concurrentes, login por cookie HttpOnly y 50 iteraciones por cada consulta. Las operaciones de cotizaciones, historial operativo, reporte de periodo y comparaciÃ³n de planillas obtuvieron 500 muestras cada una, 0 errores y P95 de 4, 4, 5 y 4 ms respectivamente. Se conservaron el JTL y `statistics.json` en `performance/evidencia-2026-11-08/`.
-## ReejecuciÃ³n RNF-03 con JMeter en host
+Se ejecutó Apache JMeter 5.6.3 contra la API Express compilada y un contenedor PostgreSQL 16 aislado. El escenario usó 10 usuarios concurrentes, login por cookie HttpOnly y 50 iteraciones por cada consulta. Las operaciones de cotizaciones, historial operativo, reporte de periodo y comparación de planillas obtuvieron 500 muestras cada una, 0 errores y P95 de 4, 4, 5 y 4 ms respectivamente. Se conservaron el JTL y `statistics.json` en `performance/evidencia-2026-11-08/`.
+## Reejecución RNF-03 con JMeter en host
 
-Se ejecutÃ³ una nueva carga con Apache JMeter 5.6.3 en el host Windows, Java 25.0.2, API Express local y PostgreSQL temporal. El escenario usÃ³ 10 usuarios concurrentes, 50 iteraciones por cada una de cuatro consultas y login por hilo. Resultado real: 2.010 muestras, 0 errores y P95 de 8 ms o menos para cada consulta. El JTL y `statistics.json` estÃ¡n en `performance/evidencia-live-2026-11-08/`; el detalle estÃ¡ en `performance/evidencia-live-2026-11-08.md`. La mediciÃ³n no es SLA ni validaciÃ³n de producciÃ³n.
+Se ejecutó una nueva carga con Apache JMeter 5.6.3 en el host Windows, Java 25.0.2, API Express local y PostgreSQL temporal. El escenario usó 10 usuarios concurrentes, 50 iteraciones por cada una de cuatro consultas y login por hilo. Resultado real: 2.010 muestras, 0 errores y P95 de 8 ms o menos para cada consulta. El JTL y `statistics.json` están en `performance/evidencia-live-2026-11-08/`; el detalle está en `performance/evidencia-live-2026-11-08.md`. La medición no es SLA ni validación de producción.
 
 ## Evidencia cross-browser local
 
-La prueba local del 2026-11-08 se repitiÃƒÂ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programaciÃ³n administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
+### Conteo vigente de la suite de navegador
 
-La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditorÃ­a completa de todas las pantallas ni una validaciÃ³n empresarial.
+La suite actual de `e2e/roles.spec.ts` contiene ocho escenarios funcionales y produce 24 casos en tres proyectos (`8 Chromium + 8 Firefox + 8 WebKit`), con dos omisiones intencionales del escenario mutativo en Firefox y WebKit. Al sumar `e2e/accessibility.spec.ts`, que ejecuta un caso por navegador, la suite completa lista 27 casos y la última corrida local terminó con `25 passed`, `2 skipped`, `0 failed`. Las referencias históricas de nueve, 18 y 21 casos corresponden a versiones anteriores del arnés.
+
+La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programación administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
+
+La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditoría completa de todas las pantallas ni una validación empresarial.
 ## Flujo integrado ampliado
 
-La prueba `backend/tests/integration.test.ts` se ejecutÃ³ nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. AdemÃ¡s del flujo de cotizaciÃ³n, aceptaciÃ³n, programaciÃ³n y planillas, verificÃ³ inicio y finalizaciÃ³n de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administraciÃ³n y rechazo de acceso del cliente al reporte (`403`).
-## ReejecuciÃ³n de integraciÃ³n en base temporal limpia
+La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. Además del flujo de cotización, aceptación, programación y planillas, verificó inicio y finalización de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administración y rechazo de acceso del cliente al reporte (`403`).
+## Reejecución de integración en base temporal limpia
 
-El 2026-11-08 se preparÃ³ `dpm_codex_test_20261108` con `01_schema.sql`, `02_seed.sql` y `04_seed_e2e.sql`, y se ejecutÃ³ `npm run test:integration` con `RUN_INTEGRATION=1` y credenciales ficticias suministradas por variables de entorno. Resultado real: `1 passed`, `0 failed`, `0 skipped` en 2,23 s. La ejecuciÃ³n cubriÃ³ autenticaciÃ³n, propiedad de zonas, cotizaciÃ³n y aceptaciÃ³n, programaciÃ³n y solape, ciclo del operario, historial, reportes, planillas y RBAC.
+El 2026-11-08 se preparó `dpm_codex_test_20261108` con `01_schema.sql`, `02_seed.sql` y `04_seed_e2e.sql`, y se ejecutó `npm run test:integration` con `RUN_INTEGRATION=1` y credenciales ficticias suministradas por variables de entorno. Resultado real: `1 passed`, `0 failed`, `0 skipped` en 2,23 s. La ejecución cubrió autenticación, propiedad de zonas, cotización y aceptación, programación y solape, ciclo del operario, historial, reportes, planillas y RBAC.
 
 ## Endurecimiento de propiedad y errores de negocio
 
-La API ahora verifica que la zona de una cotizaciÃ³n pertenezca al cliente autenticado o al cliente seleccionado por administraciÃ³n. La prueba integrada confirmÃ³ el rechazo `403 ZONE_NOT_OWNED` para una zona ajena. TambiÃ©n se mapearon las restricciones de envÃ­o y respuesta de cotizaciones a errores HTTP `409` controlados, manteniendo las validaciones definitivas en PostgreSQL.
+La API ahora verifica que la zona de una cotización pertenezca al cliente autenticado o al cliente seleccionado por administración. La prueba integrada confirmó el rechazo `403 ZONE_NOT_OWNED` para una zona ajena. También se mapearon las restricciones de envío y respuesta de cotizaciones a errores HTTP `409` controlados, manteniendo las validaciones definitivas en PostgreSQL.
 ## Contraejemplos API verificados
 
-La integraciÃ³n ampliada ejecutada contra PostgreSQL 16 aislado verificÃ³: envÃ­o sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), ediciÃ³n posterior al envÃ­o (`409 QUOTE_IMMUTABLE`), doble programaciÃ³n por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃƒÂ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminÃ³ `1 passed`, `0 failed`, `0 skipped`.
-## ActualizaciÃ³n posterior de conteo y validaciÃ³n de planillas
+La integración ampliada ejecutada contra PostgreSQL 16 aislado verificó: envío sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), edición posterior al envío (`409 QUOTE_IMMUTABLE`), doble programación por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminó `1 passed`, `0 failed`, `0 skipped`.
+## Actualización posterior de conteo y validación de planillas
 
-La suite actual de `e2e/roles.spec.ts` contiene ocho escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 24 casos (`8 Chromium + 8 Firefox + 8 WebKit`), con dos omisiones intencionales del escenario mutativo (`Firefox` y `WebKit`). Las referencias histÃ³ricas de nueve, 18 y 21 casos corresponden a versiones anteriores del arnÃ©s.
+La suite actual de `e2e/roles.spec.ts` contiene ocho escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 24 casos (`8 Chromium + 8 Firefox + 8 WebKit`), con dos omisiones intencionales del escenario mutativo (`Firefox` y `WebKit`). Las referencias históricas de nueve, 18 y 21 casos corresponden a versiones anteriores del arnés.
 
-El 2026-11-08 se aÃ±adiÃ³ la validaciÃ³n HTTP de pares de planillas. `GET /api/v1/planillas/comparar` rechaza con `409 PLANILLA_PAIR_INVALID` los identificadores que no corresponden al mismo cliente, periodo y orÃ­genes campo/administrativa. La evidencia reproducible estÃ¡ en `docs/evidencia-planillas-validacion-2026-11-08.md`.
+El 2026-11-08 se añadió la validación HTTP de pares de planillas. `GET /api/v1/planillas/comparar` rechaza con `409 PLANILLA_PAIR_INVALID` los identificadores que no corresponden al mismo cliente, periodo y orígenes campo/administrativa. La evidencia reproducible está en `docs/evidencia-planillas-validacion-2026-11-08.md`.
 
-## EvaluaciÃ³n de FullCalendar
+## Evaluación de FullCalendar
 
-Se revisÃ³ la alternativa FullCalendar React para las vistas gratuitas `dayGrid`, `timeGrid` y `list`. La implementaciÃ³n vigente conserva componentes propios en `src/pages/admin/ProgramacionApiView.tsx`, porque ya cubren mes/semana/lista, navegaciÃ³n, filtros, detalle lateral y fechas America/Bogota sin aÃ±adir una dependencia de licencia ni requerir vistas de recursos Premium. La disponibilidad y los solapes continÃºan siendo responsabilidad del servidor y PostgreSQL; esta decisiÃ³n puede revisarse si el volumen operativo justifica incorporar la dependencia.
+Se revisó la alternativa FullCalendar React para las vistas gratuitas `dayGrid`, `timeGrid` y `list`. La implementación vigente conserva componentes propios en `src/pages/admin/ProgramacionApiView.tsx`, porque ya cubren mes/semana/lista, navegación, filtros, detalle lateral y fechas America/Bogota sin añadir una dependencia de licencia ni requerir vistas de recursos Premium. La disponibilidad y los solapes continúan siendo responsabilidad del servidor y PostgreSQL; esta decisión puede revisarse si el volumen operativo justifica incorporar la dependencia.
 
-## EjecuciÃ³n de orden por operario
+## Ejecución de orden por operario
 
-Se agregÃ³ el escenario E2E mutativo para iniciar una orden, registrar una nota y finalizarla mediante la API real desde el portal mobile-first. En una base temporal limpia (`dpm_codex_test_20261108`) la suite completa produjo `22 passed`, `2 skipped`, `0 failed`; el escenario mutativo se ejecuta solo en Chromium para no repetir el cambio persistente en Firefox y WebKit. La evidencia detallada estÃ¡ en `docs/evidencia-operario-ejecucion-2026-11-08.md`.
+Se agregó el escenario E2E mutativo para iniciar una orden, registrar una nota y finalizarla mediante la API real desde el portal mobile-first. En una base temporal limpia (`dpm_codex_test_20261108`) la suite completa produjo `22 passed`, `2 skipped`, `0 failed`; el escenario mutativo se ejecuta solo en Chromium para no repetir el cambio persistente en Firefox y WebKit. La evidencia detallada está en `docs/evidencia-operario-ejecucion-2026-11-08.md`.
 
 ## Detalle de cotizaciones en frontend real
 
-Se incorporÃ³ `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administraciÃ³n y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃƒÂ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administraciÃ³n y el cliente puede responder Ãºnicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutÃ³ con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
+Se incorporó `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administración y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administración y el cliente puede responder únicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutó con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
 
