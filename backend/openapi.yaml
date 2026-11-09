@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: DPM S.A.S. API
   version: 0.2.0
-  description: Contrato de autenticaciÃ³n y HU-01/HU-02 sobre PostgreSQL. Las rutas pendientes se incorporarÃ¡n por fases.
+  description: Contrato de autenticación y HU-01/HU-02 sobre PostgreSQL. Las rutas pendientes se incorporarán por fases.
 servers:
   - url: /
 paths:
@@ -24,7 +24,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } }
       responses:
-        '200': { description: SesiÃ³n creada mediante cookie HttpOnly }
+        '200': { description: Sesión creada mediante cookie HttpOnly }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /api/v1/auth/me:
@@ -37,7 +37,7 @@ paths:
   /api/v1/auth/logout:
     post:
       operationId: logout
-      responses: { '204': { description: SesiÃ³n cerrada } }
+      responses: { '204': { description: Sesión cerrada } }
   /api/v1/clientes/{id}/historial:
     get:
       operationId: clientServiceHistory
@@ -61,7 +61,7 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/QuoteRequest' } } }
       responses:
-        '201': { description: CotizaciÃ³n creada }
+        '201': { description: Cotización creada }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /api/v1/cotizaciones/{id}:
@@ -70,8 +70,8 @@ paths:
       security: [{ sessionCookie: [] }]
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
       responses:
-        '200': { description: Detalle; costos internos solo para administraciÃ³n }
-        '404': { description: CotizaciÃ³n no disponible }
+        '200': { description: Detalle; costos internos solo para administración }
+        '404': { description: Cotización no disponible }
   /api/v1/cotizaciones/{id}/enviar:
     post:
       operationId: sendQuote
@@ -85,19 +85,19 @@ paths:
       operationId: addTechnicalVisit
       security: [{ sessionCookie: [] }]
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
-      responses: { '201': { description: Visita tÃ©cnica registrada }, '422': { $ref: '#/components/responses/ValidationError' } }
+      responses: { '201': { description: Visita técnica registrada }, '422': { $ref: '#/components/responses/ValidationError' } }
   /api/v1/cotizaciones/{id}/lineas:
     post:
       operationId: addQuoteLine
       security: [{ sessionCookie: [] }]
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
-      responses: { '201': { description: LÃ­nea registrada }, '422': { $ref: '#/components/responses/ValidationError' } }
+      responses: { '201': { description: Línea registrada }, '422': { $ref: '#/components/responses/ValidationError' } }
   /api/v1/cotizaciones/{id}/costos:
     post:
       operationId: addInternalCost
       security: [{ sessionCookie: [] }]
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
-      responses: { '201': { description: Costo interno registrado; solo administraciÃ³n } }
+      responses: { '201': { description: Costo interno registrado; solo administración } }
   /api/v1/cotizaciones/{id}/hitos:
     post:
       operationId: addMilestone
@@ -120,11 +120,11 @@ paths:
     get:
       operationId: listOrders
       security: [{ sessionCookie: [] }]
-      responses: { '200': { description: Ã“rdenes visibles segÃºn rol }, '401': { $ref: '#/components/responses/Unauthorized' } }
+      responses: { '200': { description: Órdenes visibles según rol }, '401': { $ref: '#/components/responses/Unauthorized' } }
     post:
       operationId: createOrder
       security: [{ sessionCookie: [] }]
-      responses: { '201': { description: Orden creada desde cotizaciÃ³n aceptada }, '409': { description: Conflicto de horario o regla de negocio } }
+      responses: { '201': { description: Orden creada desde cotización aceptada }, '409': { description: Conflicto de horario o regla de negocio } }
   /api/v1/ordenes/mias:
     get:
       operationId: listMyOrders
@@ -135,7 +135,7 @@ paths:
       operationId: startOrder
       security: [{ sessionCookie: [] }]
       parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
-      responses: { '200': { description: Orden iniciada }, '409': { description: Operario no pertenece a la cuadrilla o transiciÃ³n invÃ¡lida } }
+      responses: { '200': { description: Orden iniciada }, '409': { description: Operario no pertenece a la cuadrilla o transición inválida } }
   /api/v1/ordenes/{id}/finalizar:
     patch:
       operationId: finishOrder
@@ -176,12 +176,12 @@ paths:
     post:
       operationId: createSheetPair
       security: [{ sessionCookie: [] }]
-      responses: { '201': { description: Par de planillas creado atÃ³micamente }, '409': { description: Ya existe el periodo } }
+      responses: { '201': { description: Par de planillas creado atómicamente }, '409': { description: Ya existe el periodo } }
   /api/v1/planillas/comparar:
     get:
       operationId: compareSheets
       security: [{ sessionCookie: [] }]
-      responses: { '200': { description: ComparaciÃ³n por operario y fecha } }
+      responses: { '200': { description: Comparación por operario y fecha } }
   /api/v1/planillas/{id}/registros:
     post:
       operationId: addSheetRecord
@@ -192,7 +192,7 @@ paths:
     post:
       operationId: reconcileSheets
       security: [{ sessionCookie: [] }]
-      responses: { '200': { description: Planillas conciliadas }, '409': { description: Diferencias bloquean conciliaciÃ³n } }
+      responses: { '200': { description: Planillas conciliadas }, '409': { description: Diferencias bloquean conciliación } }
   /api/v1/reportes/periodo:
     get:
       operationId: periodReport
@@ -207,13 +207,13 @@ paths:
         - { name: hasta, in: query, required: false, schema: { type: string, format: date } }
         - { name: clienteId, in: query, required: false, schema: { type: integer, minimum: 1 } }
       responses:
-        '200': { description: Conteos agregados y actividad del centro operativo; no depende de una pÃ¡gina de cotizaciones }
+        '200': { description: Conteos agregados y actividad del centro operativo; no depende de una página de cotizaciones }
         '403': { $ref: '#/components/responses/Forbidden' }
   /api/v1/clientes:
     get:
       operationId: listClients
       security: [{ sessionCookie: [] }]
-      responses: { '200': { description: Clientes visibles para administraciÃ³n } }
+      responses: { '200': { description: Clientes visibles para administración } }
     post:
       operationId: createClient
       security: [{ sessionCookie: [] }]
@@ -229,7 +229,7 @@ paths:
       operationId: listZones
       security: [{ sessionCookie: [] }]
       parameters: [{ name: clienteId, in: query, required: false, schema: { type: integer, minimum: 1 } }]
-      responses: { '200': { description: Zonas visibles segÃºn rol y propiedad } }
+      responses: { '200': { description: Zonas visibles según rol y propiedad } }
     post:
       operationId: createZone
       security: [{ sessionCookie: [] }]
@@ -245,21 +245,31 @@ paths:
       operationId: listServices
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Servicios activos sin tarifas } }
+    post:
+      operationId: createService
+      security: [{ sessionCookie: [] }]
+      responses: { '201': { description: Servicio creado }, '409': { description: Nombre de servicio duplicado } }
+  /api/v1/servicios/{id}:
+    patch:
+      operationId: updateService
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses: { '200': { description: Servicio actualizado }, '404': { description: Servicio inexistente }, '409': { description: Nombre de servicio duplicado } }
   /api/v1/operarios:
     get:
       operationId: listWorkers
       security: [{ sessionCookie: [] }]
-      responses: { '200': { description: Operarios y carga prÃ³xima para administraciÃ³n } }
+      responses: { '200': { description: Operarios y carga próxima para administración } }
     post:
       operationId: createWorker
       security: [{ sessionCookie: [] }]
-      responses: { '201': { description: Operario creado }, '409': { description: LÃ­der activo duplicado } }
+      responses: { '201': { description: Operario creado }, '409': { description: Líder activo duplicado } }
   /api/v1/operarios/{id}:
     patch:
       operationId: updateWorker
       security: [{ sessionCookie: [] }]
       parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
-      responses: { '200': { description: Operario actualizado }, '404': { description: Operario inexistente }, '409': { description: LÃ­der activo duplicado } }
+      responses: { '200': { description: Operario actualizado }, '404': { description: Operario inexistente }, '409': { description: Líder activo duplicado } }
 components:
   securitySchemes:
     sessionCookie: { type: apiKey, in: cookie, name: dpm_session }
@@ -291,12 +301,12 @@ components:
         details: { type: object, additionalProperties: true }
   responses:
     Unauthorized:
-      description: SesiÃ³n ausente, invÃ¡lida o credenciales incorrectas
+      description: Sesión ausente, inválida o credenciales incorrectas
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     Forbidden:
       description: Usuario autenticado sin permisos para el recurso
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     ValidationError:
-      description: Entrada invÃ¡lida
+      description: Entrada inválida
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
