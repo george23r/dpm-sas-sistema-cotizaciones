@@ -216,6 +216,7 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.ok(summary.body.data.cotizaciones);
     assert.ok(summary.body.data.ordenes);
     assert.ok(Array.isArray(summary.body.data.actividad));
+    assert.ok(summary.body.data.actividad.every((item: { fecha: string }) => /^\d{4}-\d{2}-\d{2}$/.test(item.fecha)), "La actividad debe usar fechas ISO sin hora ni zona horaria");
     const sheetPair = await request("/api/v1/planillas/par", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd }) }, admin.cookie);
     assert.equal(sheetPair.response.status, 201);
     const fieldSheet = { body: { data: sheetPair.body.data.find((sheet: { origen: string }) => sheet.origen === "campo") } };
