@@ -22,3 +22,8 @@
 **Criterio de cierre:** los modelos se corresponden con las HU, el SQL se puede reconstruir, el material académico documenta el alcance y las discrepancias quedan explícitas. La integración total API–frontend–BD no pertenece a la evidencia de implementación del corte 2.
 
 > Este tablero escrito es una evidencia de planificación, **no** representa un Sprint Review realizado o aprobado por DPM.
+
+## Actualización posterior al Corte 2
+
+Este archivo conserva la fotografía de planificación del Corte 2. La implementación posterior se documenta en [`docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](../fase-3-4-evidencia-actualizacion-2026-11-08.md) y en [`docs/arquitectura/diagrama-componentes.md`](../arquitectura/diagrama-componentes.md). Actualmente existe integración API–frontend–PostgreSQL para cotizaciones, órdenes, cuadrillas, jornadas, conciliación, reportes y catálogo, con pruebas locales de integración y navegador. Las validaciones empresariales y académicas que aparecen como pendientes en este backlog continúan pendientes; no se convierten en requisitos aprobados por la implementación técnica.
+
