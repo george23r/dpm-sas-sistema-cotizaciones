@@ -56,7 +56,7 @@ export function Panel() {
   const finished = orders.filter((order) => orderState(order) === "finalizado" || orderState(order) === "finalizada");
   const active = orders.filter((order) => orderState(order) === "en_ejecucion");
   const quoteSummary = modoDemo ? { solicitadas: quotes.filter((quote) => quote.estado === "solicitada").length, enviadas: sent.length, aceptadas: accepted.length, pendientes_respuesta: sent.length } : apiSummary?.cotizaciones;
-  const orderSummary = modoDemo ? { programadas: scheduled.length, en_ejecucion: active.length, finalizadas: finished.length } : apiSummary?.ordenes;
+  const orderSummary = modoDemo ? { programadas: scheduled.length, en_ejecucion: active.length, finalizadas: finished.length } : apiSummary?.ordenes ?? { programadas: 0, en_ejecucion: "—", finalizadas: 0 };
   const upcoming = [...orders].filter((order) => orderState(order) !== "finalizado" && orderState(order) !== "finalizada" && isUpcoming(order)).sort((a, b) => orderStart(a).localeCompare(orderStart(b))).slice(0, 5);
   const recent = [...quotes].sort((a, b) => quoteDate(b).localeCompare(quoteDate(a))).slice(0, 5);
   const conflicts = orders.filter((order, index, all) => all.some((other, otherIndex) => otherIndex > index && orderOverlap(order, other)));
