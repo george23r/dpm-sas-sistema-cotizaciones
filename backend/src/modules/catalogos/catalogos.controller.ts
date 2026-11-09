@@ -9,6 +9,7 @@ const clientSchema = z.object({ nombre: z.string().trim().min(2).max(150), nit: 
 const zoneSchema = z.object({ clienteId: z.number().int().positive(), nombre: z.string().trim().min(2).max(120), direccion: z.string().trim().max(200).optional(), areaM2: z.number().positive().optional(), descripcion: z.string().trim().max(300).optional() });
 const pathId = z.coerce.number().int().positive();
 const workerSchema = z.object({ nombre: z.string().trim().min(2).max(120), cuadrillaId: z.number().int().positive(), esLider: z.boolean().default(false), activo: z.boolean().default(true) });
+const serviceSchema = z.object({ nombre: z.string().trim().min(2).max(100), unidadCobro: z.string().trim().min(1).max(30), activo: z.boolean().default(true) });
 
 export const clientes = [authenticate, requireRole("administrador"), asyncRoute(async (_request: Request, response: Response) => {
   const result = await pool.query("SELECT id, nombre, nit, tipo, correo_contacto, telefono FROM dpm.clientes ORDER BY nombre");
@@ -62,9 +63,40 @@ export const updateZone = [authenticate, requireRole("administrador"), asyncRout
   values.push(zoneId.data); try { const result = await pool.query(`UPDATE dpm.zonas SET ${fields.join(",")} WHERE id=$${values.length} RETURNING id,cliente_id,nombre,direccion,area_m2,descripcion`, values); if (!result.rows[0]) throw new HttpError(404, "ZONE_NOT_FOUND", "La zona no existe."); response.json({ data: result.rows[0] }); } catch (error) { if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "ZONE_ALREADY_EXISTS", "Ya existe una zona con ese nombre para el cliente."); throw error; }
 })];
 
-export const servicios = [authenticate, asyncRoute(async (_request: Request, response: Response) => {
-  const result = await pool.query("SELECT id, nombre, unidad_cobro, activo FROM dpm.servicios WHERE activo=true ORDER BY id");
+export const servicios = [authenticate, asyncRoute(async (request: Request, response: Response) => {
+  const incluirInactivos = request.query.incluirInactivos === "true" && request.user?.rol === "administrador";
+  const result = await pool.query(`SELECT id, nombre, unidad_cobro, activo FROM dpm.servicios ${incluirInactivos ? "" : "WHERE activo=true"} ORDER BY id`);
   response.json({ data: result.rows });
+})];
+
+export const createService = [authenticate, requireRole("administrador"), asyncRoute(async (request: Request, response: Response) => {
+  const parsed = serviceSchema.safeParse(request.body);
+  if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "Los datos del servicio no son válidos.", parsed.error.flatten().fieldErrors);
+  try {
+    const result = await pool.query("INSERT INTO dpm.servicios (nombre, unidad_cobro, activo) VALUES ($1, $2, $3) RETURNING id, nombre, unidad_cobro, activo", [parsed.data.nombre, parsed.data.unidadCobro, parsed.data.activo]);
+    response.status(201).json({ data: result.rows[0] });
+  } catch (error) {
+    if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "SERVICE_ALREADY_EXISTS", "Ya existe un servicio con ese nombre.");
+    throw error;
+  }
+})];
+
+export const updateService = [authenticate, requireRole("administrador"), asyncRoute(async (request: Request, response: Response) => {
+  const serviceId = pathId.safeParse(request.params.id);
+  const parsed = serviceSchema.partial().safeParse(request.body);
+  if (!serviceId.success || !parsed.success || !Object.keys(parsed.data).length) throw new HttpError(422, "VALIDATION_ERROR", "Los datos del servicio no son válidos.");
+  const fields: string[] = []; const values: unknown[] = [];
+  const entries: Array<[string, unknown]> = [["nombre", parsed.data.nombre], ["unidad_cobro", parsed.data.unidadCobro], ["activo", parsed.data.activo]];
+  for (const [column, value] of entries) if (value !== undefined) fields.push(`${column}=$${values.push(value)}`);
+  values.push(serviceId.data);
+  try {
+    const result = await pool.query(`UPDATE dpm.servicios SET ${fields.join(",")} WHERE id=$${values.length} RETURNING id, nombre, unidad_cobro, activo`, values);
+    if (!result.rows[0]) throw new HttpError(404, "SERVICE_NOT_FOUND", "El servicio no existe.");
+    response.json({ data: result.rows[0] });
+  } catch (error) {
+    if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "SERVICE_ALREADY_EXISTS", "Ya existe un servicio con ese nombre.");
+    throw error;
+  }
 })];
 
 export const operarios = [authenticate, requireRole("administrador"), asyncRoute(async (_request: Request, response: Response) => {
@@ -86,3 +118,4 @@ export const updateOperario = [authenticate, requireRole("administrador"), async
   const fields: string[] = []; const values: unknown[] = []; const entries: Array<[string, unknown]> = [["nombre", parsed.data.nombre], ["cuadrilla_id", parsed.data.cuadrillaId], ["es_lider", parsed.data.esLider], ["activo", parsed.data.activo]]; for (const [column, value] of entries) if (value !== undefined) fields.push(`${column}=$${values.push(value)}`); values.push(workerId.data);
   try { const result = await pool.query(`UPDATE dpm.operarios SET ${fields.join(",")} WHERE id=$${values.length} RETURNING id,nombre,cuadrilla_id,es_lider,activo`, values); if (!result.rows[0]) throw new HttpError(404, "WORKER_NOT_FOUND", "El trabajador no existe."); response.json({ data: result.rows[0] }); } catch (error) { if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "LEADER_ALREADY_EXISTS", "La cuadrilla ya tiene un líder activo."); if (error instanceof Error && /foreign key/i.test(error.message)) throw new HttpError(422, "TEAM_NOT_FOUND", "La cuadrilla seleccionada no existe."); throw error; }
 })];
+
