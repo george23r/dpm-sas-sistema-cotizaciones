@@ -39,7 +39,9 @@ BEGIN
             CALL sp_enviar_cotizacion(q);
             RAISE EXCEPTION 'FAIL C2a: se envió sin visita técnica';
         EXCEPTION WHEN raise_exception THEN
-            IF SQLERRM NOT LIKE '%visita técnica%' THEN RAISE; END IF;
+            -- Comparar una parte ASCII del mensaje evita que el resultado dependa
+            -- del client_encoding del runner; el detalle completo sigue visible en PostgreSQL.
+            IF SQLERRM NOT LIKE '%visita%' THEN RAISE; END IF;
             RAISE NOTICE 'PASS C2a  No se envía una cotización sin visita técnica registrada';
         END;
         INSERT INTO visitas_tecnicas (cotizacion_id, fecha, realizada_por) VALUES (q, current_date, admin_id);
@@ -49,7 +51,7 @@ BEGIN
             CALL sp_enviar_cotizacion(q);
             RAISE EXCEPTION 'FAIL C2b: se envió sin líneas';
         EXCEPTION WHEN raise_exception THEN
-            IF SQLERRM NOT LIKE '%no tiene líneas%' THEN RAISE; END IF;
+            IF SQLERRM NOT LIKE '%no tiene%' THEN RAISE; END IF;
             RAISE NOTICE 'PASS C2b  No se envía una cotización sin líneas de valor';
         END;
         INSERT INTO cotizacion_lineas (cotizacion_id, concepto, cantidad, valor_unitario) VALUES (q, 'Servicio de prueba', 2, 100000);
@@ -101,7 +103,7 @@ BEGIN
             CALL sp_responder_cotizacion(q, true);
             RAISE EXCEPTION 'FAIL C3: se aceptó una cotización vencida';
         EXCEPTION WHEN raise_exception THEN
-            IF SQLERRM NOT LIKE '%venció%' THEN RAISE; END IF;
+            IF SQLERRM NOT LIKE '%venc%' THEN RAISE; END IF;
             RAISE NOTICE 'PASS C3   Una cotización vencida no puede aceptarse (vigencia de 15 días)';
         END;
         RAISE EXCEPTION 'rollback_prueba';
