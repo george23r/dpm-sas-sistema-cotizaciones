@@ -37,6 +37,7 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByRole("heading", { name: "Programar servicio" })).toBeVisible();
   await expect(page.getByLabel("Cotización aceptada")).toBeVisible();
   await page.getByRole("button", { name: "Cancelar" }).click();
+  await expect(page.getByRole("heading", { name: "Programar servicio" })).not.toBeVisible();
   const monthTitle = page.getByRole("heading", { level: 2 }).first();
   const initialMonth = await monthTitle.textContent();
   await page.getByRole("button", { name: "Periodo siguiente" }).click();
