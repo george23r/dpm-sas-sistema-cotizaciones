@@ -18,13 +18,13 @@ async function login(page: Page, role: keyof typeof credentials) {
 }
 
 async function expectAccessible(page: Page, name: string) {
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   const result = await new AxeBuilder({ page }).analyze();
   expect(result.violations, `${name}: se encontraron ${result.violations.length} violaciones Axe`).toEqual([]);
 }
 
-test("los tres portales pasan el smoke automatizado de accesibilidad", async ({ page, browserName }) => {
-  test.skip(browserName !== "chromium", "El smoke Axe se ejecuta una vez por corrida; Playwright cubre los motores por separado.");
-
+test("los tres portales pasan el smoke automatizado de accesibilidad", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.setViewportSize({ width: 1366, height: 900 });
   await login(page, "admin");
   await expect(page).toHaveURL(/\/app\/admin\/panel$/);
