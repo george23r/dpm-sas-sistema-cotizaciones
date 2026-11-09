@@ -94,6 +94,10 @@ La captura cubre evidencia representativa de los tres perfiles; no sustituye una
 ## Suite E2E completa en base aislada
 
 El 2026-11-09 se creo la base temporal `dpm_e2e_current` en PostgreSQL 16 y se aplicaron `database/01_schema.sql`, `database/02_seed.sql` y `database/04_seed_e2e.sql`. Con Express en `:3000`, Vite en `:5173`, cookie HttpOnly y limite de login de pruebas configurado en 100, `npm run test:e2e -- --reporter=line` termino con `25 passed`, `2 skipped`, `0 failed` en Chromium, Firefox y WebKit. Los dos casos omitidos son los escenarios mutativos que solo corren en Chromium para no repetir cambios persistentes en Firefox y WebKit. La ejecucion anterior contra `dpm_sas` no se usa como evidencia porque esa base ya estaba mutada por pruebas previas.
+
+## Checks SQL replicados
+
+Sobre la misma base temporal se ejecuto `database/03_consultas_comprobacion.sql` con `ON_ERROR_STOP=1`. Resultado real: C1-C18 y sus subcasos en `PASS`, incluyendo total por lineas, visita y hitos, vigencia, inmutabilidad, solapes, propiedad de zona, ciclo del operario, horas nocturnas, comparacion/conciliacion, reporte y privilegios de `dpm_reportes`. Los datos son ficticios y el script no se ejecuto sobre una base empresarial.
 ## Flujo integrado ampliado
 
 La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. Además del flujo de cotización, aceptación, programación y planillas, verificó inicio y finalización de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administración y rechazo de acceso del cliente al reporte (`403`).
