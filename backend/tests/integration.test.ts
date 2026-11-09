@@ -220,7 +220,7 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     assert.equal(fieldRecord.response.status, 201);
     assert.equal(adminRecord.response.status, 201);
     const comparison = await request(`/api/v1/planillas/comparar?campoId=${fieldSheet.body.data.id}&adminId=${adminSheet.body.data.id}`, {}, admin.cookie);
-    assert.equal(comparison.response.status, 200);
+    assert.equal(comparison.response.status, 200, JSON.stringify(comparison.body));
     assert.equal(comparison.body.data[0]?.resultado, "coincide");
     const reconciled = await request("/api/v1/planillas/conciliar", { method: "POST", body: JSON.stringify({ campoId: fieldSheet.body.data.id, adminId: adminSheet.body.data.id }) }, admin.cookie);
     assert.equal(reconciled.response.status, 200);
@@ -240,6 +240,9 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const differenceComparison = await request(`/api/v1/planillas/comparar?campoId=${differenceField.body.data.id}&adminId=${differenceAdmin.body.data.id}`, {}, admin.cookie);
     assert.equal(differenceComparison.response.status, 200);
     assert.equal(differenceComparison.body.data[0]?.resultado, "diferente");
+    const crossPairComparison = await request(`/api/v1/planillas/comparar?campoId=${fieldSheet.body.data.id}&adminId=${differenceAdmin.body.data.id}`, {}, admin.cookie);
+    assert.equal(crossPairComparison.response.status, 409);
+    assert.equal(crossPairComparison.body.code, "PLANILLA_PAIR_INVALID");
     const blockedReconciliation = await request("/api/v1/planillas/conciliar", { method: "POST", body: JSON.stringify({ campoId: differenceField.body.data.id, adminId: differenceAdmin.body.data.id }) }, admin.cookie);
     assert.equal(blockedReconciliation.response.status, 409);
     assert.equal(blockedReconciliation.body.code, "RECONCILIATION_BLOCKED");
