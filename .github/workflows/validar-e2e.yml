@@ -38,6 +38,7 @@ jobs:
       COOKIE_SECURE: "false"
       LOGIN_RATE_LIMIT_MAX: "100"
       VITE_API_URL: http://127.0.0.1:3000
+      E2E_BASE_URL: http://127.0.0.1:5173
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
