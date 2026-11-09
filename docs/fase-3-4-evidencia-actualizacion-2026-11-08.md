@@ -127,3 +127,7 @@ La auditoria del 2026-11-09 encontro que Express ya exponia `GET/PATCH /api/v1/o
 ## Validacion de disponibilidad de cuadrillas
 
 El 2026-11-09 la API dejo de aceptar nuevas ordenes o reasignaciones hacia cuadrillas desactivadas. La comprobacion se ejecuta dentro de la transaccion y conserva la validacion de solapes en el trigger PostgreSQL. La integracion contra PostgreSQL 16 local verifico el contraejemplo `409 TEAM_UNAVAILABLE` junto con el flujo completo de cotizacion, aceptacion, programacion, ejecucion, historial, reportes y planillas: `1 passed`, `0 failed`, `0 skipped`.
+
+## Estado de disponibilidad en el centro operativo
+
+El dashboard administrativo ahora comunica el estado de cada cuadrilla con texto respaldado por `cuadrillas.activa`: `Disponible para asignaciones`, `Desactivada` o `Disponible hoy` en modo demostracion. No se agregan porcentajes de ocupacion ni disponibilidad futura que la API no entregue. La compilacion frontend y las 16 pruebas unitarias pasaron el 2026-11-09; lint termino sin errores y conserva advertencias de React ya documentadas.
