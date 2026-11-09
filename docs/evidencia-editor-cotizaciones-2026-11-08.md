@@ -26,7 +26,7 @@ npx playwright test e2e/roles.spec.ts
 21 passed (1.1m)
 ```
 
-La prueba focalizada pasó en Chromium, Firefox y WebKit. La suite completa pasó con los siete escenarios en los tres motores. Las capturas fueron tomadas con `E2E_CAPTURE=1`:
+La prueba focalizada pasó en Chromium, Firefox y WebKit. La evidencia histórica de la suite completa que aparece arriba corresponde a una versión anterior del arnés; la suite vigente contiene ocho escenarios funcionales por navegador y el último resultado documentado fue `22 passed`, `2 skipped`, `0 failed` para roles, más `3 passed` del smoke Axe de accesibilidad. Las capturas fueron tomadas con `E2E_CAPTURE=1`:
 
 - `evidencias/cross-browser-chromium-admin-editor-cotizacion-1366.png`
 - `evidencias/cross-browser-firefox-admin-editor-cotizacion-1366.png`
