@@ -99,6 +99,10 @@ El 2026-11-08 se aÃ±adiÃ³ la validaciÃ³n HTTP de pares de planillas. `GET 
 
 Se revisÃ³ la alternativa FullCalendar React para las vistas gratuitas `dayGrid`, `timeGrid` y `list`. La implementaciÃ³n vigente conserva componentes propios en `src/pages/admin/ProgramacionApiView.tsx`, porque ya cubren mes/semana/lista, navegaciÃ³n, filtros, detalle lateral y fechas America/Bogota sin aÃ±adir una dependencia de licencia ni requerir vistas de recursos Premium. La disponibilidad y los solapes continÃºan siendo responsabilidad del servidor y PostgreSQL; esta decisiÃ³n puede revisarse si el volumen operativo justifica incorporar la dependencia.
 
+## EjecuciÃ³n de orden por operario
+
+Se agregÃ³ el escenario E2E mutativo para iniciar una orden, registrar una nota y finalizarla mediante la API real desde el portal mobile-first. En una base temporal limpia (`dpm_codex_test_20261108`) la suite completa produjo `22 passed`, `2 skipped`, `0 failed`; el escenario mutativo se ejecuta solo en Chromium para no repetir el cambio persistente en Firefox y WebKit. La evidencia detallada estÃ¡ en `docs/evidencia-operario-ejecucion-2026-11-08.md`.
+
 ## Detalle de cotizaciones en frontend real
 
 Se incorporÃ³ `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administraciÃ³n y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃƒÂ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administraciÃ³n y el cliente puede responder Ãºnicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutÃ³ con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
