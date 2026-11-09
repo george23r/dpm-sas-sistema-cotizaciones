@@ -46,6 +46,10 @@ export const create = [authenticate, requireRole("administrador"), asyncRoute(as
     await client.query("SELECT pg_advisory_xact_lock(7002, $1)", [parsed.data.cotizacionId]);
     const duplicate = await client.query<{ id: number }>("SELECT id FROM dpm.ordenes_trabajo WHERE cotizacion_id=$1 LIMIT 1", [parsed.data.cotizacionId]);
     if (duplicate.rows[0]) throw new HttpError(409, "QUOTE_ALREADY_SCHEDULED", "La cotización aceptada ya tiene una orden de trabajo.");
+    if (parsed.data.cuadrillaId !== null && parsed.data.cuadrillaId !== undefined) {
+      const crew = await client.query("SELECT id FROM dpm.cuadrillas WHERE id=$1 AND activa=true FOR SHARE", [parsed.data.cuadrillaId]);
+      if (!crew.rows[0]) throw new HttpError(409, "TEAM_UNAVAILABLE", "La cuadrilla no existe o está desactivada para nuevas asignaciones.");
+    }
     const result = await client.query<{ id: number }>(`INSERT INTO dpm.ordenes_trabajo (cotizacion_id,zona_id,tipo_servicio,cuadrilla_id,inicio,fin) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`, [parsed.data.cotizacionId, quote.rows[0].zona_id, quote.rows[0].tipo_servicio, parsed.data.cuadrillaId ?? null, parsed.data.inicio, parsed.data.fin]);
     const created = result.rows[0];
     if (!created) throw new HttpError(500, "ORDER_CREATE_FAILED", "No fue posible crear la orden.");
@@ -59,7 +63,19 @@ export const create = [authenticate, requireRole("administrador"), asyncRoute(as
   void current;
 })];
 
-export const assign = [authenticate, requireRole("administrador"), asyncRoute(async (request, response) => { const parsed = assignmentSchema.safeParse(request.body); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "La cuadrilla no es válida."); const orderId = pathId(request); try { const result = await pool.query(`UPDATE dpm.ordenes_trabajo SET cuadrilla_id=$2 WHERE id=$1 RETURNING id, cuadrilla_id`, [orderId, parsed.data.cuadrillaId]); if (!result.rows[0]) throw new HttpError(404, "ORDER_NOT_FOUND", "La orden no existe."); response.json({ data: result.rows[0] }); } catch (error) { translate(error); } })];
+export const assign = [authenticate, requireRole("administrador"), asyncRoute(async (request, response) => {
+  const parsed = assignmentSchema.safeParse(request.body); if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "La cuadrilla no es válida."); const orderId = pathId(request); const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    if (parsed.data.cuadrillaId !== null) {
+      const crew = await client.query("SELECT id FROM dpm.cuadrillas WHERE id=$1 AND activa=true FOR SHARE", [parsed.data.cuadrillaId]);
+      if (!crew.rows[0]) throw new HttpError(409, "TEAM_UNAVAILABLE", "La cuadrilla no existe o está desactivada para nuevas asignaciones.");
+    }
+    const result = await client.query(`UPDATE dpm.ordenes_trabajo SET cuadrilla_id=$2 WHERE id=$1 RETURNING id, cuadrilla_id`, [orderId, parsed.data.cuadrillaId]);
+    if (!result.rows[0]) throw new HttpError(404, "ORDER_NOT_FOUND", "La orden no existe.");
+    await client.query("COMMIT"); response.json({ data: result.rows[0] });
+  } catch (error) { await client.query("ROLLBACK"); if (error instanceof HttpError) throw error; translate(error); } finally { client.release(); }
+})];
 
 export const start = [authenticate, requireRole("operario"), asyncRoute(async (request, response) => { const current = user(request); const orderId = pathId(request); const result = await pool.query(`UPDATE dpm.ordenes_trabajo SET estado='en_ejecucion', iniciada_en=now() WHERE id=$1 AND cuadrilla_id=(SELECT cuadrilla_id FROM dpm.operarios WHERE usuario_id=$2 AND activo=true) AND estado='pendiente' RETURNING id, estado, iniciada_en`, [orderId, current.id]); if (!result.rows[0]) throw new HttpError(409, "ORDER_START_NOT_ALLOWED", "La orden no está pendiente o no pertenece a tu cuadrilla."); response.json({ data: result.rows[0] }); })];
 
