@@ -161,6 +161,13 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const filteredOrders = await request(`/api/v1/ordenes?clienteId=${zone.cliente_id}&cuadrillaId=${activeWorker.cuadrilla_id}&estado=pendiente`, {}, admin.cookie);
     assert.equal(filteredOrders.response.status, 200);
     assert.ok(filteredOrders.body.data.some((item: { id: number }) => item.id === order.body.data.id));
+    const disabledCrew = await request("/api/v1/cuadrillas", { method: "POST", body: JSON.stringify({ nombre: `Cuadrilla inactiva ${Date.now()}` }) }, admin.cookie);
+    assert.equal(disabledCrew.response.status, 201);
+    const disabledCrewUpdate = await request(`/api/v1/cuadrillas/${disabledCrew.body.data.id}`, { method: "PATCH", body: JSON.stringify({ activa: false }) }, admin.cookie);
+    assert.equal(disabledCrewUpdate.response.status, 200);
+    const unavailableAssignment = await request(`/api/v1/ordenes/${order.body.data.id}`, { method: "PATCH", body: JSON.stringify({ cuadrillaId: disabledCrew.body.data.id }) }, admin.cookie);
+    assert.equal(unavailableAssignment.response.status, 409);
+    assert.equal(unavailableAssignment.body.code, "TEAM_UNAVAILABLE");
     const overlappingQuote = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Solape automatizado ${Date.now()}` }) }, client.cookie);
     assert.equal(overlappingQuote.response.status, 201);
     const overlappingQuoteId = overlappingQuote.body.data.id;
@@ -263,4 +270,3 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     await pool.end();
   }
 });
-
