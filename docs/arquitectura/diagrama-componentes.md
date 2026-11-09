@@ -13,7 +13,7 @@ Estado actualizado: 2026-11-08. Las rutas indicadas son las implementadas bajo `
 | Ejecución | Mis órdenes y detalle móvil | `/ordenes/mias`, iniciar, finalizar | `ordenes_trabajo`, `v_ordenes_operario` |
 | Historial | Servicios finalizados del cliente | `/clientes/:id/historial` | `v_historial_servicios` |
 | Jornadas | Planillas, turnos, comparación y conciliación | `/planillas`, `/comparar`, `/conciliar` | `planillas_jornada`, `registros_jornada` |
-| Reportes | Filtros por periodo/cliente y desglose | `/reportes/periodo` | `fn_reporte_periodo` |
+| Reportes | Filtros por periodo/cliente, desglose y resumen operativo | `/reportes/periodo`, `/reportes/resumen` | `fn_reporte_periodo` y consultas agregadas parametrizadas |
 | Catálogo | Servicios activos; administración de alta, edición y estado | `GET /servicios`; `POST/PATCH /servicios` solo administrador | `servicios` |
 
 ## 2. Autorización resumida
@@ -36,7 +36,7 @@ La autorización se aplica en Express y PostgreSQL según corresponda; las rutas
 - `GET/POST/PATCH /clientes`, `/zonas`, `/operarios`, `/cuadrillas` y `GET /servicios`.
 - `POST/PATCH /servicios` solo para administradores; `incluirInactivos=true` también queda restringido a administración. No se exponen tarifas no confirmadas.
 - `GET/POST /planillas`, `POST /planillas/:id/registros`, `GET /planillas/comparar` y `POST /planillas/conciliar`.
-- `GET /api/v1/reportes/periodo`.
+- `GET /api/v1/reportes/periodo` y `GET /api/v1/reportes/resumen` para el centro operativo.
 
 El contrato OpenAPI está en `backend/openapi.yaml`. Las fechas de API son ISO; la interfaz presenta fechas en `America/Bogota` y valores monetarios en COP.
 
