@@ -3,6 +3,8 @@
 **Fecha:** 2026-11-08 (America/Bogota)  
 **Estado:** implementado parcialmente y verificable sin base conectada; no es Done E2E.
 
+> **Nota de actualización:** este documento conserva la fotografía histórica de Fase 1 y no debe leerse como el estado final. Posteriormente se implementaron la integración HTTP con PostgreSQL, los módulos de cotizaciones, órdenes, planillas, reportes y catálogo, además de las pruebas de integración y CI. La evidencia vigente está en [`docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](fase-3-4-evidencia-actualizacion-2026-11-08.md), [`docs/evidencia-planillas-validacion-2026-11-08.md`](evidencia-planillas-validacion-2026-11-08.md) y [`backend/README.md`](../backend/README.md). Las brechas empresariales siguen pendientes de validación con DPM.
+
 ## Archivos agregados
 
 - `backend/package.json`, `backend/package-lock.json`, `backend/tsconfig.json`.
@@ -51,3 +53,4 @@
 - El seed contiene hashes marcadores; se requiere seed de desarrollo con hashes bcrypt reales, sin usar sus tarifas como políticas.
 - El SQL actual sí tiene líneas, visitas, costos, hitos, servicios y planillas; quedan pendientes los repositorios, servicios, rutas y pruebas de integración que los consuman.
 - Falta suite de integración HTTP + PostgreSQL, RBAC negativo, OpenAPI servido bajo autorización y CI backend.
+
