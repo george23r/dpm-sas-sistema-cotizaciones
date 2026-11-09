@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: DPM S.A.S. API
   version: 0.2.0
-  description: Contrato de autenticación y HU-01/HU-02 sobre PostgreSQL. Las rutas pendientes se incorporarán por fases.
+  description: Contrato REST de autenticación, cotizaciones, órdenes, cuadrillas, planillas, reportes y catálogo sobre PostgreSQL. Las reglas empresariales aún pendientes de validación se identifican en la documentación y no se convierten en tarifas o recargos automáticos.
 servers:
   - url: /
 paths:
