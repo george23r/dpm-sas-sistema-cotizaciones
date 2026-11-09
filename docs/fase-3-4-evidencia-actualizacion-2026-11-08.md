@@ -58,7 +58,7 @@ Capturas versionadas en `evidencias/`: `e2e-dashboard-admin-1366-2026-11-08.png`
 
 Se publico `.github/workflows/validar-backend.yml` en `main`. Para el commit `a331c57`, el workflow `Verificar API y PostgreSQL` termino `success` en la ejecucion `42523408817`; levanto PostgreSQL 16, aplico esquema, seed y `03_consultas_comprobacion.sql`, y ejecuto build, lint y tests backend.
 
-Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `e2e/roles.spec.ts` y `database/04_seed_e2e.sql`. El arnes reconoce tres pruebas de navegador: centro operativo del administrador, aislamiento del portal cliente y portal mobile-first del operario. `npx playwright test --list` reconocio las tres pruebas en local. La ejecucion CI `42523408808` termino `success` contra PostgreSQL temporal y Chromium; el smoke E2E completo paso despues de corregir la espera de disponibilidad de la API. La limitacion local de este equipo sigue siendo la ausencia de `psql`.
+Tambien se agrego `.github/workflows/validar-e2e.yml`, `playwright.config.ts`, `e2e/roles.spec.ts` y `database/04_seed_e2e.sql`. El arnes actual contiene ocho escenarios funcionales; la ejecucion completa local produce 24 casos entre Chromium, Firefox y WebKit, con el escenario mutativo del operario omitido en Firefox y WebKit para no repetir cambios persistentes. La ejecucion CI historica termino `success` contra PostgreSQL temporal y Chromium; la evidencia vigente esta en `docs/evidencia-operario-ejecucion-2026-11-08.md`.
 
 ## Brechas vigentes
 
@@ -91,7 +91,7 @@ La API ahora verifica que la zona de una cotizaciÃ³n pertenezca al cliente aut
 La integraciÃ³n ampliada ejecutada contra PostgreSQL 16 aislado verificÃ³: envÃ­o sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), ediciÃ³n posterior al envÃ­o (`409 QUOTE_IMMUTABLE`), doble programaciÃ³n por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃƒÂ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminÃ³ `1 passed`, `0 failed`, `0 skipped`.
 ## ActualizaciÃ³n posterior de conteo y validaciÃ³n de planillas
 
-La suite actual de `e2e/roles.spec.ts` contiene siete escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 21 casos (`7 Chromium + 7 Firefox + 7 WebKit`). Las referencias histÃ³ricas de nueve y 18 casos corresponden a versiones anteriores del arnÃ©s.
+La suite actual de `e2e/roles.spec.ts` contiene ocho escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 24 casos (`8 Chromium + 8 Firefox + 8 WebKit`), con dos omisiones intencionales del escenario mutativo (`Firefox` y `WebKit`). Las referencias histÃ³ricas de nueve, 18 y 21 casos corresponden a versiones anteriores del arnÃ©s.
 
 El 2026-11-08 se aÃ±adiÃ³ la validaciÃ³n HTTP de pares de planillas. `GET /api/v1/planillas/comparar` rechaza con `409 PLANILLA_PAIR_INVALID` los identificadores que no corresponden al mismo cliente, periodo y orÃ­genes campo/administrativa. La evidencia reproducible estÃ¡ en `docs/evidencia-planillas-validacion-2026-11-08.md`.
 
