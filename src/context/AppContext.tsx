@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import type { Cliente, Operario, Cotizacion, EstadoOrden, OrdenTrabajo, Rol } from "@/types";
 import { clientes, CLIENTE_DEMO_ID } from "@/data/clientes";
 import { zonas } from "@/data/zonas";
@@ -160,7 +160,7 @@ export function AppProvider({children}:{children:React.ReactNode}){
  if(!comparacion.length||comparacion.some(r=>r.resultado!=="coincide")){setPlanillas(p=>p.map(x=>x.id===campoId||x.id===adminId?{...x,estado:"en_comparacion"}:x));return {ok:false,error:"Existen diferencias o faltan registros; revisa antes de conciliar."};}
  setPlanillas(p=>p.map(x=>x.id===campoId||x.id===adminId?{...x,estado:"conciliada"}:x));return {ok:true};
  };
- const value=useMemo<AppContextValue>(()=>({rol,setRol,usuarioActual,autenticado,authCargando,authError,modoDemo,iniciarSesion,cerrarSesion,mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes:listaClientes,operarios,guardarCliente,guardarOperario,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden}),[rol,usuarioActual,autenticado,authCargando,authError,modoDemo,mostrarHU,cotizaciones,ordenes,planillas,jornadas,listaClientes,operarios]);
+ const value:AppContextValue={rol,setRol,usuarioActual,autenticado,authCargando,authError,modoDemo,iniciarSesion,cerrarSesion,mostrarHU,alternarHU:()=>setMostrarHU(v=>!v),clientes:listaClientes,operarios,guardarCliente,guardarOperario,zonas,cuadrillas,clienteActualId:CLIENTE_DEMO_ID,cuadrillaActualId:OPERARIO_DEMO_CUADRILLA_ID,operarioActualNombre:OPERARIO_DEMO_NOMBRE,planillas,jornadas,crearParejaPlanillas,agregarJornada,conciliarPlanillas,cotizaciones,crearCotizacion,editarCotizacion,enviarCotizacion,responderCotizacion,ordenes,crearOrden,asignarCuadrillaAOrden,cambiarEstadoOrden,finalizarOrden};
  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 export function useApp(){const c=useContext(AppContext);if(!c)throw new Error("useApp debe usarse dentro de AppProvider");return c;}
