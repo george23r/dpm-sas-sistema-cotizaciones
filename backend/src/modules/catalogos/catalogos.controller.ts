@@ -34,7 +34,7 @@ export const updateClient = [authenticate, requireRole("administrador"), asyncRo
   values.push(clientId.data); try { const result = await pool.query(`UPDATE dpm.clientes SET ${fields.join(",")} WHERE id=$${values.length} RETURNING id,nombre,nit,tipo,telefono,correo_contacto`, values); if (!result.rows[0]) throw new HttpError(404, "CLIENT_NOT_FOUND", "El cliente no existe."); response.json({ data: result.rows[0] }); } catch (error) { if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "CLIENT_ALREADY_EXISTS", "Ya existe un cliente con ese nombre o NIT."); throw error; }
 })];
 
-export const zonas = [authenticate, asyncRoute(async (request: Request, response: Response) => {
+export const zonas = [authenticate, requireRole("administrador", "cliente"), asyncRoute(async (request: Request, response: Response) => {
   const parsed = request.query.clienteId === undefined ? { success: true as const, data: undefined } : clienteIdSchema.safeParse(request.query.clienteId);
   if (!parsed.success) throw new HttpError(422, "VALIDATION_ERROR", "El cliente no es válido.");
   const params: unknown[] = [];
@@ -118,4 +118,3 @@ export const updateOperario = [authenticate, requireRole("administrador"), async
   const fields: string[] = []; const values: unknown[] = []; const entries: Array<[string, unknown]> = [["nombre", parsed.data.nombre], ["cuadrilla_id", parsed.data.cuadrillaId], ["es_lider", parsed.data.esLider], ["activo", parsed.data.activo]]; for (const [column, value] of entries) if (value !== undefined) fields.push(`${column}=$${values.push(value)}`); values.push(workerId.data);
   try { const result = await pool.query(`UPDATE dpm.operarios SET ${fields.join(",")} WHERE id=$${values.length} RETURNING id,nombre,cuadrilla_id,es_lider,activo`, values); if (!result.rows[0]) throw new HttpError(404, "WORKER_NOT_FOUND", "El trabajador no existe."); response.json({ data: result.rows[0] }); } catch (error) { if (error instanceof Error && /duplicate|unique/i.test(error.message)) throw new HttpError(409, "LEADER_ALREADY_EXISTS", "La cuadrilla ya tiene un líder activo."); if (error instanceof Error && /foreign key/i.test(error.message)) throw new HttpError(422, "TEAM_NOT_FOUND", "La cuadrilla seleccionada no existe."); throw error; }
 })];
-
