@@ -71,6 +71,13 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await expect(page.getByRole("heading", { name: "Servicios DPM" })).toBeVisible();
   await expect(page.getByText(/Las unidades y tarifas son datos de desarrollo/)).toBeVisible();
   await capture(page, "admin-servicios-1366");
+  await page.getByRole("link", { name: /Jornadas/ }).click();
+  await expect(page).toHaveURL(/\/app\/admin\/jornadas$/);
+  await expect(page.getByRole("heading", { name: /Jornadas y conciliación/ })).toBeVisible();
+  await page.getByLabel("Inicio").fill("18:00");
+  await page.getByLabel("Fin").fill("06:00");
+  await expect(page.getByText(/Este turno cruza medianoche/)).toBeVisible();
+  await capture(page, "admin-jornadas-1366");
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
