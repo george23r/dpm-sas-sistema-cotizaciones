@@ -76,6 +76,10 @@ No se implementan facturación electrónica, nómina, pasarelas de pago, notific
 
 ## Autores
 
+## Evidencia local vigente
+
+`npm run test:unit` pasa 16/16 pruebas. La suite Playwright lista 27 casos entre Chromium, Firefox y WebKit; la última corrida local documentada obtuvo 25 PASS, 2 SKIP y 0 FAIL. Los dos SKIP corresponden al escenario mutativo de iniciar/finalizar una orden en Firefox y WebKit, para no repetir cambios persistentes sobre la misma base temporal. El smoke de accesibilidad Axe obtuvo 3/3 PASS, uno por navegador.
+
 - Jorge Luis Ramos Perdomo
 - Richard Esteban Sevillano Cuaran
 
