@@ -8,6 +8,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().url(),
   SESSION_SECRET: z.string().min(32),
   SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(28_800),
+  LOGIN_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
   COOKIE_NAME: z.string().min(1).default("dpm_session"),
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).default("lax"),
   DB_SSL: z.enum(["true", "false"]).default("false"),
