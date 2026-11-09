@@ -123,3 +123,7 @@ Se incorporó `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para admi
 ## Sincronizacion del contrato OpenAPI de ordenes
 
 La auditoria del 2026-11-09 encontro que Express ya exponia `GET/PATCH /api/v1/ordenes/:id`, pero esas operaciones no estaban declaradas en `backend/openapi.yaml`. Se agregaron los contratos de detalle y asignacion de cuadrilla, incluyendo cookie de sesion, propiedad del recurso, cuerpo validado y respuestas 401/403/404/409/422. `backend/tests/openapi.test.ts` protege esta correspondencia en regresion. La prueba local del backend termino con `6 passed`, `0 failed`, `1 skipped`; el caso omitido requiere PostgreSQL de integracion.
+
+## Validacion de disponibilidad de cuadrillas
+
+El 2026-11-09 la API dejo de aceptar nuevas ordenes o reasignaciones hacia cuadrillas desactivadas. La comprobacion se ejecuta dentro de la transaccion y conserva la validacion de solapes en el trigger PostgreSQL. La integracion contra PostgreSQL 16 local verifico el contraejemplo `409 TEAM_UNAVAILABLE` junto con el flujo completo de cotizacion, aceptacion, programacion, ejecucion, historial, reportes y planillas: `1 passed`, `0 failed`, `0 skipped`.
