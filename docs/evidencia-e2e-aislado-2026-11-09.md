@@ -32,3 +32,18 @@ La prueba de integración verifica la revocación de sesión desactivando tempor
 
 La evidencia usa datos ficticios y no demuestra validación empresarial, disponibilidad productiva ni un SLA.
 
+## Correcciones posteriores y CI
+
+La corrida remota inicial detectó una condición de fecha en la navegación mensual: GitHub Actions ejecuta en UTC y el primer día del mes se estaba formateando con America/Bogota, por lo que diciembre podía mostrarse como noviembre. Se separaron las claves de calendario de la fecha real de Bogotá y se hizo funcional la actualización del estado de navegación.
+
+También se añadió una espera explícita al cerrar el diálogo de programación antes de validar la navegación. La prueba específica de agenda pasó en los tres navegadores (`3 passed`, 22,5 s).
+
+La verificación CI final del commit `cb32226` terminó:
+
+```text
+Verificar prototipo React: success
+Verificar API y PostgreSQL: success
+Verificar flujo E2E web: success
+```
+
+La evidencia corresponde a datos ficticios y no sustituye validación empresarial ni despliegue productivo.
