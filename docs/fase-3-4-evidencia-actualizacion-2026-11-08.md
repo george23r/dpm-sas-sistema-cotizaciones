@@ -91,7 +91,7 @@ La API ahora verifica que la zona de una cotización pertenezca al cliente auten
 La integración ampliada ejecutada contra PostgreSQL 16 aislado verificó: envío sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), edición posterior al envío (`409 QUOTE_IMMUTABLE`), doble programación por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminó `1 passed`, `0 failed`, `0 skipped`.
 ## Actualización posterior de conteo y validación de planillas
 
-La suite actual de `e2e/roles.spec.ts` contiene seis escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 18 casos (`6 Chromium + 6 Firefox + 6 WebKit`). Las referencias históricas de nueve casos corresponden a una versión anterior del arnés.
+La suite actual de `e2e/roles.spec.ts` contiene siete escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 21 casos (`7 Chromium + 7 Firefox + 7 WebKit`). Las referencias históricas de nueve y 18 casos corresponden a versiones anteriores del arnés.
 
 El 2026-11-08 se añadió la validación HTTP de pares de planillas. `GET /api/v1/planillas/comparar` rechaza con `409 PLANILLA_PAIR_INVALID` los identificadores que no corresponden al mismo cliente, periodo y orígenes campo/administrativa. La evidencia reproducible está en `docs/evidencia-planillas-validacion-2026-11-08.md`.
 
