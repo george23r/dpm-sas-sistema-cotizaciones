@@ -22,7 +22,7 @@ npm run dev
 
 - `GET /health` y `GET /ready`.
 - `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`.
-- `GET/POST /api/v1/cotizaciones`, `GET/PATCH /api/v1/cotizaciones/:id` y operaciones de visita, líneas, costos, hitos, envío y respuesta.
+- `GET/POST /api/v1/cotizaciones`, `GET /api/v1/cotizaciones/:id` y operaciones de visita, líneas, costos, hitos, envío y respuesta.
 - `GET/POST /api/v1/ordenes`, `GET/PATCH /api/v1/ordenes/:id`, `/ordenes/mias`, `/iniciar` y `/finalizar`.
 - `GET/POST/PATCH /api/v1/clientes`, `/zonas`, `/operarios` y `/cuadrillas`, además de miembros de cuadrilla.
 - `GET /api/v1/servicios` devuelve el catálogo activo sin tarifas ficticias; administración puede usar `?incluirInactivos=true`.
@@ -51,4 +51,3 @@ En producción se requiere HTTPS, `COOKIE_SECURE=true`, CORS con origen explíci
 ## Brechas declaradas
 
 La medición local de RNF-03 está documentada en `../performance/evidencia-2026-11-08.md`, con 2.010 muestras y 0 errores; no se presenta como SLA ni como validación de DPM. Tampoco se presentan como validadas por DPM las reglas de liderazgo, tarifas, recargos, autogestión ni otros supuestos empresariales. No se implementan facturación electrónica, nómina, pagos ni notificaciones automáticas. El conteo vigente de navegador está documentado en la sección anterior.
-
