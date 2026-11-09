@@ -16,7 +16,7 @@ const required = [
 const missing = required.filter((key) => !process.env[key]);
 if (process.env.RUN_INTEGRATION !== "1") missing.push("RUN_INTEGRATION");
 
-test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.length > 0 }, async () => {
+test("flujo integrado de cotización, orden y permisos", { skip: missing.length > 0 }, async () => {
   const { buildApp } = await import("../src/app.js");
   const { pool } = await import("../src/db/pool.js");
   const app = buildApp();
@@ -45,7 +45,7 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
       assert.equal(result.response.status, 200);
       const cookies = result.response.headers.getSetCookie?.() ?? [];
       const cookie = cookies[0]?.split(";", 1)[0];
-      assert.ok(cookie, "El login debe entregar una cookie de sesiÃ³n");
+      assert.ok(cookie, "El login debe entregar una cookie de sesión");
       return { cookie, user: result.body.user };
     }
 
@@ -56,7 +56,7 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
 
     const managedClient = await request("/api/v1/clientes", { method: "POST", body: JSON.stringify({ nombre: `Cliente CRUD ${Date.now()}`, tipo: "comercial", nit: `TEST-${Date.now()}` }) }, admin.cookie);
     assert.equal(managedClient.response.status, 201);
-    const managedZone = await request("/api/v1/zonas", { method: "POST", body: JSON.stringify({ clienteId: managedClient.body.data.id, nombre: "Zona principal", direccion: "DirecciÃ³n de prueba", areaM2: 120 }) }, admin.cookie);
+    const managedZone = await request("/api/v1/zonas", { method: "POST", body: JSON.stringify({ clienteId: managedClient.body.data.id, nombre: "Zona principal", direccion: "Dirección de prueba", areaM2: 120 }) }, admin.cookie);
     assert.equal(managedZone.response.status, 201);
     const updatedZone = await request(`/api/v1/zonas/${managedZone.body.data.id}`, { method: "PATCH", body: JSON.stringify({ descripcion: "Zona actualizada" }) }, admin.cookie);
     assert.equal(updatedZone.response.status, 200);
@@ -64,10 +64,18 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
     assert.equal(managedTeam.response.status, 201);
     const managedWorker = await request("/api/v1/operarios", { method: "POST", body: JSON.stringify({ nombre: "Operario CRUD", cuadrillaId: managedTeam.body.data.id, esLider: true, activo: true }) }, admin.cookie);
     assert.equal(managedWorker.response.status, 201);
-    const duplicateLeader = await request("/api/v1/operarios", { method: "POST", body: JSON.stringify({ nombre: "Segundo lÃ­der", cuadrillaId: managedTeam.body.data.id, esLider: true, activo: true }) }, admin.cookie);
+    const duplicateLeader = await request("/api/v1/operarios", { method: "POST", body: JSON.stringify({ nombre: "Segundo líder", cuadrillaId: managedTeam.body.data.id, esLider: true, activo: true }) }, admin.cookie);
     assert.equal(duplicateLeader.response.status, 409);
     const updatedWorker = await request(`/api/v1/operarios/${managedWorker.body.data.id}`, { method: "PATCH", body: JSON.stringify({ activo: false }) }, admin.cookie);
     assert.equal(updatedWorker.response.status, 200);
+    const managedService = await request("/api/v1/servicios", { method: "POST", body: JSON.stringify({ nombre: `Servicio CRUD ${Date.now()}`, unidadCobro: "unidad", activo: true }) }, admin.cookie);
+    assert.equal(managedService.response.status, 201);
+    const updatedService = await request(`/api/v1/servicios/${managedService.body.data.id}`, { method: "PATCH", body: JSON.stringify({ activo: false }) }, admin.cookie);
+    assert.equal(updatedService.response.status, 200);
+    assert.equal(updatedService.body.data.activo, false);
+    const servicesWithInactive = await request("/api/v1/servicios?incluirInactivos=true", {}, admin.cookie);
+    assert.equal(servicesWithInactive.response.status, 200);
+    assert.ok(servicesWithInactive.body.data.some((item: { id: number; activo: boolean }) => item.id === managedService.body.data.id && item.activo === false));
 
     const client = await login(process.env.INTEGRATION_CLIENT_EMAIL!, process.env.INTEGRATION_CLIENT_PASSWORD!);
     const zones = await request("/api/v1/zonas", {}, client.cookie);
@@ -75,26 +83,26 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
     const zone = zones.body.data[0];
     const ownHistory = await request(`/api/v1/clientes/${zone.cliente_id}/historial`, {}, client.cookie);
     assert.equal(ownHistory.response.status, 200);
-    assert.ok(zone?.id, "El cliente de integraciÃ³n debe tener una zona");
+    assert.ok(zone?.id, "El cliente de integración debe tener una zona");
 
     const foreignQuote = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: managedZone.body.data.id, objeto: "Zona ajena de prueba" }) }, client.cookie);
     assert.equal(foreignQuote.response.status, 403);
     assert.equal(foreignQuote.body.code, "ZONE_NOT_OWNED");
 
-    const created = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `IntegraciÃ³n automatizada ${Date.now()}`, alcance: "Prueba de flujo persistente" }) }, client.cookie);
+    const created = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ zonaId: zone.id, objeto: `Integración automatizada ${Date.now()}`, alcance: "Prueba de flujo persistente" }) }, client.cookie);
     assert.equal(created.response.status, 201);
     const quoteId = created.body.data.id;
-    const paginatedQuotes = await request(`/api/v1/cotizaciones?search=IntegraciÃ³n&page=1&pageSize=1`, {}, admin.cookie);
+    const paginatedQuotes = await request(`/api/v1/cotizaciones?search=Integración&page=1&pageSize=1`, {}, admin.cookie);
     assert.equal(paginatedQuotes.response.status, 200);
     assert.equal(paginatedQuotes.body.meta.pageSize, 1);
     assert.ok(paginatedQuotes.body.meta.total >= 1);
     assert.ok(paginatedQuotes.body.data.length <= 1);
-    const composite = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, zonaId: zone.id, objeto: `ComposiciÃ³n atÃ³mica ${Date.now()}`, visita: { fecha: "2027-01-10", observaciones: "Visita compuesta" }, lineas: [{ concepto: "Servicio compuesto", cantidad: 1, valorUnitario: 75000 }], hitos: [{ orden: 1, descripcion: "Pago Ãºnico", porcentaje: 100 }], enviar: true }) }, admin.cookie);
+    const composite = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, zonaId: zone.id, objeto: `Composición atómica ${Date.now()}`, visita: { fecha: "2027-01-10", observaciones: "Visita compuesta" }, lineas: [{ concepto: "Servicio compuesto", cantidad: 1, valorUnitario: 75000 }], hitos: [{ orden: 1, descripcion: "Pago único", porcentaje: 100 }], enviar: true }) }, admin.cookie);
     assert.equal(composite.response.status, 201);
     const compositeDetail = await request(`/api/v1/cotizaciones/${composite.body.data.id}`, {}, admin.cookie);
     assert.equal(compositeDetail.response.status, 200);
     assert.equal(compositeDetail.body.data.estado, "enviada");
-    const atomicFailureObject = `Fallo atÃ³mico ${Date.now()}`;
+    const atomicFailureObject = `Fallo atómico ${Date.now()}`;
     const atomicFailure = await request("/api/v1/cotizaciones", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, zonaId: zone.id, objeto: atomicFailureObject, visita: { fecha: "2027-01-10" }, lineas: [{ concepto: "Sin hito", cantidad: 1, valorUnitario: 1 }], enviar: true }) }, admin.cookie);
     assert.equal(atomicFailure.response.status, 409);
     const failedSearch = await request(`/api/v1/cotizaciones?search=${encodeURIComponent(atomicFailureObject)}&pageSize=1`, {}, admin.cookie);
@@ -106,6 +114,9 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
 
     const forbiddenCatalog = await request("/api/v1/clientes", {}, client.cookie);
     assert.equal(forbiddenCatalog.response.status, 403);
+    const clientServices = await request("/api/v1/servicios?incluirInactivos=true", {}, client.cookie);
+    assert.equal(clientServices.response.status, 200);
+    assert.equal(clientServices.body.data.some((item: { id: number }) => item.id === managedService.body.data.id), false);
 
     const visit = await request(`/api/v1/cotizaciones/${quoteId}/visitas`, { method: "POST", body: JSON.stringify({ fecha: new Date().toISOString().slice(0, 10), observaciones: "Visita de prueba" }) }, admin.cookie);
     assert.equal(visit.response.status, 201);
@@ -180,7 +191,7 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
     const members = await request(`/api/v1/cuadrillas/${teamId}/miembros`, {}, admin.cookie);
     assert.equal(members.response.status, 200);
     const worker = members.body.data.find((item: { activo: boolean }) => item.activo);
-    assert.ok(worker?.id, "La cuadrilla de integraciÃ³n debe tener un operario activo");
+    assert.ok(worker?.id, "La cuadrilla de integración debe tener un operario activo");
     const periodDay = 1 + (quoteId % 20);
     const periodStart = `2027-${String((quoteId % 12) + 1).padStart(2, "0")}-${String(periodDay).padStart(2, "0")}`;
     const periodEndDate = new Date(`${periodStart}T00:00:00Z`);
@@ -203,7 +214,7 @@ test("flujo integrado de cotizaciÃ³n, orden y permisos", { skip: missing.lengt
     assert.ok(adminSheet.body.data?.id);
     const duplicatePair = await request("/api/v1/planillas/par", { method: "POST", body: JSON.stringify({ clienteId: zone.cliente_id, desde: periodStart, hasta: periodEnd }) }, admin.cookie);
     assert.equal(duplicatePair.response.status, 409);
-    const recordInput = { operarioId: worker.id, fecha: periodStart, zonaId: zone.id, actividad: "Mantenimiento", labor: "Prueba de conciliaciÃ³n", inicio: "08:00", fin: "17:00", descansoHoras: 1, dominicalFestivo: false };
+    const recordInput = { operarioId: worker.id, fecha: periodStart, zonaId: zone.id, actividad: "Mantenimiento", labor: "Prueba de conciliación", inicio: "08:00", fin: "17:00", descansoHoras: 1, dominicalFestivo: false };
     const fieldRecord = await request(`/api/v1/planillas/${fieldSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify(recordInput) }, admin.cookie);
     const adminRecord = await request(`/api/v1/planillas/${adminSheet.body.data.id}/registros`, { method: "POST", body: JSON.stringify(recordInput) }, admin.cookie);
     assert.equal(fieldRecord.response.status, 201);
