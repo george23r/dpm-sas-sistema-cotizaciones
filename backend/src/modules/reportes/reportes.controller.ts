@@ -17,12 +17,11 @@ export const summary = [authenticate, requireRole("administrador"), asyncRoute(a
   const [quotes, orders, quoteActivity, orderActivity] = await Promise.all([
     pool.query(`SELECT count(*) FILTER (WHERE q.estado='solicitada')::int AS solicitadas, count(*) FILTER (WHERE q.estado='enviada')::int AS enviadas, count(*) FILTER (WHERE q.estado='aceptada')::int AS aceptadas, count(*) FILTER (WHERE q.estado='enviada' AND q.enviada_en + make_interval(days => q.vigencia_dias) >= now())::int AS pendientes_respuesta FROM dpm.cotizaciones q WHERE ${quoteWhere.join(" AND ")}`, quoteParams),
     pool.query(`SELECT count(*) FILTER (WHERE o.estado='pendiente')::int AS programadas, count(*) FILTER (WHERE o.estado='en_ejecucion')::int AS en_ejecucion, count(*) FILTER (WHERE o.estado='finalizada')::int AS finalizadas FROM dpm.ordenes_trabajo o JOIN dpm.zonas z ON z.id=o.zona_id WHERE ${orderWhere.join(" AND ")}`, orderParams),
-    pool.query(`SELECT q.solicitada_en::date AS fecha, count(*)::int AS total FROM dpm.cotizaciones q WHERE ${quoteWhere.join(" AND ")} GROUP BY 1`, quoteParams),
-    pool.query(`SELECT o.inicio::date AS fecha, count(*)::int AS total FROM dpm.ordenes_trabajo o JOIN dpm.zonas z ON z.id=o.zona_id WHERE ${orderWhere.join(" AND ")} GROUP BY 1`, orderParams),
+    pool.query(`SELECT to_char(q.solicitada_en::date, 'YYYY-MM-DD') AS fecha, count(*)::int AS total FROM dpm.cotizaciones q WHERE ${quoteWhere.join(" AND ")} GROUP BY 1`, quoteParams),
+    pool.query(`SELECT to_char(o.inicio::date, 'YYYY-MM-DD') AS fecha, count(*)::int AS total FROM dpm.ordenes_trabajo o JOIN dpm.zonas z ON z.id=o.zona_id WHERE ${orderWhere.join(" AND ")} GROUP BY 1`, orderParams),
   ]);
   const activityMap = new Map<string, number>();
   for (const row of [...quoteActivity.rows, ...orderActivity.rows]) activityMap.set(String(row.fecha), (activityMap.get(String(row.fecha)) ?? 0) + Number(row.total));
   const actividad = [...activityMap.entries()].sort(([a], [b]) => b.localeCompare(a)).slice(0, 14).map(([fecha, total]) => ({ fecha, total }));
   response.json({ data: { cotizaciones: quotes.rows[0], ordenes: orders.rows[0], actividad } });
 })];
-
