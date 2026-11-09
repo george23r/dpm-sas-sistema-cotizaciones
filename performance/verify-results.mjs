@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 
-const file = new URL("./evidencia-2026-11-08/statistics.json", import.meta.url);
+const file = process.argv[2]
+  ? new URL(`../${process.argv[2].replaceAll("\\", "/")}`, import.meta.url)
+  : new URL("./evidencia-2026-11-08/statistics.json", import.meta.url);
 const report = JSON.parse(await readFile(file, "utf8"));
 const expected = [
   { label: "GET cotizaciones", key: "GET cotizaciones" },
