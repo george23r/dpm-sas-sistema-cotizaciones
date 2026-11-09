@@ -69,7 +69,7 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await page.getByRole("link", { name: "Catálogo de servicios" }).click();
   await expect(page).toHaveURL(/\/app\/admin\/servicios$/);
   await expect(page.getByRole("heading", { name: "Servicios DPM" })).toBeVisible();
-  await expect(page.getByText(/unidades y tarifas mostradas.*pendientes de validación con DPM/)).toBeVisible();
+  await expect(page.getByText(/Las unidades y tarifas son datos de desarrollo/)).toBeVisible();
   await capture(page, "admin-servicios-1366");
 });
 
