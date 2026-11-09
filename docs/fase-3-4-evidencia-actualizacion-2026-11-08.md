@@ -83,6 +83,10 @@ La captura cubre evidencia representativa de los tres perfiles; no sustituye una
 ## Flujo integrado ampliado
 
 La prueba `backend/tests/integration.test.ts` se ejecutÃ³ nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. AdemÃ¡s del flujo de cotizaciÃ³n, aceptaciÃ³n, programaciÃ³n y planillas, verificÃ³ inicio y finalizaciÃ³n de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administraciÃ³n y rechazo de acceso del cliente al reporte (`403`).
+## ReejecuciÃ³n de integraciÃ³n en base temporal limpia
+
+El 2026-11-08 se preparÃ³ `dpm_codex_test_20261108` con `01_schema.sql`, `02_seed.sql` y `04_seed_e2e.sql`, y se ejecutÃ³ `npm run test:integration` con `RUN_INTEGRATION=1` y credenciales ficticias suministradas por variables de entorno. Resultado real: `1 passed`, `0 failed`, `0 skipped` en 2,23 s. La ejecuciÃ³n cubriÃ³ autenticaciÃ³n, propiedad de zonas, cotizaciÃ³n y aceptaciÃ³n, programaciÃ³n y solape, ciclo del operario, historial, reportes, planillas y RBAC.
+
 ## Endurecimiento de propiedad y errores de negocio
 
 La API ahora verifica que la zona de una cotizaciÃ³n pertenezca al cliente autenticado o al cliente seleccionado por administraciÃ³n. La prueba integrada confirmÃ³ el rechazo `403 ZONE_NOT_OWNED` para una zona ajena. TambiÃ©n se mapearon las restricciones de envÃ­o y respuesta de cotizaciones a errores HTTP `409` controlados, manteniendo las validaciones definitivas en PostgreSQL.
