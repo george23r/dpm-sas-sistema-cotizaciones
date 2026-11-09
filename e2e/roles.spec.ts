@@ -10,7 +10,10 @@ async function login(page: Page, role: keyof typeof credentials) {
   await page.goto("/login");
   await page.getByRole("textbox").first().fill(credentials[role].correo);
   await page.getByRole("textbox").nth(1).fill(credentials[role].clave);
-  await page.getByRole("button", { name: /Ingresar al sistema/ }).click();
+  await Promise.all([
+    page.waitForURL(/\/app\//),
+    page.getByRole("button", { name: /Ingresar al sistema/ }).click(),
+  ]);
 }
 
 async function capture(page: Page, name: string) {
@@ -78,6 +81,38 @@ test("administra el centro operativo y no depende del selector demo", async ({ p
   await page.getByLabel("Fin").fill("06:00");
   await expect(page.getByText(/Este turno cruza medianoche/)).toBeVisible();
   await capture(page, "admin-jornadas-1366");
+});
+
+test("admin puede recorrer el editor de cotizaciones por pasos", async ({ page }) => {
+  await login(page, "admin");
+  await page.goto("/app/admin/cotizaciones/nueva");
+  await expect(page.getByRole("heading", { name: "Nueva cotización" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cliente y zona" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Visita técnica" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Conceptos" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Costos internos" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Hitos y vigencia" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Revisión y envío" })).toBeVisible();
+
+  const selects = page.locator("select");
+  await selects.nth(0).selectOption({ index: 1 });
+  await expect(selects.nth(1).locator("option")).toHaveCount(2);
+  await selects.nth(1).selectOption({ index: 1 });
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByLabel("Objeto de la cotización").fill("Mantenimiento de zona de prueba visual");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByText("Valor unitario")).toBeVisible();
+  await page.getByLabel("Concepto").fill("Mantenimiento manual");
+  await page.getByLabel("Valor unitario").fill("250000");
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByText(/Información privada para administración/)).toBeVisible();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByText("Total de hitos: 100%")).toBeVisible();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await expect(page.getByText("Vista previa")).toBeVisible();
+  await expect(page.getByText("Total al cliente")).toBeVisible();
+  await capture(page, "admin-editor-cotizacion-1366");
 });
 
 test("cliente solo entra a su portal y sus zonas", async ({ page }) => {
