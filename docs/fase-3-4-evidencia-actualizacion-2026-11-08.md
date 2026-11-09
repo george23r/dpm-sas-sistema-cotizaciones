@@ -131,3 +131,7 @@ El 2026-11-09 la API dejo de aceptar nuevas ordenes o reasignaciones hacia cuadr
 ## Estado de disponibilidad en el centro operativo
 
 El dashboard administrativo ahora comunica el estado de cada cuadrilla con texto respaldado por `cuadrillas.activa`: `Disponible para asignaciones`, `Desactivada` o `Disponible hoy` en modo demostracion. No se agregan porcentajes de ocupacion ni disponibilidad futura que la API no entregue. La compilacion frontend y las 16 pruebas unitarias pasaron el 2026-11-09; lint termino sin errores y conserva advertencias de React ya documentadas.
+
+## Fechas ISO en actividad y prueba visual
+
+La captura del centro operativo detecto que el grafico recibia fechas PostgreSQL como objetos con hora y zona horaria. `GET /api/v1/reportes/resumen` ahora devuelve `fecha` como `YYYY-MM-DD`, y la integracion valida ese formato. La prueba E2E Chromium del 2026-11-09 termino `1 passed` contra Express, Vite y PostgreSQL local; la captura actualizada esta en `evidencias/cross-browser-chromium-admin-panel-1366.png` y muestra etiquetas compactas sin desbordamiento. Tambien se alineo el origen local de Playwright con `localhost`, dejando `127.0.0.1` explicito en CI para mantener CORS estricto.
