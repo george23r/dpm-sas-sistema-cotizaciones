@@ -57,15 +57,16 @@ export function Panel() {
   const active = orders.filter((order) => orderState(order) === "en_ejecucion");
   const quoteSummary = modoDemo ? { solicitadas: quotes.filter((quote) => quote.estado === "solicitada").length, enviadas: sent.length, aceptadas: accepted.length, pendientes_respuesta: sent.length } : apiSummary?.cotizaciones;
   const orderSummary = modoDemo ? { programadas: scheduled.length, en_ejecucion: active.length, finalizadas: finished.length } : apiSummary?.ordenes;
-  const upcoming = [...orders].sort((a, b) => orderStart(a).localeCompare(orderStart(b))).slice(0, 5);
+  const upcoming = [...orders].filter((order) => orderState(order) !== "finalizado" && orderState(order) !== "finalizada" && isUpcoming(order)).sort((a, b) => orderStart(a).localeCompare(orderStart(b))).slice(0, 5);
   const recent = [...quotes].sort((a, b) => quoteDate(b).localeCompare(quoteDate(a))).slice(0, 5);
   const conflicts = orders.filter((order, index, all) => all.some((other, otherIndex) => otherIndex > index && orderOverlap(order, other)));
-  const metrics: Array<[string, number, LucideIcon, string]> = [
-    ["Solicitadas", quoteSummary?.solicitadas ?? 0, Clock3, "text-amber-700 bg-amber-50"],
-    ["Enviadas", quoteSummary?.enviadas ?? 0, FileText, "text-sky-700 bg-sky-50"],
-    ["Aceptadas", quoteSummary?.aceptadas ?? 0, CheckCircle2, "text-primary bg-soft"],
-    ["Programados", orderSummary?.programadas ?? 0, CalendarDays, "text-violet-700 bg-violet-50"],
-    ["Finalizados", orderSummary?.finalizadas ?? 0, CheckCircle2, "text-slate-700 bg-slate-100"],
+  const summaryAvailable = modoDemo || apiSummary !== null;
+  const metrics: Array<[string, number | string, LucideIcon, string]> = [
+    ["Solicitadas", summaryAvailable ? quoteSummary?.solicitadas ?? 0 : "—", Clock3, "text-amber-700 bg-amber-50"],
+    ["Enviadas", summaryAvailable ? quoteSummary?.enviadas ?? 0 : "—", FileText, "text-sky-700 bg-sky-50"],
+    ["Aceptadas", summaryAvailable ? quoteSummary?.aceptadas ?? 0 : "—", CheckCircle2, "text-primary bg-soft"],
+    ["Programados", summaryAvailable ? orderSummary?.programadas ?? 0 : "—", CalendarDays, "text-violet-700 bg-violet-50"],
+    ["Finalizados", summaryAvailable ? orderSummary?.finalizadas ?? 0 : "—", CheckCircle2, "text-slate-700 bg-slate-100"],
     ["En ejecución", orderSummary?.en_ejecucion ?? 0, Activity, "text-indigo-700 bg-indigo-50"],
   ];
   const clientName = (id: string | number) => clientRows.find((client) => String(client.id) === String(id))?.nombre ?? (typeof id === "number" ? `Cliente #${id}` : "Cliente");
@@ -84,13 +85,14 @@ export function Panel() {
 
 function orderStart(order: OrderRow) { return "fecha" in order ? `${order.fecha}T${order.horaInicio}` : order.inicio; }
 function orderEnd(order: OrderRow) { return "fecha" in order ? `${order.fecha}T${order.horaFin}` : order.fin; }
+function isUpcoming(order: OrderRow) { const timestamp = Date.parse(orderEnd(order)); return Number.isNaN(timestamp) || timestamp >= Date.now(); }
 function orderState(order: OrderRow): "pendiente" | "en_ejecucion" | "finalizado" | "finalizada" { return "estado" in order ? order.estado : "pendiente"; }
 function orderService(order: OrderRow) { return "tipoServicio" in order ? order.tipoServicio : order.tipo_servicio; }
 function orderZone(order: OrderRow) { return "zonaNombre" in order ? order.zonaNombre : order.zona; }
 function orderOverlap(a: OrderRow, b: OrderRow) { const teamA = "cuadrillaId" in a ? a.cuadrillaId : a.cuadrilla_id; const teamB = "cuadrillaId" in b ? b.cuadrillaId : b.cuadrilla_id; return teamA !== null && teamA === teamB && orderStart(a) < orderEnd(b) && orderEnd(a) > orderStart(b); }
 function quoteDate(quote: QuoteRow) { return ("fechaSolicitud" in quote ? quote.fechaSolicitud : quote.solicitada_en).slice(0, 10); }
 function teamInfo(team: Cuadrilla | CuadrillaApi) { return "servicios_proximos" in team ? `${team.integrantes} integrantes · ${team.servicios_proximos} próximos` : `${team.integrantes} integrantes`; }
-function Metric({ label, value, icon: Icon, tone }: { label: string; value: number; icon: LucideIcon; tone: string }) { return <Card><CardContent className="flex items-start justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p><p className="mt-3 font-heading text-3xl font-semibold text-ink">{value}</p><p className="mt-1 text-xs text-muted">En filtros activos</p></div><span className={`flex size-10 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5" /></span></CardContent></Card>; }
+function Metric({ label, value, icon: Icon, tone }: { label: string; value: number | string; icon: LucideIcon; tone: string }) { return <Card><CardContent className="flex items-start justify-between p-5"><div><p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p><p className="mt-3 font-heading text-3xl font-semibold text-ink">{value}</p><p className="mt-1 text-xs text-muted">{value === "—" ? "Dato no disponible" : "En filtros activos"}</p></div><span className={`flex size-10 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5" /></span></CardContent></Card>; }
 function ActivityChart({ quotes, orders, activity, loading }: { quotes: QuoteRow[]; orders: OrderRow[]; activity?: Array<{ fecha: string; total: number }>; loading: boolean }) { const points = useMemo(() => activity?.length ? activity.map((item) => [item.fecha, Number(item.total)] as [string, number]) : (() => { const counts = new Map<string, number>(); [...quotes.map(quoteDate), ...orders.map((order) => orderStart(order).slice(0, 10))].forEach((date) => counts.set(date, (counts.get(date) ?? 0) + 1)); return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-8); })(), [activity, quotes, orders]); if (loading) return <div className="h-40 animate-pulse rounded-xl bg-app-bg" />; if (!points.length) return <Empty text="No hay suficientes datos para graficar actividad." />; const max = Math.max(...points.map(([, value]) => value)); return <div className="flex h-44 items-end gap-2 border-b border-line pb-1">{points.map(([date, value]) => <div key={date} className="flex min-w-0 flex-1 flex-col items-center gap-2"><span className="text-[10px] font-semibold text-muted">{value}</span><div className="w-full rounded-t-lg bg-primary/80 transition-all" style={{ height: `${Math.max(12, (value / max) * 112)}px` }} title={`${value} registros el ${date}`} /><span className="text-[10px] text-muted">{date.slice(5)}</span></div>)}</div>; }
 function StatusQuote({ quote }: { quote: QuoteRow }) { return <EstadoCotizacionBadge estado={quote.estado} />; }
 function StatusOrder({ order }: { order: OrderRow }) { const state = orderState(order); if (state === "finalizada") return <span className="text-xs text-muted">Finalizado</span>; return <EstadoOrdenBadge estado={state} />; }
