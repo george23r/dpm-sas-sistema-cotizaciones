@@ -37,4 +37,5 @@ function Badge({ className, variant, dotClassName, children, ...props }: BadgePr
   );
 }
 
-export { Badge, badgeVariants };
+export { Badge };
+
