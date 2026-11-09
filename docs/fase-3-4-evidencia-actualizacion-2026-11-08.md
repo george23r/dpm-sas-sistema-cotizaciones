@@ -89,6 +89,12 @@ La API ahora verifica que la zona de una cotización pertenezca al cliente auten
 ## Contraejemplos API verificados
 
 La integración ampliada ejecutada contra PostgreSQL 16 aislado verificó: envío sin visita (`409 QUOTE_SEND_BLOCKED`), hitos que no suman 100 % (`409`), edición posterior al envío (`409 QUOTE_IMMUTABLE`), doble programación por solape de cuadrilla (`409 BUSINESS_RULE`) y conciliaciÃ³n con diferencias (`409 RECONCILIATION_BLOCKED`). El caso completo terminó `1 passed`, `0 failed`, `0 skipped`.
+## Actualización posterior de conteo y validación de planillas
+
+La suite actual de `e2e/roles.spec.ts` contiene seis escenarios funcionales y se ejecuta en tres proyectos; por eso una corrida completa produce 18 casos (`6 Chromium + 6 Firefox + 6 WebKit`). Las referencias históricas de nueve casos corresponden a una versión anterior del arnés.
+
+El 2026-11-08 se añadió la validación HTTP de pares de planillas. `GET /api/v1/planillas/comparar` rechaza con `409 PLANILLA_PAIR_INVALID` los identificadores que no corresponden al mismo cliente, periodo y orígenes campo/administrativa. La evidencia reproducible está en `docs/evidencia-planillas-validacion-2026-11-08.md`.
+
 ## Detalle de cotizaciones en frontend real
 
 Se incorporó `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administración y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administración y el cliente puede responder únicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutó con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
