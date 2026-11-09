@@ -130,6 +130,36 @@ paths:
       operationId: listMyOrders
       security: [{ sessionCookie: [] }]
       responses: { '200': { description: Ordenes de la cuadrilla del operario autenticado }, '403': { description: Solo operarios } }
+  /api/v1/ordenes/{id}:
+    get:
+      operationId: getOrder
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      responses:
+        '200': { description: Orden visible según el rol autenticado }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: El rol o la relación con la orden no permite el acceso }
+        '404': { description: Orden inexistente o no disponible }
+    patch:
+      operationId: updateOrderAssignment
+      security: [{ sessionCookie: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cuadrillaId]
+              properties:
+                cuadrillaId: { type: integer, minimum: 1, nullable: true }
+      responses:
+        '200': { description: Asignación de cuadrilla actualizada }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Solo administrador puede asignar cuadrillas }
+        '404': { description: Orden inexistente }
+        '409': { description: Conflicto de asignación o regla de negocio }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/v1/ordenes/{id}/iniciar:
     patch:
       operationId: startOrder
