@@ -14,7 +14,7 @@ function options(): CookieOptions {
   const env = loadEnv();
   return {
     httpOnly: true,
-    secure: env.NODE_ENV === "production" || env.COOKIE_SAMESITE === "none",
+    secure: env.NODE_ENV === "production" || env.COOKIE_SECURE === "true" || env.COOKIE_SAMESITE === "none",
     sameSite: env.COOKIE_SAMESITE,
     maxAge: env.SESSION_TTL_SECONDS * 1000,
     path: "/",
