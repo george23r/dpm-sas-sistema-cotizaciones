@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "test:performance": "node performance/verify-results.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -39,3 +40,4 @@
     "vite": "^8.3.0"
   }
 }
+
