@@ -11,6 +11,7 @@ const envSchema = z.object({
   LOGIN_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
   COOKIE_NAME: z.string().min(1).default("dpm_session"),
   COOKIE_SAMESITE: z.enum(["lax", "strict", "none"]).default("lax"),
+  COOKIE_SECURE: z.enum(["true", "false"]).default("false"),
   DB_SSL: z.enum(["true", "false"]).default("false"),
 });
 
