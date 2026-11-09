@@ -16,3 +16,5 @@ test("descuenta descanso",()=>assert.equal(horasJornada({inicio:"06:00",fin:"15:
 test("rechaza cero horas",()=>assert.ok(Number.isNaN(horasJornada({inicio:"08:00",fin:"08:00",descansoMin:0}))));
 test("identifica discrepancia y coincidencia",()=>{const r=compararPlanillas(demoJornadas,"p-campo-01","p-admin-01");assert.equal(r.length,2);assert.ok(r.some(x=>x.resultado==="coincide"));assert.ok(r.some(x=>x.resultado==="diferente"&&x.diferencia===2));});
 test("identifica registros ausentes",()=>{const r=compararPlanillas(demoJornadas.filter(x=>x.id!=="j-2"),"p-campo-01","p-admin-01");assert.ok(r.some(x=>x.resultado==="solo_campo"));});
+test("identifica registros solo administrativos",()=>{const r=compararPlanillas(demoJornadas.filter(x=>x.id!=="j-1"),"p-campo-01","p-admin-01");assert.ok(r.some(x=>x.resultado==="solo_administrativa"));});
+
