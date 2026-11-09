@@ -2,6 +2,8 @@
 
 **Alcance verificable:** React/TypeScript con datos ficticios en memoria y base PostgreSQL diseñada de manera independiente. Este documento no declara pruebas de navegador ejecutadas ni validación del cliente.
 
+> **Nota de actualización:** esta matriz pertenece al corte 2 y conserva sus resultados históricos. El estado posterior de integración, pruebas de PostgreSQL, E2E y capturas se documenta en [`docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](../fase-3-4-evidencia-actualizacion-2026-11-08.md) y en [`docs/evidencia-editor-cotizaciones-2026-11-08.md`](../evidencia-editor-cotizaciones-2026-11-08.md). No sustituye esa evidencia ni convierte hipótesis empresariales en requisitos aprobados.
+
 ## Pruebas automatizadas
 
 - `npm run build`: compila y verifica TypeScript.
@@ -33,3 +35,4 @@
 **Cómo documentar:** fecha, navegador y resolución, pasos, capturas de antes/después, resultados observados, autor de la prueba y número de issue en caso de defecto. No registrar «PASS» sin haberla ejecutado.
 
 **Limitaciones:** no hay autenticación real de servidor, almacenamiento persistente, facturación ni integración Express–PostgreSQL. La compilación y los tests unitarios no sustituyen pruebas visuales ni de seguridad.
+
