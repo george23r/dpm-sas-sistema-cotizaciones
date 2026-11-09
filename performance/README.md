@@ -22,7 +22,7 @@ Los archivos `results.jtl` y `report/` son artefactos generados y no deben versi
 
 La ejecuciÃ³n local se realizÃ³ el 2026-11-08 con Apache JMeter 5.6.3, PostgreSQL 16 aislado y la API compilada. El escenario produjo 2.010 muestras y 0 errores; los P95 por operaciÃ³n fueron 4 ms (cotizaciones), 4 ms (historial), 5 ms (reporte) y 4 ms (comparaciÃ³n). La evidencia estÃ¡ en `performance/evidencia-2026-11-08/`.
 
-Para validar los artefactos ya generados sin repetir la carga, ejecuta `npm run test:performance`. El verificador comprueba las 500 muestras por operaciÃ³n, los 2.010 registros totales, cero errores y el P95 menor de 3 segundos; no sustituye una nueva ejecuciÃ³n de JMeter.
+Para validar los artefactos ya generados sin repetir la carga, ejecuta `npm run test:performance`. Para un resultado concreto puedes pasar el `statistics.json` como segundo argumento: `npm run test:performance -- performance/evidencia-live-2026-11-08/statistics.json`. El verificador comprueba las 500 muestras por operaciÃ³n, los 2.010 registros totales, cero errores y el P95 menor de 3 segundos; no sustituye una nueva ejecuciÃ³n de JMeter.
 
 Esta mediciÃ³n es reproducible y Ãºnicamente local, con datos ficticios; no constituye un SLA de producciÃ³n ni validaciÃ³n de DPM.
 
