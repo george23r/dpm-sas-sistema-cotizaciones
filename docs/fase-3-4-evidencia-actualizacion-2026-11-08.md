@@ -90,6 +90,10 @@ La reejecución más reciente en una base exclusiva `dpm_e2e_codex`, con API y f
 La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programación administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
 
 La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditoría completa de todas las pantallas ni una validación empresarial.
+
+## Suite E2E completa en base aislada
+
+El 2026-11-09 se creo la base temporal `dpm_e2e_current` en PostgreSQL 16 y se aplicaron `database/01_schema.sql`, `database/02_seed.sql` y `database/04_seed_e2e.sql`. Con Express en `:3000`, Vite en `:5173`, cookie HttpOnly y limite de login de pruebas configurado en 100, `npm run test:e2e -- --reporter=line` termino con `25 passed`, `2 skipped`, `0 failed` en Chromium, Firefox y WebKit. Los dos casos omitidos son los escenarios mutativos que solo corren en Chromium para no repetir cambios persistentes en Firefox y WebKit. La ejecucion anterior contra `dpm_sas` no se usa como evidencia porque esa base ya estaba mutada por pruebas previas.
 ## Flujo integrado ampliado
 
 La prueba `backend/tests/integration.test.ts` se ejecutó nuevamente el 2026-11-08 contra PostgreSQL 16 aislado. Resultado: `1 passed`, `0 failed`, `0 skipped`. Además del flujo de cotización, aceptación, programación y planillas, verificó inicio y finalización de la orden por el operario, rechazo de cierre duplicado (`409`), historial del cliente con el servicio finalizado, reporte de periodo para administración y rechazo de acceso del cliente al reporte (`403`).
