@@ -85,6 +85,8 @@ Se ejecutó una nueva carga con Apache JMeter 5.6.3 en el host Windows, Java 25.
 
 La suite actual de `e2e/roles.spec.ts` contiene ocho escenarios funcionales y produce 24 casos en tres proyectos (`8 Chromium + 8 Firefox + 8 WebKit`), con dos omisiones intencionales del escenario mutativo en Firefox y WebKit. Al sumar `e2e/accessibility.spec.ts`, que ejecuta un caso por navegador, la suite completa lista 27 casos y la última corrida local terminó con `25 passed`, `2 skipped`, `0 failed`. Las referencias históricas de nueve, 18 y 21 casos corresponden a versiones anteriores del arnés.
 
+La reejecución más reciente en una base exclusiva `dpm_e2e_codex`, con API y frontend en orígenes CORS consistentes, está documentada en [`docs/evidencia-e2e-aislado-2026-11-09.md`](evidencia-e2e-aislado-2026-11-09.md).
+
 La prueba local del 2026-11-08 se repitiÃ³ con 9 casos: 3 en Chromium, 3 en Firefox y 3 en WebKit. Resultado: `9 passed` en 31,5 segundos, contra Vite, Express y PostgreSQL temporal con cookie HttpOnly. Se generaron capturas de panel y programación administrativa, portal cliente a 360 px y portal operario a 360 px para cada motor en `evidencias/cross-browser-*.png`.
 
 La captura cubre evidencia representativa de los tres perfiles; no sustituye una auditoría completa de todas las pantallas ni una validación empresarial.
