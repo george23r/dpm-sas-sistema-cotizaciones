@@ -147,6 +147,9 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     const crews = await request("/api/v1/cuadrillas", {}, admin.cookie);
     assert.equal(crews.response.status, 200);
     const operator = await login(process.env.INTEGRATION_OPERATOR_EMAIL!, process.env.INTEGRATION_OPERATOR_PASSWORD!);
+    const forbiddenZones = await request("/api/v1/zonas", {}, operator.cookie);
+    assert.equal(forbiddenZones.response.status, 403);
+    assert.equal(forbiddenZones.body.code, "FORBIDDEN");
     const workers = await request("/api/v1/operarios", {}, admin.cookie);
     assert.equal(workers.response.status, 200);
     const activeWorker = workers.body.data.find((item: { activo: boolean; usuario_id?: number | null }) => item.activo && item.usuario_id === operator.user.id);
@@ -259,4 +262,3 @@ test("flujo integrado de cotización, orden y permisos", { skip: missing.length 
     await pool.end();
   }
 });
-
