@@ -120,4 +120,6 @@ Se agregó el escenario E2E mutativo para iniciar una orden, registrar una nota 
 ## Detalle de cotizaciones en frontend real
 
 Se incorporó `src/pages/CotizacionDetalle.tsx` y las rutas de detalle para administración y cliente. La vista consulta `GET /api/v1/cotizaciones/:id`, muestra lÃ­neas, visita, hitos y vigencia; los costos internos solo se renderizan para administración y el cliente puede responder únicamente cuando la API y la vigencia lo permiten. La prueba E2E local se ejecutó con 9 casos: `9 passed` en Chromium, Firefox y WebKit; la vista de detalle fue comprobada para ambos roles.
+## Sincronizacion del contrato OpenAPI de ordenes
 
+La auditoria del 2026-11-09 encontro que Express ya exponia `GET/PATCH /api/v1/ordenes/:id`, pero esas operaciones no estaban declaradas en `backend/openapi.yaml`. Se agregaron los contratos de detalle y asignacion de cuadrilla, incluyendo cookie de sesion, propiedad del recurso, cuerpo validado y respuestas 401/403/404/409/422. `backend/tests/openapi.test.ts` protege esta correspondencia en regresion. La prueba local del backend termino con `6 passed`, `0 failed`, `1 skipped`; el caso omitido requiere PostgreSQL de integracion.
