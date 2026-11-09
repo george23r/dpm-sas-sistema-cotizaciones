@@ -46,5 +46,5 @@ En producción se requiere HTTPS, `COOKIE_SECURE=true`, CORS con origen explíci
 
 ## Brechas declaradas
 
-El smoke E2E de navegador tiene PASS en CI con Chromium, Firefox y WebKit, PostgreSQL temporal y seis escenarios funcionales (18 ejecuciones al combinar los tres navegadores). La medición local de RNF-03 está documentada en `../performance/evidencia-2026-11-08.md`, con 2.010 muestras y 0 errores; no se presenta como SLA ni como validación de DPM. Tampoco se presentan como validadas por DPM las reglas de liderazgo, tarifas, recargos, autogestión ni otros supuestos empresariales. No se implementan facturación electrónica, nómina, pagos ni notificaciones automáticas.
+El smoke E2E de navegador tiene PASS local con Chromium, Firefox y WebKit, PostgreSQL temporal y siete escenarios funcionales (21 ejecuciones al combinar los tres navegadores). La medición local de RNF-03 está documentada en `../performance/evidencia-2026-11-08.md`, con 2.010 muestras y 0 errores; no se presenta como SLA ni como validación de DPM. Tampoco se presentan como validadas por DPM las reglas de liderazgo, tarifas, recargos, autogestión ni otros supuestos empresariales. No se implementan facturación electrónica, nómina, pagos ni notificaciones automáticas.
 
