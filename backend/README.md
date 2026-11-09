@@ -46,7 +46,7 @@ La evidencia ejecutada el 2026-11-08 está en [`../docs/fase-3-4-evidencia-actua
 
 La suite funcional vigente contiene ocho escenarios y se ejecuta en Chromium, Firefox y WebKit. Al sumar el smoke de accesibilidad Axe, `npx playwright test --list` lista 27 casos. La última corrida local documentada obtuvo 25 PASS, 2 SKIP y 0 FAIL; los dos SKIP corresponden al escenario mutativo del operario en Firefox y WebKit, para no repetir cambios persistentes sobre la misma base temporal. Esta evidencia es local y no se presenta como una ejecución CI remota actual.
 
-En producción se requiere HTTPS, `COOKIE_SECURE=true`, CORS con origen explícito, `COOKIE_SAMESITE=none` solo cuando sea necesario por separación de orígenes y TLS verificable para PostgreSQL. No se registran credenciales ni se persisten tokens en el navegador. `/ready` comprueba infraestructura y no exige autenticación de usuario.
+En producción se requiere HTTPS y `COOKIE_SECURE=true` (además, el backend fuerza `Secure` cuando `NODE_ENV=production`); CORS debe usar un origen explícito, `COOKIE_SAMESITE=none` solo cuando sea necesario por separación de orígenes y TLS verificable para PostgreSQL. No se registran credenciales ni se persisten tokens en el navegador. `/ready` comprueba infraestructura y no exige autenticación de usuario.
 
 ## Brechas declaradas
 
