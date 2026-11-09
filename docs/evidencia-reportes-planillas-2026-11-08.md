@@ -35,5 +35,5 @@ Los datos usados son ficticios y locales. Esta evidencia no constituye validaci�
 
 La prueba E2E focalizada de Chromium verificÃ³ el acceso administrativo al reporte, los indicadores de planillas y el bloque de conciliaciÃ³n por cliente. Captura: `evidencias/cross-browser-chromium-admin-reportes-1366.png`.
 
-Posteriormente se ejecutÃ³ la suite completa `npx playwright test e2e/roles.spec.ts` con 18 casos: 6 en Chromium, 6 en Firefox y 6 en WebKit. Resultado real de esa corrida histÃ³rica: `18 passed` en 60,0 segundos. TambiÃ©n se generaron las capturas equivalentes de reportes para Firefox y WebKit. La suite vigente tiene siete escenarios por navegador, por lo que la ejecuciÃ³n mÃ¡s reciente produjo 21/21 PASS.
+Posteriormente se ejecutÃ³ la suite completa `npx playwright test e2e/roles.spec.ts` con 18 casos: 6 en Chromium, 6 en Firefox y 6 en WebKit. Resultado real de esa corrida histÃ³rica: `18 passed` en 60,0 segundos. TambiÃ©n se generaron las capturas equivalentes de reportes para Firefox y WebKit. La suite vigente tiene ocho escenarios por navegador; la ejecuciÃ³n mÃ¡s reciente produjo `22 passed`, `2 skipped`, `0 failed`, porque el escenario mutativo del operario se limita a Chromium.
 
