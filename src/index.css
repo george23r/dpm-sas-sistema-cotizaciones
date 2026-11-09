@@ -11,12 +11,12 @@
   --color-surface: #ffffff;
   --color-app-bg: #f6f8f5;
   --color-ink: #202b2a;
-  --color-muted: #6d7b78;
+  --color-muted: #5f6d69;
   --color-line: #dfe8e2;
 
-  --color-status-pending: #f9a825;
+  --color-status-pending: #8a5a00;
   --color-status-pending-bg: #fff3dc;
-  --color-status-progress: #1976d2;
+  --color-status-progress: #0b5cab;
   --color-status-progress-bg: #e3f0fb;
   --color-status-done: #2e7d32;
   --color-status-done-bg: #e8f5e9;
