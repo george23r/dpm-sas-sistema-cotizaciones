@@ -1,5 +1,7 @@
 # Evidencia técnica — Fases 0 y 1
 
+> Documento histórico de la línea base. Las brechas y conteos de esta página corresponden a la fecha indicada; el estado posterior está consolidado en `docs/fase-3-4-evidencia-actualizacion-2026-11-08.md` y `backend/README.md`.
+
 Fecha de ejecución: 2026-11-08, America/Bogota.
 
 ## Línea base
