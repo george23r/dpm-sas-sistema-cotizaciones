@@ -1,30 +1,30 @@
 export type Rol = "cliente" | "administrador" | "operario";
 
-// Estos catÃ¡logos histÃ³ricos describen algunas zonas del prototipo, NO calculan cotizaciones.
+// Estos catálogos históricos describen algunas zonas del prototipo, NO calculan cotizaciones.
 export type TipoVegetacion = "cesped_simple" | "jardin_ornamental" | "zona_arborizada" | "mixta";
 export const TIPOS_VEGETACION: Record<TipoVegetacion, string> = {
-  cesped_simple: "CÃ©sped simple",
-  jardin_ornamental: "JardÃ­n ornamental",
+  cesped_simple: "Césped simple",
+  jardin_ornamental: "Jardín ornamental",
   zona_arborizada: "Zona arborizada",
   mixta: "Mixta",
 };
 export type Frecuencia = "unica" | "mensual" | "quincenal" | "semanal";
 export const FRECUENCIAS: Record<Frecuencia, string> = {
-  unica: "Ãšnica vez", mensual: "Mensual", quincenal: "Quincenal", semanal: "Semanal",
+  unica: "Única vez", mensual: "Mensual", quincenal: "Quincenal", semanal: "Semanal",
 };
-export type Equipo = "guadaÃ±adora" | "motosierra" | "fumigadora";
+export type Equipo = "guadañadora" | "motosierra" | "fumigadora";
 export const EQUIPOS: Record<Equipo, string> = {
-  guadaÃ±adora: "GuadaÃ±adora", motosierra: "Motosierra", fumigadora: "Fumigadora",
+  guadañadora: "Guadañadora", motosierra: "Motosierra", fumigadora: "Fumigadora",
 };
 
 export const SERVICIOS_DPM = [
-  "Poda de Ã¡rboles",
+  "Poda de árboles",
   "Resiembra con macollo",
   "Resiembra con semilla",
   "Control de limpieza manual",
-  "RectificaciÃ³n de encalle manual",
-  "Riego en situaciones de sequÃ­a",
-  "FumigaciÃ³n manual",
+  "Rectificación de encalle manual",
+  "Riego en situaciones de sequía",
+  "Fumigación manual",
 ] as const;
 
 export type EstadoCotizacion = "solicitada" | "borrador" | "enviada" | "aceptada" | "rechazada";
@@ -34,7 +34,7 @@ export const ESTADOS_COTIZACION: Record<EstadoCotizacion, string> = {
 };
 export type EstadoOrden = "pendiente" | "en_ejecucion" | "finalizado";
 export const ESTADOS_ORDEN: Record<EstadoOrden, string> = {
-  pendiente: "Pendiente", en_ejecucion: "En ejecuciÃ³n", finalizado: "Finalizado",
+  pendiente: "Pendiente", en_ejecucion: "En ejecución", finalizado: "Finalizado",
 };
 
 export interface Cliente { id: string; nombre: string; correo: string; telefono: string }
@@ -77,6 +77,5 @@ export interface OrdenTrabajo {
   finalizacion?: { fecha: string; hora: string; responsable: string; nota?: string };
 }
 
-/** Estructura histÃ³rica de precio por Ã¡rea. Conservar solo para migraciones; no se usa para cotizar. */
+/** Estructura histórica de precio por área. Conservar solo para migraciones; no se usa para cotizar. */
 export interface DesglosePrecio {areaPorTarifa:number;factorVegetacion:number;factorFrecuencia:number;subtotalArea:number;costoPersonal:number;costoEquipos:number;total:number}
-
