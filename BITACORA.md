@@ -49,3 +49,9 @@
 - Verificación local: frontend build PASS, 15/15 unitarias PASS, backend build/lint PASS, integración PostgreSQL PASS y smoke E2E Chromium 4/4 PASS. Las advertencias de lint existentes están documentadas y no se presentan como cero advertencias.
 - Pendientes: ejecución CI remota del commit actual, despliegue, capturas representativas completas, pruebas en dispositivos reales y validación empresarial de tarifas, vigencia, liderazgo, recargos y políticas de conciliación. Estos pendientes no se consideran requisitos aprobados.
 
+
+## 2026-11-22 — Richard: revisión del documento y coordinación del Corte 3
+
+- Se revisó el documento v2.6 contra la guía de entregables del tercer corte (comunes y ruta Scrum).
+- Se identificaron los pendientes para completar antes de la entrega: actas de sprint, ejecución de la matriz de aceptación, enlace de demostración y participación de ambos integrantes en el repositorio.
+
