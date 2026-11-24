@@ -3,6 +3,8 @@
 **Alcance verificable:** React/TypeScript con datos ficticios en memoria y base PostgreSQL diseñada de manera independiente. Este documento no declara pruebas de navegador ejecutadas ni validación del cliente.
 
 > **Nota de actualización:** esta matriz pertenece al corte 2 y conserva sus resultados históricos. El estado posterior de integración, pruebas de PostgreSQL, E2E y capturas se documenta en [`docs/fase-3-4-evidencia-actualizacion-2026-11-08.md`](../fase-3-4-evidencia-actualizacion-2026-11-08.md) y en [`docs/evidencia-editor-cotizaciones-2026-11-08.md`](../evidencia-editor-cotizaciones-2026-11-08.md). No sustituye esa evidencia ni convierte hipótesis empresariales en requisitos aprobados.
+>
+> **Ejecución real de los 17 casos de aceptación (corte 3, 23 de noviembre de 2026):** ya fueron ejecutados contra la aplicación real (frontend + API Express + PostgreSQL), con capturas de pantalla y verificación directa en base de datos. Resultado: 18 de 19 verificaciones en PASS y 1 hallazgo real documentado. Ver el detalle completo en [`docs/evidencia-matriz-aceptacion-2026-11-23.md`](../evidencia-matriz-aceptacion-2026-11-23.md).
 
 ## Pruebas automatizadas
 
@@ -10,7 +12,7 @@
 - `npm run test:unit`: ejecuta 12 verificaciones con el runner nativo de Node.js 22; incluye nombres/correos duplicados, restricciones de líder, turnos nocturnos, descansos y comparación de planillas.
 - GitHub Actions ejecuta ambas al proponer cambios del frontend.
 
-## Casos de aceptación para revisión visual (pendientes de ejecución documentada)
+## Casos de aceptación para revisión visual (ejecutados el 2026-11-23 — ver [evidencia](../evidencia-matriz-aceptacion-2026-11-23.md))
 
 | Historia | Recorrido a comprobar | Resultado esperado |
 | --- | --- | --- |

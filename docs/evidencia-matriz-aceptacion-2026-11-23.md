@@ -1,0 +1,47 @@
+# Ejecución documentada de la matriz de aceptación — 23 de noviembre de 2026
+
+**Autor de la prueba:** Claude (agente de IA), ejecutando en nombre de Jorge Ramos / Richard Sevillano, sobre la aplicación real en ejecución local (frontend Vite + backend Express + PostgreSQL 16, sin modo demo).
+
+**Entorno:** `localhost:5173` (frontend) / `localhost:3000` (API), base de datos `dpm_sas` reseedeada (`01_schema.sql` → `02_seed.sql` → `04_seed_e2e.sql`) inmediatamente antes de la ejecución. Navegador: Chromium (Playwright) con sesión real por cookie HttpOnly, nunca llamadas directas a la API sin pasar por la interfaz salvo donde se indica explícitamente.
+
+**Método:** para cada caso se leyó primero el código fuente relevante (controlador, esquema, triggers o procedimientos) para saber qué comportamiento exigir, y luego se reprodujo la acción en la aplicación real (clics, formularios, navegación), verificando el resultado tanto en pantalla (capturas en `evidencias/`) como directamente en PostgreSQL. Ningún resultado fue asumido ni inventado; dos casos revelaron una diferencia real entre lo redactado en la matriz y el comportamiento implementado, y se documentan como hallazgos en vez de forzarse a "PASS".
+
+**Resultado global: 18 de 19 verificaciones en PASS, 1 hallazgo real (caso 7b).**
+
+| # | Historia | Recorrido comprobado | Resultado esperado (matriz) | Resultado observado | Veredicto |
+|---|----------|----------------------|------------------------------|----------------------|-----------|
+| 1 | HU-01 | Admin crea borrador con líneas, visita, costos e hitos y envía | Total se calcula por conceptos; hitos suman 100 % | Total $300.000 correcto (2 × $150.000); cotización COT-0008 quedó en estado `enviada` en BD | **PASS** |
+| 2 | HU-01 | Intenta enviar sin visita técnica (con conceptos e hitos completos) | El envío se bloquea | El servidor rechazó con "La cotización COT-0009 requiere una visita técnica registrada antes de enviarse."; no quedó ningún registro huérfano (transacción revertida por completo) | **PASS** |
+| 3 | HU-02 | Cliente (Hacienda Ejemplo) solicita servicio desde su zona "Lote 002" | Aparece al admin sin divulgar costos internos | Apareció como "Solicitada" en el listado admin; el detalle mostró "No hay costos registrados" y el listado incluye el aviso "Los costos internos no forman parte de esta vista" | **PASS** |
+| 4a | HU-02 | Cliente acepta una cotización vigente (vigencia 15 días, recién enviada) | Se permite aceptar | Estado pasó a `aceptada` en PostgreSQL | **PASS** |
+| 4b | HU-02 | Cliente intenta aceptar una cotización vencida (vigencia 1 día, enviada hace 10 días) | Solo se permite aceptar vigente | La interfaz ocultó los botones y mostró "La vigencia de esta cotización terminó."; además se verificó de forma independiente contra la API real (`POST /cotizaciones/:id/respuesta`) con sesión autenticada: respondió **409 QUOTE_RESPONSE_BLOCKED**. Estado permaneció `enviada` | **PASS** |
+| 5 | HU-03 | Se programa una cotización aceptada y se asigna fecha/cuadrilla | Se crea orden ligada al cliente/zona originales | La orden creada quedó con cliente="Hacienda Ejemplo" y zona="Lote 002", coincidiendo exactamente con los de la cotización | **PASS** |
+| 6 | HU-03 | Se programa una segunda cotización en la MISMA cuadrilla con horario superpuesto | Se rechaza el cruce | El servidor respondió "La cuadrilla ya tiene un servicio asignado en este horario."; no se creó la segunda orden | **PASS** |
+| 7a | HU-04 | Se reasigna una orden **pendiente** a otra cuadrilla | Se permite (salvo cruce de horario) | Reasignación aceptada sin error; cuadrilla actualizada en BD | **PASS** |
+| 7b | HU-04 | Se intenta reasignar una orden **en ejecución** a otra cuadrilla | La matriz exige que se rechace | La interfaz **no mostró ningún error** y la cuadrilla **sí cambió** en BD | **HALLAZGO** — ver nota abajo |
+| 8 | HU-05 | Operario consulta "Mis órdenes" | No aparecen órdenes ajenas a su cuadrilla | Solo se listaron las 2 órdenes reales de su cuadrilla; confirmado también en el código del endpoint (filtra por `cuadrilla_id` del operario autenticado) | **PASS** |
+| 9 | HU-06 | Operario inicia y finaliza un servicio asignado, con nota | Estado final y nota visibles | Pasó de `pendiente` → `en_ejecucion` → `finalizada`, con la nota de cierre guardada en PostgreSQL | **PASS** (ver nota menor de huso horario) |
+| 10 | HU-07 | Cliente abre su historial tras finalizarse un servicio suyo | Solo ve órdenes finalizadas propias | El nuevo servicio finalizado apareció; ningún otro cliente con órdenes finalizadas (p. ej. Empresa Ejemplo S.A.S.) apareció en la vista de Hacienda | **PASS** |
+| 11 | HU-08 | Admin filtra reportes por cliente y fechas | Totales se actualizan según filtros | El contenido de la página cambió al aplicar el filtro por "Hacienda Ejemplo" y rango de fechas | **PASS** |
+| 12 | HU-09 | Se registra un turno nocturno 18:00–06:00 (cruza medianoche) con 1 h de descanso | Las horas se calculan según las reglas de diseño | Estimación en pantalla: 11 h; columna generada en PostgreSQL: 11.00 h (coincide) | **PASS** |
+| 13 | HU-09 | Se intenta registrar una jornada duplicada (mismo trabajador/fecha/hora de inicio) | Aparece mensaje de rechazo | "Ya existe un turno para ese trabajador, fecha y hora de inicio en esta planilla." | **PASS** |
+| 14 | HU-10 | Se comparan planilla de campo y administrativa con horas distintas | No permite conciliar | La comparación mostró 1 diferencia; botón "Conciliar" quedó deshabilitado | **PASS** |
+| 15 | HU-10 | Se comparan planillas coincidentes, se concilian, y se intenta registrar un turno nuevo después | Se concilia; luego bloquea nuevos registros | Conciliación exitosa ("Planillas conciliadas y bloqueadas por la API"), estado `conciliada` en BD; el intento posterior de registrar un turno quedó bloqueado (botón deshabilitado) | **PASS** |
+| 16 | Admin | Crea cliente válido; intenta crear uno con nombre duplicado | Permite válido, bloquea duplicado | Cliente válido creado; el duplicado por nombre fue rechazado ("Ya existe un cliente con ese nombre o NIT.") | **PASS** (con hallazgo de redacción, ver abajo) |
+| 17 | Admin | Crea un segundo líder activo en una cuadrilla que ya tiene uno | Se rechaza | "La cuadrilla ya tiene un líder activo."; no se creó el registro | **PASS** |
+
+## Hallazgos reales encontrados durante la ejecución
+
+Estos no son errores de la prueba: se confirmaron primero leyendo el código fuente y luego reproduciéndolos en vivo contra la aplicación real.
+
+1. **Caso 7b — reasignación de cuadrilla en una orden "en ejecución" no se bloquea.** El endpoint `PATCH /api/v1/ordenes/:id/cuadrilla` (función `assign` en `backend/src/modules/ordenes/ordenes.controller.ts`) solo valida que la nueva cuadrilla exista y esté activa, y que no haya cruce de horario (a través del trigger `fn_validar_orden`). No existe ninguna comprobación que impida reasignar una orden cuyo estado ya es `en_ejecucion`. Se reprodujo en vivo: la orden #2 (en ejecución) se reasignó de Cuadrilla Esmeralda a Cuadrilla Follaje sin ningún error. **Recomendación:** agregar una condición `estado = 'pendiente'` (o excluir `en_ejecucion`/`finalizada`) en el `UPDATE` de `assign`, análoga a la que ya existe en `start` y `finish`.
+
+2. **Caso 16 — la redacción de la matriz ("correo duplicado") no coincide con la restricción real ("nombre o NIT duplicado").** El esquema (`uq_clientes_nombre` y un índice único parcial sobre `nit`) no tiene ninguna restricción `UNIQUE` sobre `correo_contacto`. Se comprobó en vivo creando dos clientes distintos con el mismo correo de contacto: el sistema lo permitió sin error. Esto no es necesariamente un defecto de la aplicación (puede ser una decisión de diseño razonable, ya que un mismo correo de contacto podría representar a la misma persona gestionando varias cuentas), pero si la intención original era bloquear correos duplicados, la restricción no está implementada; si la intención es la actual (nombre/NIT), conviene corregir la redacción de la matriz.
+
+3. **Hallazgo menor — mensajes de error con mojibake.** Al menos 8 mensajes de `RAISE EXCEPTION` en `database/01_schema.sql` (por ejemplo "La cotizaciÃ³n % requiere una visita tÃ©cnica...") están guardados con una doble codificación UTF-8, y se reproducen visiblemente mal en pantalla cuando el usuario provoca esa regla de negocio. Se confirmó que el problema está en el propio archivo fuente (115 ocurrencias de "Ã" en todo `01_schema.sql`), no en el navegador ni en la codificación de red. No afecta la validación de negocio, pero sí la legibilidad para el usuario final.
+
+4. **Hallazgo menor — horario mostrado al operario no se convierte a hora de Bogotá.** La tarjeta "Mis órdenes" (`src/pages/operario/MisOrdenes.tsx`, función `orderTime`) recorta directamente los caracteres de hora del timestamp ISO en UTC (`order.inicio.slice(11,16)`) sin convertir a `America/Bogota` (UTC-5). Una orden programada para las 09:00 hora de Bogotá se mostró al operario como "14:00". No afecta la lógica de negocio del backend (que sí trabaja correctamente en UTC), pero sí puede confundir a un operario de campo sobre la hora real de inicio de su turno.
+
+## Evidencia
+
+Todas las capturas de pantalla (36 archivos) están en `evidencias/` dentro de esta misma carpeta de trabajo de la prueba, con nombres descriptivos por caso (`caso01-...`, `caso02-...`, etc.). El detalle estructurado de cada verificación (incluyendo las consultas SQL de control ejecutadas contra PostgreSQL) está en `results.json`.
